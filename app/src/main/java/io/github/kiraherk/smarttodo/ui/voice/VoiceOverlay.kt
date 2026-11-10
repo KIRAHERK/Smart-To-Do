@@ -60,24 +60,38 @@ fun VoiceOverlay(
         onDismissRequest = { if (state !is VoiceViewModel.UiState.Thinking) onDismiss() },
         properties = DialogProperties(usePlatformDefaultWidth = false, dismissOnClickOutside = false),
     ) {
-        Surface(
-            shape = RoundedCornerShape(24.dp),
-            color = MaterialTheme.colorScheme.surface,
-            modifier = Modifier.fillMaxWidth().padding(14.dp),
+        VoiceOverlayContent(state, onFinish, onConfirm, onReject, onRetry, onSpeakAgain, onDismiss)
+    }
+}
+
+/** The card shown inside the voice dialog (separate so it can be previewed and tested). */
+@Composable
+fun VoiceOverlayContent(
+    state: VoiceViewModel.UiState,
+    onFinish: () -> Unit,
+    onConfirm: () -> Unit,
+    onReject: () -> Unit,
+    onRetry: () -> Unit,
+    onSpeakAgain: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    Surface(
+        shape = RoundedCornerShape(24.dp),
+        color = MaterialTheme.colorScheme.surface,
+        modifier = Modifier.fillMaxWidth().padding(14.dp),
+    ) {
+        Column(
+            Modifier.padding(20.dp).heightIn(max = 640.dp).verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            Column(
-                Modifier.padding(20.dp).heightIn(max = 640.dp).verticalScroll(rememberScrollState()),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(14.dp),
-            ) {
-                when (state) {
-                    is VoiceViewModel.UiState.Listening -> Listening(state, onFinish, onDismiss)
-                    is VoiceViewModel.UiState.Thinking -> Thinking(state)
-                    is VoiceViewModel.UiState.Confirm -> Confirm(state, onConfirm, onReject, onSpeakAgain)
-                    is VoiceViewModel.UiState.Answer -> Answer(state, onRetry, onSpeakAgain, onDismiss)
-                    is VoiceViewModel.UiState.Message -> Message(state, onRetry, onSpeakAgain, onDismiss)
-                    VoiceViewModel.UiState.Idle -> Unit
-                }
+            when (state) {
+                is VoiceViewModel.UiState.Listening -> Listening(state, onFinish, onDismiss)
+                is VoiceViewModel.UiState.Thinking -> Thinking(state)
+                is VoiceViewModel.UiState.Confirm -> Confirm(state, onConfirm, onReject, onSpeakAgain)
+                is VoiceViewModel.UiState.Answer -> Answer(state, onRetry, onSpeakAgain, onDismiss)
+                is VoiceViewModel.UiState.Message -> Message(state, onRetry, onSpeakAgain, onDismiss)
+                VoiceViewModel.UiState.Idle -> Unit
             }
         }
     }

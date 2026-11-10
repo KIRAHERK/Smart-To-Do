@@ -64,9 +64,7 @@ class TaskRepository(
     suspend fun createTask(spec: NewTask): Long {
         val now = now()
         val anchor = spec.date ?: if (spec.recurrence != null) today() else null
-        val firstDate = if (spec.recurrence != null && anchor != null) {
-            RecurrenceEngine.firstOnOrAfter(spec.recurrence, anchor, anchor) ?: anchor
-        } else anchor
+        val firstDate = if (spec.recurrence != null && anchor != null) RecurrenceEngine.firstStart(spec.recurrence, anchor) else anchor
         val time = spec.time?.let(Dates::formatTime)
         val base = TaskEntity(
             title = spec.title.trim(),
@@ -221,7 +219,7 @@ class TaskRepository(
             } else {
                 val current = Dates.parseDate(o?.takeIf { it.isOpen }?.date)
                 val base = if (current == null || current < today()) today() else current
-                val first = RecurrenceEngine.firstOnOrAfter(rule, base, base) ?: base
+                val first = RecurrenceEngine.firstStart(rule, base)
                 val n = t.copy(recurrenceJson = rule.toJson(), startDate = first.toString(), updatedAt = now)
                 tasks.update(n)
                 if (o != null && o.isOpen) {
