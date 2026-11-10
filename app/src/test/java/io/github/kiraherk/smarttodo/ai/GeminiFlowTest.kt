@@ -52,7 +52,8 @@ class GeminiFlowTest {
         server.start()
         db = inMemoryDb()
         settings = SettingsRepository(testContext())
-        gemini = GeminiClient(OkHttpClient(), { "test-key" }, server.url("/v1beta").toString().trimEnd('/'))
+        val base = server.url("/v1beta").toString().trimEnd('/')
+        gemini = GeminiClient(OkHttpClient(), { "test-key" }, { base })
     }
 
     @After

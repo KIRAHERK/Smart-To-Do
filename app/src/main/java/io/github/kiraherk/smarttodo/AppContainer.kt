@@ -41,7 +41,11 @@ class AppContainer(val app: Application) {
         .writeTimeout(60, TimeUnit.SECONDS)
         .build()
 
-    val gemini = GeminiClient(http, apiKey = { secrets.getApiKey() })
+    /** Where Gemini requests go. Only the emulator tests change it, to point at a fake server. */
+    @Volatile
+    var geminiBaseUrl: String = GeminiClient.DEFAULT_BASE_URL
+
+    val gemini = GeminiClient(http, apiKey = { secrets.getApiKey() }, baseUrl = { geminiBaseUrl })
     val ai = AiService(gemini, settings)
 
     val reminders = ReminderScheduler(app, db)

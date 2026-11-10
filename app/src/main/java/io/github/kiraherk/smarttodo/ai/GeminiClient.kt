@@ -39,7 +39,7 @@ sealed class AiException(message: String, cause: Throwable? = null) : Exception(
 class GeminiClient(
     private val http: OkHttpClient,
     private val apiKey: () -> String?,
-    private val baseUrl: String = DEFAULT_BASE_URL,
+    private val baseUrl: () -> String = { DEFAULT_BASE_URL },
 ) {
     data class Turn(val role: String, val text: String) {
         companion object {
@@ -57,7 +57,7 @@ class GeminiClient(
         var pageToken: String? = null
         var pages = 0
         do {
-            val url = "$baseUrl/models?pageSize=200" + (pageToken?.let { "&pageToken=$it" } ?: "")
+            val url = "${baseUrl()}/models?pageSize=200" + (pageToken?.let { "&pageToken=$it" } ?: "")
             val body = execute(Request.Builder().url(url).header(KEY_HEADER, key).get().build(), model = null)
             val obj = json.parseToJsonElement(body).jsonObject
             obj["models"]?.jsonArray?.forEach { element ->
@@ -98,7 +98,7 @@ class GeminiClient(
             }
         }
         val request = Request.Builder()
-            .url("$baseUrl/models/$model:generateContent")
+            .url("${baseUrl()}/models/$model:generateContent")
             .header(KEY_HEADER, key)
             .post(body.toString().toRequestBody(JSON_MEDIA))
             .build()
