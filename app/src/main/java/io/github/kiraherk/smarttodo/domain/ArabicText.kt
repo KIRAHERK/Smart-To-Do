@@ -17,10 +17,20 @@ object ArabicText {
         .replace(spaces, " ")
         .trim()
 
-    /** Search keywords: normalised words of 3+ letters with the common "the/and the" prefixes removed. */
+    /**
+     * Search keywords: normalised words of 3+ letters with "the / and the" prefixes removed, plus the
+     * word without a one-letter prefix (ب و ل ف ك) so "بأحمد" also finds "أحمد". Matching is by
+     * substring, so stripping a prefix only ever finds more, never less.
+     */
     fun keywords(text: String): List<String> = normalize(text)
         .split(separators)
-        .map { word -> prefixes.firstOrNull { word.startsWith(it) && word.length - it.length >= 3 }?.let { word.removePrefix(it) } ?: word }
+        .flatMap { raw ->
+            val word = prefixes.firstOrNull { raw.startsWith(it) && raw.length - it.length >= 3 }?.let { raw.removePrefix(it) } ?: raw
+            val short = if (word.length >= 4 && word[0] in singleLetterPrefixes) word.substring(1) else null
+            listOfNotNull(word, short)
+        }
         .filter { it.length >= 3 }
         .distinct()
+
+    private val singleLetterPrefixes = setOf('ب', 'و', 'ل', 'ف', 'ك')
 }

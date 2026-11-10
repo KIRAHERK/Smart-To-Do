@@ -47,6 +47,14 @@ object RecurrenceEngine {
     /** Weeks are counted from Saturday, as is usual in the Middle East, so "every 2 weeks on Sun and Tue" stays together. */
     private val WEEK_START = DayOfWeek.SATURDAY
 
+    /**
+     * Where a new series should start when created (or changed) on [from]: the first matching day,
+     * ignoring the interval. "Every two weeks on Monday" said on a Tuesday starts next Monday,
+     * not in two weeks. The result becomes the series anchor.
+     */
+    fun firstStart(rule: RecurrenceRule, from: LocalDate): LocalDate =
+        firstOnOrAfter(rule.copy(interval = 1), from, from) ?: from
+
     /** The first date of the series that is on or after [from]. */
     fun firstOnOrAfter(rule: RecurrenceRule, anchor: LocalDate, from: LocalDate): LocalDate? =
         nextAfter(rule, anchor, from.minusDays(1))

@@ -106,6 +106,7 @@ class NotificationActionReceiver : BroadcastReceiver() {
 /** After a restart, an app update or a clock/time-zone change, alarms must be set again. */
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
+        if (intent.action !in HANDLED) return
         val app = context.applicationContext as SmartTodoApp
         val pending = goAsync()
         app.appScope.launch {
@@ -115,5 +116,15 @@ class BootReceiver : BroadcastReceiver() {
                 pending.finish()
             }
         }
+    }
+
+    companion object {
+        private val HANDLED = setOf(
+            Intent.ACTION_BOOT_COMPLETED,
+            Intent.ACTION_MY_PACKAGE_REPLACED,
+            Intent.ACTION_TIME_CHANGED,
+            Intent.ACTION_TIMEZONE_CHANGED,
+            "android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED",
+        )
     }
 }
