@@ -1,0 +1,87 @@
+name: Release
+
+# Publishes a signed APK as a GitHub Release. The app on his phone checks the latest
+# release once a day and offers the update; his data is kept because the signing key is the same.
+#
+# Start it either by pushing a tag (git tag v0.2.0 && git push origin v0.2.0) or from the
+# Actions tab: "Release" -> "Run workflow" -> type the version, e.g. 0.2.0.
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version number, e.g. 0.2.0 (must be higher than the last release)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Work out version
+        id: v
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION="${GITHUB_REF_NAME#v}"
+          fi
+          VERSION="${VERSION#v}"
+          if ! echo "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::Version must look like 1.2.3 (got '$VERSION')"; exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Restore the signing key from secrets
+        env:
+          KEYSTORE_B64: ${{ secrets.SIGNING_KEYSTORE_BASE64 }}
+          PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE_B64" ] || [ -z "$PASSWORD" ]; then
+            echo "::error::Add the SIGNING_KEYSTORE_BASE64 and SIGNING_PASSWORD secrets first (docs/SETUP.md, step 2)."
+            exit 1
+          fi
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - uses: android-actions/setup-android@v3
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Test and build the signed APK
+        env:
+          SIGNING_KEYSTORE_PATH: ${{ runner.temp }}/release.jks
+          SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+        run: |
+          ./gradlew testDebugUnitTest assembleRelease -PappVersionName=${{ steps.v.outputs.version }} --stacktrace
+          cp app/build/outputs/apk/release/app-release.apk "SmartToDo-${{ steps.v.outputs.tag }}.apk"
+
+      - name: Check the APK is signed
+        run: |
+          APKSIGNER=$(find "$ANDROID_HOME/build-tools" -name apksigner | sort -V | tail -1)
+          "$APKSIGNER" verify --print-certs SmartToDo-*.apk | grep "SHA-256"
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ steps.v.outputs.tag }}" SmartToDo-*.apk \
+            --target "$GITHUB_SHA" \
+            --title "Smart To-Do ${{ steps.v.outputs.tag }}" \
+            --generate-notes
+
+      - name: Remove the key from the runner
+        if: always()
+        run: rm -f "$RUNNER_TEMP/release.jks"

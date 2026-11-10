@@ -53,6 +53,9 @@
                 <action android:name="io.github.kiraherk.smarttodo.TALK" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts" />
         </activity>
 
         <receiver android:name=".reminders.AlarmReceiver" android:exported="false" />
