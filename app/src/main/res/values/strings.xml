@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Smart To-Do</string>
+    <string name="talk">Talk</string>
+    <string name="ask">Ask</string>
+    <string name="tell_me">Tell me</string>
+    <string name="plan_by_voice">Plan by voice</string>
+    <string name="shortcut_talk_long">Add or ask by voice</string>
+
+    <!-- Navigation -->
+    <string name="nav_today">Today</string>
+    <string name="nav_history">History</string>
+    <string name="nav_assistant">Assistant</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Common -->
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="close">Close</string>
+    <string name="back">Back</string>
+    <string name="save">Save</string>
+    <string name="delete">Delete</string>
+    <string name="open">Open</string>
+    <string name="allow">Allow</string>
+    <string name="install">Install</string>
+    <string name="choose">Choose</string>
+    <string name="change">Change</string>
+    <string name="clear">Clear</string>
+    <string name="send">Send</string>
+    <string name="all">All</string>
+    <string name="today">Today</string>
+    <string name="tomorrow">Tomorrow</string>
+    <string name="yesterday">Yesterday</string>
+    <string name="automatic">Automatic (best free model)</string>
+    <string name="read_aloud">Read aloud</string>
+    <string name="mark_done">Mark as done</string>
+
+    <!-- Categories -->
+    <string name="cat_work">Work</string>
+    <string name="cat_home">Home</string>
+    <string name="cat_personal">Personal</string>
+    <string name="cat_travel">Travel</string>
+
+    <!-- Statuses -->
+    <string name="status_not_started">Not started</string>
+    <string name="status_in_progress">In progress</string>
+    <string name="status_partly">Partly done</string>
+    <string name="status_postponed">Postponed</string>
+    <string name="status_done">Done</string>
+    <string name="status_not_done">Not done</string>
+    <string name="status_cancelled">Cancelled</string>
+    <string name="status_missed">Missed</string>
+
+    <!-- History entries -->
+    <string name="activity_created">Created</string>
+    <string name="activity_status">Status changed</string>
+    <string name="activity_note">Note added</string>
+    <string name="activity_edit">Changed</string>
+    <string name="activity_postponed">Postponed</string>
+    <string name="activity_archived">Deleted</string>
+    <string name="activity_restored">Restored</string>
+
+    <!-- Voice actions -->
+    <string name="act_create">New task</string>
+    <string name="act_update">Change task</string>
+    <string name="act_status">Update status</string>
+    <string name="act_note">Add note</string>
+    <string name="act_reminder">Reminder</string>
+    <string name="act_recurrence">Repeat</string>
+    <string name="act_postpone">Postpone</string>
+    <string name="act_delete">Delete task</string>
+    <string name="act_other">Other</string>
+
+    <!-- Voice overlay -->
+    <string name="listening">I\'m listening…</string>
+    <string name="listening_hint">Speak normally. Tap Done when you finish.</string>
+    <string name="done_speaking">Done</string>
+    <string name="thinking">One moment, I\'m organising it…</string>
+    <string name="confirm_title">Is this right?</string>
+    <string name="confirm_spoken">Shall I save it?</string>
+    <string name="yes_save">Yes, save</string>
+    <string name="no_cancel">No</string>
+    <string name="speak_again">Speak again</string>
+    <string name="saved_ok">Saved ✓</string>
+    <string name="saved_partly">Saved %1$d of %2$d. Please check the rest.</string>
+    <string name="not_saved">OK, nothing was saved.</string>
+    <string name="note_saved">Note saved ✓</string>
+    <string name="voice_unclear">Sorry, I didn\'t understand. Please say it again.</string>
+    <string name="voice_nothing_heard">I didn\'t hear anything. Please try again.</string>
+    <string name="voice_not_available">Voice recognition is not available on this phone. Please install or update the Google app.</string>
+    <string name="voice_error_network">Voice recognition needs the internet. Please check Wi-Fi.</string>
+    <string name="voice_error_permission">The app needs permission to use the microphone.</string>
+    <string name="voice_error_generic">Something went wrong with listening. Please try again.</string>
+    <string name="mic_denied">Without the microphone the app can\'t hear you. You can allow it in Settings.</string>
+    <string name="saved_inbox_no_key">I saved what you said in the Inbox. It will be organised once the AI key is set up in Settings.</string>
+    <string name="saved_inbox_later">What you said is saved in the Inbox, nothing is lost.</string>
+    <string name="err_no_key">The AI key is not set up yet (Settings).</string>
+    <string name="err_invalid_key">The AI key is not working. Please check it in Settings.</string>
+    <string name="err_quota">The free AI limit for now is used up. Try again a bit later.</string>
+    <string name="err_network">No internet connection. Please check Wi-Fi.</string>
+    <string name="err_ai_generic">The AI could not answer right now.</string>
+
+    <!-- Today -->
+    <string name="today_title">My tasks</string>
+    <string name="read_my_day">Read my day</string>
+    <string name="review_today">Today\'s review</string>
+    <string name="review_week">Weekly review</string>
+    <string name="banner_no_key">Set up the AI key to understand your voice</string>
+    <string name="empty_today">Nothing to do. Press Talk to add something.</string>
+    <string name="section_overdue">Late</string>
+    <string name="section_today">Today</string>
+    <string name="section_upcoming">Coming up</string>
+    <string name="section_no_date">No date</string>
+
+    <!-- Task details -->
+    <string name="task_details">Task</string>
+    <string name="archived_note">This task is deleted (it stays in your history).</string>
+    <string name="add_voice_note">Voice note</string>
+    <string name="change_by_voice">Change by voice</string>
+    <string name="status">Status</string>
+    <string name="when_section">When</string>
+    <string name="date">Date</string>
+    <string name="time">Time</string>
+    <string name="no_date">No date</string>
+    <string name="no_time">No time</string>
+    <string name="repeat">Repeat</string>
+    <string name="no_repeat">Does not repeat</string>
+    <string name="reminder">Reminder</string>
+    <string name="category">Category</string>
+    <string name="notes">Notes</string>
+    <string name="no_notes">No notes yet. Press Voice note to add one.</string>
+    <string name="past_rounds">Every time</string>
+    <string name="history">History</string>
+    <string name="how_much_done">How much is done?</string>
+    <string name="delete_task">Delete task</string>
+    <string name="delete_task_explain">It will disappear from your list, but stays in your history and can be restored.</string>
+    <string name="restore_task">Restore task</string>
+
+    <!-- History -->
+    <string name="history_title">History</string>
+    <string name="search_hint">Search tasks and notes</string>
+    <string name="search_by_voice">Search by voice</string>
+    <string name="no_results">Nothing found.</string>
+    <string name="empty_history">Nothing here yet.</string>
+    <string name="show_more">Show older</string>
+
+    <!-- Assistant -->
+    <string name="assistant_title">Assistant</string>
+    <string name="assistant_empty">Ask me anything about your tasks, for example: what did I do last week?</string>
+    <string name="suggest_today">What do I have today?</string>
+    <string name="suggest_week">What did I finish this week?</string>
+    <string name="suggest_pending">What is still pending?</string>
+    <string name="suggest_travel">What do I need for my next trip?</string>
+    <string name="type_instead">Or type here</string>
+    <string name="clear_chat">Clear conversation</string>
+    <string name="clear_chat_explain">This clears the conversation only. Your tasks and notes stay.</string>
+
+    <!-- Review -->
+    <string name="evening_hint">Tell me what you did today, or tap the buttons.</string>
+    <string name="weekly_hint">Here is your week. Press the button to plan next week by voice.</string>
+    <string name="nothing_today">Nothing was planned for today.</string>
+    <string name="next_7_days">Next 7 days</string>
+    <string name="week_summary">This week: %1$d done, %2$d partly done, %3$d not done, %4$d missed. %5$d still open.</string>
+
+    <!-- Inbox -->
+    <string name="inbox_title">Inbox</string>
+    <string name="inbox_explain">Things you said when there was no internet or AI. Nothing is lost: tap to organise them now.</string>
+    <string name="inbox_empty">The inbox is empty.</string>
+    <string name="understand_now">Organise now</string>
+    <string name="inbox_delete_explain">Delete this recording?</string>
+    <string name="inbox_settings_hint">Things said while offline</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="section_ai">Artificial intelligence</string>
+    <string name="gemini_key">Gemini API key</string>
+    <string name="key_saved">Saved ✓</string>
+    <string name="key_missing">Not set. Tap to enter</string>
+    <string name="key_help">Create a free key at aistudio.google.com (Get API key). Do not add a payment card so it always stays free. The key is stored encrypted on this phone only.</string>
+    <string name="remove_key">Remove key</string>
+    <string name="test_key">Test connection</string>
+    <string name="test_key_hint">Tap to check the key and find the best free models</string>
+    <string name="key_ok">Working ✓ %1$d models. Commands: %2$s · Questions: %3$s</string>
+    <string name="model_commands">Model for commands</string>
+    <string name="model_questions">Model for questions</string>
+    <string name="ai_privacy_note">On the free tier Google may use what is sent to improve its products. Don\'t say passwords or bank details.</string>
+    <string name="section_voice">Voice</string>
+    <string name="dialect">Speech language</string>
+    <string name="read_aloud_setting">Read answers aloud</string>
+    <string name="auto_confirm">Save new tasks without asking</string>
+    <string name="test_voice">Test the voice</string>
+    <string name="test_voice_hint">Tap to hear a sentence</string>
+    <string name="voice_test_sentence">Hello! This is how I will read your tasks.</string>
+    <string name="section_checkins">Daily and weekly check-ins</string>
+    <string name="morning_summary">Morning summary</string>
+    <string name="evening_review">Evening review</string>
+    <string name="weekly_review">Weekly review</string>
+    <string name="change_time">Change time</string>
+    <string name="change_day">Change day</string>
+    <string name="default_reminder_time">Reminder time when none is said</string>
+    <string name="section_display">Display</string>
+    <string name="app_language">App language</string>
+    <string name="text_size">Text size</string>
+    <string name="section_backup">Backup</string>
+    <string name="last_backup">Last backup: %1$s</string>
+    <string name="no_backup_yet">No backup yet.</string>
+    <string name="backup_now">Back up now</string>
+    <string name="backup_now_hint">A backup is also made every day automatically</string>
+    <string name="backup_folder">Backup folder</string>
+    <string name="backup_folder_none">Not chosen. Tap to choose a folder on the phone</string>
+    <string name="backup_folder_set">Chosen ✓ (a copy is saved there every day)</string>
+    <string name="backup_done">Backup saved ✓</string>
+    <string name="backup_failed">Backup failed</string>
+    <string name="share_backup">Send backup</string>
+    <string name="share_backup_hint">To email, WhatsApp or Google Drive</string>
+    <string name="restore_backup">Restore backup</string>
+    <string name="restore_backup_hint">Replace everything with a backup file</string>
+    <string name="restore_confirm">All current tasks will be replaced by the backup. A safety copy of the current data is made first. Continue?</string>
+    <string name="restore_done">Backup restored ✓</string>
+    <string name="restore_failed">Could not restore this file.</string>
+    <string name="section_updates">Updates</string>
+    <string name="check_updates">Check for updates</string>
+    <string name="current_version">Current version %1$s</string>
+    <string name="update_checking">Checking…</string>
+    <string name="update_up_to_date">You have the latest version ✓</string>
+    <string name="update_available_title">New version %1$s</string>
+    <string name="update_available_text">Tap to update. Your tasks and history are kept.</string>
+    <string name="update_now">Update now</string>
+    <string name="update_downloading">Downloading… %1$d%%</string>
+    <string name="update_installing">Installing… confirm on the screen if asked.</string>
+    <string name="update_needs_permission">Allow Smart To-Do to install updates (once), then tap Update now.</string>
+    <string name="allow_install">Allow</string>
+    <string name="update_failed">Update failed.</string>
+    <string name="update_check_failed">Could not check for updates.</string>
+    <string name="update_bad_signature">This file is not signed by the official app, so it was not installed.</string>
+    <string name="update_debug_build">This is a test build; updates only work in the official version.</string>
+    <string name="section_phone">Phone</string>
+    <string name="setup_settings_hint">Permissions, battery, voice</string>
+    <string name="open_source">Open source</string>
+
+    <!-- Setup -->
+    <string name="setup_title">Set up the phone</string>
+    <string name="setup_intro">A few steps so the voice works and reminders always ring. Green means ready.</string>
+    <string name="setup_mic">Microphone</string>
+    <string name="setup_mic_hint">So the app can hear you</string>
+    <string name="setup_notifications">Notifications</string>
+    <string name="setup_notifications_hint">For reminders and daily summaries</string>
+    <string name="setup_alarms">Exact reminders</string>
+    <string name="setup_alarms_hint">So reminders ring on time</string>
+    <string name="setup_battery">Keep reminders running</string>
+    <string name="setup_battery_hint">Samsung puts apps to sleep. Allow, and also set Settings → Apps → Smart To-Do → Battery → Unrestricted.</string>
+    <string name="setup_speech">Voice recognition</string>
+    <string name="setup_speech_hint">Uses the Google app. Keep it installed and updated.</string>
+    <string name="setup_voice">Reading voice</string>
+    <string name="setup_voice_hint">Install the voice so answers can be read aloud</string>
+    <string name="setup_key_hint">Needed to understand speech (free)</string>
+    <string name="setup_backup_hint">Optional: a folder where a backup copy is saved every day</string>
+    <string name="setup_finish">Finish</string>
+
+    <!-- Notifications -->
+    <string name="channel_reminders">Reminders</string>
+    <string name="channel_checkins">Daily and weekly summaries</string>
+    <string name="channel_updates">App updates</string>
+    <string name="channel_general">General</string>
+    <string name="reminder_default_text">Reminder</string>
+    <string name="action_done">Done</string>
+    <string name="action_partly">Partly</string>
+    <string name="action_snooze_hour">In 1 hour</string>
+    <string name="morning_title">Good morning ☀️</string>
+    <string name="morning_greeting">Good morning!</string>
+    <string name="morning_nothing">You have nothing planned today.</string>
+    <string name="morning_nothing_today">Nothing is planned for today.</string>
+    <string name="evening_title">How did today go?</string>
+    <string name="evening_text_empty">Tap to tell me what you did today.</string>
+    <string name="weekly_title">Your week</string>
+    <string name="weekly_text">This week: %1$d done, %2$d partly, %3$d not done. %4$d still open. %5$d planned for next week. Tap to plan.</string>
+
+    <plurals name="morning_today_count">
+        <item quantity="one">You have 1 thing today:</item>
+        <item quantity="other">You have %d things today:</item>
+    </plurals>
+    <plurals name="morning_overdue_count">
+        <item quantity="one">And 1 late task.</item>
+        <item quantity="other">And %d late tasks.</item>
+    </plurals>
+    <plurals name="evening_text">
+        <item quantity="one">%1$d of %2$d tasks today is still open. Tap to review.</item>
+        <item quantity="other">%1$d of %2$d tasks today are still open. Tap to review.</item>
+    </plurals>
+    <plurals name="inbox_waiting">
+        <item quantity="one">1 recording waiting to be organised</item>
+        <item quantity="other">%d recordings waiting to be organised</item>
+    </plurals>
+    <plurals name="done_today">
+        <item quantity="one">✓ 1 done today</item>
+        <item quantity="other">✓ %d done today</item>
+    </plurals>
+    <plurals name="done_count">
+        <item quantity="one">✓ 1 done</item>
+        <item quantity="other">✓ %d done</item>
+    </plurals>
+</resources>

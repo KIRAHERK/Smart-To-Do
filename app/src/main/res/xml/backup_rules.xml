@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android's automatic Google backup (Android 6-11). The encrypted API key ("secrets") is
+     deliberately NOT included: it can only be decrypted on this phone. -->
+<full-backup-content>
+    <include domain="database" path="." />
+    <include domain="file" path="backups/" />
+    <include domain="file" path="datastore/" />
+    <include domain="sharedpref" path="ui_prefs.xml" />
+</full-backup-content>
