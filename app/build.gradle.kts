@@ -120,4 +120,14 @@ dependencies {
     testImplementation(libs.okhttp.mockwebserver)
     testImplementation(platform(libs.compose.bom))
     testImplementation(libs.compose.ui.test.junit4)
+
+    // Emulator tests (app/src/androidTest), run by .github/workflows/emulator.yml
+    androidTestImplementation(platform(libs.compose.bom))
+    androidTestImplementation(libs.compose.ui.test.junit4)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.rules)
+    androidTestImplementation(libs.androidx.test.junit)
+    androidTestImplementation(libs.androidx.test.core)
+    androidTestImplementation(libs.uiautomator)
+    androidTestImplementation(libs.okhttp.mockwebserver)
 }
