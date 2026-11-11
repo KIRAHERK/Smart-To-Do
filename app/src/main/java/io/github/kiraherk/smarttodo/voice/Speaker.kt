@@ -33,7 +33,7 @@ class Speaker(
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var job: Job? = null
     private var ready = false
-    private var pending: String? = null
+    private var pending: Pair<String, String?>? = null
 
     /** Null until the engine has started; false if the phone has no voice for the app language. */
     var voiceAvailable: Boolean? = null
@@ -59,15 +59,24 @@ class Speaker(
             return
         }
         ready = true
-        applyLanguage()
-        pending?.let { phone(it) }
+        applyLanguage(null)
+        pending?.let { (text, voice) -> phone(text, voice) }
         pending = null
     }
 
-    private fun applyLanguage() {
+    /** [preferred] = a phone voice he picked by name; otherwise the best one is chosen. */
+    private fun applyLanguage(preferred: String?) {
         val locale = Locale.forLanguageTag(languageTag())
         val result = runCatching { tts.setLanguage(locale) }.getOrDefault(TextToSpeech.LANG_NOT_SUPPORTED)
         voiceAvailable = result >= TextToSpeech.LANG_AVAILABLE
+        if (preferred != null) {
+            val chosen = runCatching { offlineVoices(tts.voices, locale).firstOrNull { it.name == preferred } }.getOrNull()
+            if (chosen != null) {
+                runCatching { if (tts.voice?.name != chosen.name) tts.voice = chosen }
+                tts.setSpeechRate(0.92f)
+                return
+            }
+        }
         // The default voice is often not the best one installed. With internet, Google's online
         // voices sound much more natural; without it, the clearest voice stored on the phone.
         runCatching {
@@ -98,6 +107,11 @@ class Speaker(
         stop()
         job = scope.launch {
             val voice = voiceOverride ?: runCatching { voiceName() }.getOrDefault("")
+            // A voice stored on the phone: no internet, no waiting.
+            if (voice.startsWith(PHONE_PREFIX)) {
+                phone(clean, voice.removePrefix(PHONE_PREFIX))
+                return@launch
+            }
             val audio = if (voice.isNotBlank() && natural != null) {
                 try {
                     natural.invoke(clean, voice)
@@ -124,15 +138,19 @@ class Speaker(
         }
     }
 
-    private fun phone(text: String) {
-        lastSpokenWith = ""
+    private fun phone(text: String, preferred: String? = null) {
+        lastSpokenWith = preferred?.let { PHONE_PREFIX + it } ?: ""
         if (!ready) {
-            pending = text
+            pending = text to preferred
             return
         }
-        applyLanguage()
+        applyLanguage(preferred)
         tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, "smarttodo-${System.nanoTime()}")
     }
+
+    /** Names of the voices stored on the phone for the app language (instant, no internet). */
+    fun phoneVoices(): List<String> =
+        if (!ready) emptyList() else runCatching { offlineVoices(tts.voices, Locale.forLanguageTag(languageTag())).map { it.name } }.getOrDefault(emptyList())
 
     fun stop() {
         job?.cancel()
@@ -156,5 +174,18 @@ class Speaker(
 
         /** Gemini voices offered in Settings (all speak Arabic); "" = the phone's voice. */
         val NATURAL_VOICES = listOf("Kore", "Aoede", "Leda", "Charon", "Orus", "Puck")
+
+        /** A saved voice "phone:<name>" is a voice stored on the phone. */
+        const val PHONE_PREFIX = "phone:"
+
+        fun isPhoneVoice(saved: String) = saved.isBlank() || saved.startsWith(PHONE_PREFIX)
+
+        /** Installed voices for [locale] that work without internet, in a stable order. */
+        fun offlineVoices(voices: Collection<android.speech.tts.Voice>?, locale: Locale): List<android.speech.tts.Voice> = voices.orEmpty()
+            .filter {
+                it.locale.language == locale.language && !it.isNetworkConnectionRequired &&
+                    "notInstalled" !in it.features && "legacySetLanguageVoice" !in it.features && !it.name.endsWith("-language")
+            }
+            .sortedBy { it.name }
     }
 }

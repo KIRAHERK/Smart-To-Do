@@ -69,6 +69,8 @@ class VoiceViewModel(private val c: AppContainer) : ViewModel() {
     /** The current "understand / answer" work, so Cancel can stop it. */
     private var workJob: Job? = null
     private var popupRequest: Request? = null
+    /** Failed in-app listening attempts in a row. */
+    private var inAppFailures = 0
 
     // A channel, not a SharedFlow: the request must not be lost if the screen isn't collecting yet.
     private val _popupRequests = Channel<String>(Channel.CONFLATED)
@@ -193,14 +195,17 @@ class VoiceViewModel(private val c: AppContainer) : ViewModel() {
                     error in SpeechCapture.NETWORK_ERRORS ->
                         _state.value = UiState.Message(str(R.string.voice_error_network), error = true, canRetry = true)
                     else -> {
-                        // None of the phone's speech services work from inside the app: switch to
-                        // Google's listening popup now and from now on (can be changed in Settings).
-                        c.settings.setVoicePopup(true)
+                        // Listening inside the app failed: use Google's listening window this time.
+                        // Only if it keeps failing (not after one hiccup, like the microphone being
+                        // busy for a moment) switch to that window for good (Settings can undo it).
+                        inAppFailures++
+                        if (inAppFailures >= SWITCH_AFTER_FAILURES) c.settings.setVoicePopup(true)
                         openPopup(request, language)
                     }
                 }
                 return@launchWork
             }
+            inAppFailures = 0
             handle(text, request)
         }
     }
@@ -332,5 +337,6 @@ class VoiceViewModel(private val c: AppContainer) : ViewModel() {
 
     companion object {
         const val SLOW_AFTER_MS = 12_000L
+        const val SWITCH_AFTER_FAILURES = 3
     }
 }

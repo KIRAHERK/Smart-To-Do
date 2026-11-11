@@ -74,6 +74,8 @@ import io.github.kiraherk.smarttodo.ai.ModelRanking
 import io.github.kiraherk.smarttodo.data.settings.AppSettings
 import io.github.kiraherk.smarttodo.reminders.Notifications
 import io.github.kiraherk.smarttodo.ui.voiceLabel
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material.icons.filled.Download
 import io.github.kiraherk.smarttodo.ai.AiService
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -173,6 +175,8 @@ class SettingsViewModel(private val c: AppContainer) : ViewModel() {
     fun previewVoice(v: String) = c.speaker.preview(str(R.string.voice_test_sentence), v)
     fun saveVoice(v: String) = viewModelScope.launch { c.settings.setVoiceName(v) }
     fun stopVoice() = c.speaker.stop()
+    fun phoneVoices(): List<String> = c.speaker.phoneVoices()
+    fun downloadVoicesIntent() = c.speaker.installVoiceIntent()
 
     /** A short explanation when the phone voice had to read instead of the natural one. */
     fun voiceStatus(): String? {
@@ -308,7 +312,7 @@ fun SettingsScreen(openUpdate: Boolean, onUpdateOpened: () -> Unit, onOpenSetup:
 
             SectionHeader(stringResource(R.string.section_voice), gold)
             Group {
-                SettingRow(Icons.Filled.RecordVoiceOver, stringResource(R.string.voice_choice), voiceLabel(ctx, s.voiceName), color = gold) { dialog = "voice" }
+                SettingRow(Icons.Filled.RecordVoiceOver, stringResource(R.string.voice_choice), voiceLabel(ctx, s.voiceName, vm.phoneVoices()), color = gold) { dialog = "voice" }
                 SettingRow(Icons.AutoMirrored.Filled.VolumeUp, stringResource(R.string.test_voice), stringResource(R.string.test_voice_hint), color = gold) { vm.testVoice() }
                 SwitchRow(Icons.AutoMirrored.Filled.VolumeUp, stringResource(R.string.read_aloud_setting), s.readAloud, color = gold) { vm.setReadAloud(it) }
                 SettingRow(Icons.Filled.Language, stringResource(R.string.dialect), Locale.forLanguageTag(s.dialect).getDisplayName(locale), color = gold) { dialog = "dialect" }
@@ -399,8 +403,10 @@ fun SettingsScreen(openUpdate: Boolean, onUpdateOpened: () -> Unit, onOpenSetup:
         }
         "voice" -> VoicePickerDialog(
             current = s.voiceName,
+            phoneVoices = vm.phoneVoices(),
             onPreview = { vm.previewVoice(it) },
             onSave = { vm.saveVoice(it) },
+            onDownload = { runCatching { ctx.startActivity(vm.downloadVoicesIntent()) } },
             onDismiss = { vm.stopVoice(); dialog = null },
         )
         "dialect" -> ChoiceDialog(
@@ -455,37 +461,62 @@ private fun friendly(ctx: android.content.Context, time: String): String =
  * he presses Save (so he can listen to several first).
  */
 @Composable
-private fun VoicePickerDialog(current: String, onPreview: (String) -> Unit, onSave: (String) -> Unit, onDismiss: () -> Unit) {
+private fun VoicePickerDialog(
+    current: String,
+    phoneVoices: List<String>,
+    onPreview: (String) -> Unit,
+    onSave: (String) -> Unit,
+    onDownload: () -> Unit,
+    onDismiss: () -> Unit,
+) {
     val ctx = LocalContext.current
     var selected by remember { mutableStateOf(current) }
+
+    @Composable
+    fun VoiceRow(name: String) {
+        val isSelected = name == selected
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .clip(androidx.compose.foundation.shape.RoundedCornerShape(16.dp))
+                .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerLow)
+                .clickable { selected = name; onPreview(name) }
+                .padding(vertical = 4.dp, horizontal = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            androidx.compose.material3.RadioButton(selected = isSelected, onClick = { selected = name; onPreview(name) })
+            Text(voiceLabel(ctx, name, phoneVoices), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+            Icon(Icons.AutoMirrored.Filled.VolumeUp, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(end = 10.dp))
+        }
+    }
+
+    @Composable
+    fun Section(text: String) {
+        Text(text, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 10.dp, bottom = 2.dp))
+    }
+
     AlertDialog(
         onDismissRequest = onDismiss,
         shape = androidx.compose.foundation.shape.RoundedCornerShape(28.dp),
         containerColor = MaterialTheme.colorScheme.surface,
         title = { Text(stringResource(R.string.voice_choice), style = MaterialTheme.typography.titleLarge) },
         text = {
-            Column {
+            Column(Modifier.heightIn(max = 480.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(stringResource(R.string.voice_pick_hint), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Spacer(Modifier.height(10.dp))
-                androidx.compose.foundation.lazy.LazyColumn(Modifier.heightIn(max = 420.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    items((Speaker.NATURAL_VOICES + "").size) { i ->
-                        val name = (Speaker.NATURAL_VOICES + "")[i]
-                        val isSelected = name == selected
-                        Row(
-                            Modifier
-                                .fillMaxWidth()
-                                .clip(androidx.compose.foundation.shape.RoundedCornerShape(16.dp))
-                                .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerLow)
-                                .clickable { selected = name; onPreview(name) }
-                                .padding(vertical = 4.dp, horizontal = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            androidx.compose.material3.RadioButton(selected = isSelected, onClick = { selected = name; onPreview(name) })
-                            Text(voiceLabel(ctx, name), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-                            Icon(Icons.AutoMirrored.Filled.VolumeUp, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(end = 10.dp))
-                        }
-                    }
+                // Instant voices first: no internet, no waiting.
+                Section(stringResource(R.string.voice_section_instant))
+                if (phoneVoices.isEmpty()) {
+                    Text(stringResource(R.string.voice_none_installed), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                } else {
+                    phoneVoices.forEach { VoiceRow(Speaker.PHONE_PREFIX + it) }
                 }
+                OutlinedButton(onClick = onDownload, modifier = Modifier.fillMaxWidth(), shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)) {
+                    Icon(Icons.Filled.Download, contentDescription = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.voice_download))
+                }
+                Section(stringResource(R.string.voice_section_natural))
+                Speaker.NATURAL_VOICES.forEach { VoiceRow(it) }
             }
         },
         confirmButton = {

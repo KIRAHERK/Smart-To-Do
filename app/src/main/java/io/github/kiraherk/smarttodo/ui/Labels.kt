@@ -166,8 +166,19 @@ private fun arCount(n: Int, one: String, two: String, few: String, many: String)
 
 private fun enCount(n: Int, unit: String) = if (n <= 1) "Every $unit" else "Every $n ${unit}s"
 
-/** How a reading voice is described to him ("" = the phone's own voice). */
-fun voiceLabel(ctx: Context, name: String): String = ctx.getString(
+/**
+ * How a reading voice is described to him ("" = the phone's own voice, "phone:<name>" = one of
+ * the voices stored on the phone, numbered in the order of [phoneVoices]).
+ */
+fun voiceLabel(ctx: Context, name: String, phoneVoices: List<String> = emptyList()): String {
+    if (name.startsWith(io.github.kiraherk.smarttodo.voice.Speaker.PHONE_PREFIX)) {
+        val i = phoneVoices.indexOf(name.removePrefix(io.github.kiraherk.smarttodo.voice.Speaker.PHONE_PREFIX))
+        return if (i >= 0) ctx.getString(R.string.voice_phone_n, i + 1) else ctx.getString(R.string.voice_phone_unknown)
+    }
+    return naturalVoiceLabel(ctx, name)
+}
+
+private fun naturalVoiceLabel(ctx: Context, name: String): String = ctx.getString(
     when (name) {
         "Kore" -> R.string.voice_kore
         "Aoede" -> R.string.voice_aoede

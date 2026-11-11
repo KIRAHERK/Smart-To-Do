@@ -222,9 +222,6 @@ private fun HeroCard(
                     Text(stringResource(R.string.today_title), style = MaterialTheme.typography.labelLarge, color = Color.White.copy(alpha = 0.75f))
                     Text(greeting, style = MaterialTheme.typography.headlineMedium, color = Color.White)
                     Text(Dates.fullDate(ctx, today), style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.92f))
-                    Dates.hijriDate(ctx, today)?.let {
-                        Text(it, style = MaterialTheme.typography.bodyMedium, color = if (brand.dark) brand.gold else Color(0xFFF3D99B))
-                    }
                 }
                 Spacer(Modifier.width(12.dp))
                 ProgressRing(done, total)

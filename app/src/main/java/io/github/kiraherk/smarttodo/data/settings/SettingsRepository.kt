@@ -65,7 +65,9 @@ class SettingsRepository(private val context: Context) {
         val readAloud = booleanPreferencesKey("read_aloud")
         val voiceName = stringPreferencesKey("voice_name")
         val autoConfirm = booleanPreferencesKey("auto_confirm")
-        val voicePopup = booleanPreferencesKey("voice_popup")
+        // New name in 0.2.2: older versions switched to Google's window after a single hiccup,
+        // so everyone starts again with listening inside the app.
+        val voicePopup = booleanPreferencesKey("voice_popup_v2")
         val textScale = floatPreferencesKey("text_scale")
         val backupTreeUri = stringPreferencesKey("backup_tree_uri")
         val lastBackupAt = longPreferencesKey("last_backup_at")
