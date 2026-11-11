@@ -2,10 +2,27 @@ package io.github.kiraherk.smarttodo.ui
 
 import android.content.Context
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddTask
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Autorenew
+import androidx.compose.material.icons.filled.Block
+import androidx.compose.material.icons.filled.BusinessCenter
+import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Contrast
+import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.EditNote
+import androidx.compose.material.icons.filled.EventBusy
 import androidx.compose.material.icons.filled.Flight
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Work
+import androidx.compose.material.icons.filled.RadioButtonUnchecked
+import androidx.compose.material.icons.filled.Repeat
+import androidx.compose.material.icons.filled.Restore
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.TaskAlt
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import io.github.kiraherk.smarttodo.R
@@ -28,18 +45,42 @@ fun categoryName(ctx: Context, key: CategoryKey): String = ctx.getString(
 )
 
 fun categoryColor(key: CategoryKey?): Color = when (key) {
-    CategoryKey.WORK -> Color(0xFF1565C0)
-    CategoryKey.HOME -> Color(0xFF2E7D32)
-    CategoryKey.PERSONAL -> Color(0xFF7B1FA2)
-    CategoryKey.TRAVEL -> Color(0xFFE65100)
-    null -> Color(0xFF607D8B)
+    CategoryKey.WORK -> Color(0xFF2F5DA8)
+    CategoryKey.HOME -> Color(0xFF2E8B57)
+    CategoryKey.PERSONAL -> Color(0xFF8A4FA3)
+    CategoryKey.TRAVEL -> Color(0xFFD27A1F)
+    null -> Color(0xFF7A8580)
 }
 
 fun categoryIcon(key: CategoryKey?): ImageVector = when (key) {
-    CategoryKey.WORK -> Icons.Filled.Work
+    CategoryKey.WORK -> Icons.Filled.BusinessCenter
     CategoryKey.HOME -> Icons.Filled.Home
     CategoryKey.TRAVEL -> Icons.Filled.Flight
     else -> Icons.Filled.Person
+}
+
+fun statusIcon(status: TaskStatus?): ImageVector = when (status) {
+    TaskStatus.DONE -> Icons.Filled.CheckCircle
+    TaskStatus.PARTIALLY_DONE -> Icons.Filled.Contrast
+    TaskStatus.IN_PROGRESS -> Icons.Filled.Autorenew
+    TaskStatus.POSTPONED -> Icons.Filled.Schedule
+    TaskStatus.NOT_DONE -> Icons.Filled.Cancel
+    TaskStatus.CANCELLED -> Icons.Filled.Block
+    TaskStatus.MISSED -> Icons.Filled.EventBusy
+    TaskStatus.NOT_STARTED, null -> Icons.Filled.RadioButtonUnchecked
+}
+
+fun actionIcon(type: String): ImageVector = when (type) {
+    ActionType.CREATE -> Icons.Filled.AddTask
+    ActionType.UPDATE -> Icons.Filled.Edit
+    ActionType.SET_STATUS -> Icons.Filled.TaskAlt
+    ActionType.ADD_NOTE -> Icons.Filled.EditNote
+    ActionType.SET_REMINDER -> Icons.Filled.NotificationsActive
+    ActionType.CHANGE_RECURRENCE -> Icons.Filled.Repeat
+    ActionType.POSTPONE -> Icons.Filled.Schedule
+    ActionType.DELETE -> Icons.Filled.DeleteOutline
+    ActionType.RESTORE -> Icons.Filled.Restore
+    else -> Icons.Filled.AutoAwesome
 }
 
 fun statusName(ctx: Context, status: TaskStatus): String = ctx.getString(
@@ -56,14 +97,14 @@ fun statusName(ctx: Context, status: TaskStatus): String = ctx.getString(
 )
 
 fun statusColor(status: TaskStatus?): Color = when (status) {
-    TaskStatus.DONE -> Color(0xFF2E7D32)
-    TaskStatus.PARTIALLY_DONE -> Color(0xFFF9A825)
-    TaskStatus.IN_PROGRESS -> Color(0xFF1565C0)
-    TaskStatus.POSTPONED -> Color(0xFFEF6C00)
-    TaskStatus.NOT_DONE -> Color(0xFFC62828)
+    TaskStatus.DONE -> Color(0xFF2E8B57)
+    TaskStatus.PARTIALLY_DONE -> Color(0xFFC98A12)
+    TaskStatus.IN_PROGRESS -> Color(0xFF2F5DA8)
+    TaskStatus.POSTPONED -> Color(0xFFD27A1F)
+    TaskStatus.NOT_DONE -> Color(0xFFBF3A2B)
     TaskStatus.MISSED -> Color(0xFF8D6E63)
-    TaskStatus.CANCELLED -> Color(0xFF616161)
-    TaskStatus.NOT_STARTED, null -> Color(0xFF78909C)
+    TaskStatus.CANCELLED -> Color(0xFF6F6A62)
+    TaskStatus.NOT_STARTED, null -> Color(0xFF7A8580)
 }
 
 fun activityName(ctx: Context, type: ActivityType?): String = ctx.getString(

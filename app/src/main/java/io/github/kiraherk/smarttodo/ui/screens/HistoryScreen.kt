@@ -47,7 +47,21 @@ import io.github.kiraherk.smarttodo.domain.CategoryKey
 import io.github.kiraherk.smarttodo.domain.TaskStatus
 import io.github.kiraherk.smarttodo.ui.activityName
 import io.github.kiraherk.smarttodo.ui.categoryColor
-import io.github.kiraherk.smarttodo.ui.components.CategoryPill
+import io.github.kiraherk.smarttodo.ui.components.AppCard
+import io.github.kiraherk.smarttodo.ui.components.IconTile
+import io.github.kiraherk.smarttodo.ui.components.Pill
+import io.github.kiraherk.smarttodo.ui.components.ScreenHeader
+import io.github.kiraherk.smarttodo.ui.categoryIcon
+import io.github.kiraherk.smarttodo.ui.theme.LocalBrand
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.ui.draw.clip
 import io.github.kiraherk.smarttodo.ui.components.EmptyState
 import io.github.kiraherk.smarttodo.ui.components.SectionHeader
 import io.github.kiraherk.smarttodo.ui.statusColor
@@ -103,10 +117,13 @@ fun HistoryScreen(onOpenTask: (Long) -> Unit) {
     val emptyHistory = stringResource(R.string.empty_history)
     val showMore = stringResource(R.string.show_more)
 
-    Scaffold(topBar = { TopAppBar(title = { Text(stringResource(R.string.history_title)) }) }) { padding ->
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
+        topBar = { ScreenHeader(stringResource(R.string.history_title)) },
+    ) { padding ->
         LazyColumn(
             Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = padding.calculateTopPadding(), bottom = padding.calculateBottomPadding() + 24.dp),
+            contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = padding.calculateTopPadding(), bottom = padding.calculateBottomPadding() + 24.dp),
         ) {
             item {
                 OutlinedTextField(
@@ -114,9 +131,15 @@ fun HistoryScreen(onOpenTask: (Long) -> Unit) {
                     onValueChange = { vm.query.value = it },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
+                    shape = RoundedCornerShape(22.dp),
                     textStyle = MaterialTheme.typography.bodyLarge,
                     placeholder = { Text(stringResource(R.string.search_hint)) },
                     leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                    ),
                     trailingIcon = {
                         Row {
                             if (query.isNotEmpty()) IconButton(onClick = { vm.query.value = "" }) { Icon(Icons.Filled.Clear, contentDescription = stringResource(R.string.clear)) }
@@ -130,32 +153,43 @@ fun HistoryScreen(onOpenTask: (Long) -> Unit) {
             item { CategoryFilter(filter) { vm.filter.value = it } }
 
             if (query.isNotBlank()) {
-                if (results.isEmpty()) item { EmptyState(noResults) }
+                if (results.isEmpty()) item { EmptyState(noResults, Icons.Filled.Search) }
                 items(results, key = { "r-${it.task.id}" }) { hit ->
-                    Card(Modifier.fillMaxWidth().padding(vertical = 5.dp).clickable { onOpenTask(hit.task.id) }) {
-                        Column(Modifier.padding(12.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(hit.task.title, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-                                CategoryPill(CategoryKey.parse(hit.task.category))
+                    val cat = CategoryKey.parse(hit.task.category)
+                    AppCard(modifier = Modifier.padding(vertical = 5.dp), onClick = { onOpenTask(hit.task.id) }) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            IconTile(categoryIcon(cat), categoryColor(cat))
+                            Spacer(Modifier.width(12.dp))
+                            Column(Modifier.weight(1f)) {
+                                Text(hit.task.title, style = MaterialTheme.typography.titleMedium)
+                                hit.note?.let { Text("📝 " + it.text, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 3) }
                             }
-                            hit.note?.let { Text("📝 " + it.text, style = MaterialTheme.typography.bodyMedium, maxLines = 3) }
                         }
                     }
                 }
             } else {
-                if (history.isEmpty()) item { EmptyState(emptyHistory) }
+                if (history.isEmpty()) item { EmptyState(emptyHistory, Icons.Filled.History) }
                 byDay.forEach { (day, entries) ->
                     item(key = "d-$day") {
                         val done = entries.count { it.activity.toStatus == TaskStatus.DONE.name }
-                        val header = Dates.friendlyDate(ctx, day, vm.today) + if (done > 0) "  ·  " + pluralStringResource(R.plurals.done_count, done, done) else ""
-                        SectionHeader(header)
+                        Column {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                SectionHeader(Dates.friendlyDate(ctx, day, vm.today), MaterialTheme.colorScheme.primary)
+                                Spacer(Modifier.weight(1f))
+                                if (done > 0) {
+                                    Pill(pluralStringResource(R.plurals.done_count, done, done), LocalBrand.current.success, modifier = Modifier.padding(top = 12.dp))
+                                }
+                            }
+                            AppCard(padding = PaddingValues(start = 12.dp, end = 14.dp, top = 12.dp, bottom = 2.dp)) {
+                                entries.forEachIndexed { i, entry -> HistoryRow(entry, last = i == entries.lastIndex) { onOpenTask(entry.task.id) } }
+                            }
+                        }
                     }
-                    items(entries, key = { "a-${it.activity.id}" }) { entry -> HistoryRow(entry) { onOpenTask(entry.task.id) } }
                 }
                 if (history.isNotEmpty()) {
                     item {
-                        OutlinedButton(onClick = { vm.days.value = days + 30 }, modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp)) {
-                            Text(showMore)
+                        OutlinedButton(onClick = { vm.days.value = days + 30 }, shape = RoundedCornerShape(18.dp), modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(top = 14.dp)) {
+                            Text(showMore, style = MaterialTheme.typography.titleSmall)
                         }
                     }
                 }
@@ -165,29 +199,30 @@ fun HistoryScreen(onOpenTask: (Long) -> Unit) {
 }
 
 @Composable
-private fun HistoryRow(entry: ActivityWithTask, onClick: () -> Unit) {
+private fun HistoryRow(entry: ActivityWithTask, last: Boolean, onClick: () -> Unit) {
     val ctx = LocalContext.current
     val a = entry.activity
     val type = ActivityType.entries.firstOrNull { it.name == a.type }
     val to = TaskStatus.parse(a.toStatus)
+    val cat = CategoryKey.parse(entry.task.category)
     val time = Instant.ofEpochMilli(a.at).atZone(ZoneId.systemDefault()).toLocalTime()
-    Column(Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 8.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                entry.task.title,
-                style = MaterialTheme.typography.titleMedium,
-                color = categoryColor(CategoryKey.parse(entry.task.category)),
-                modifier = Modifier.weight(1f),
-            )
-            Text(Dates.friendlyTime(ctx, time), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).clickable(onClick = onClick)) {
+        TimelineRow(to?.let { statusColor(it) } ?: categoryColor(cat), last) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(entry.task.title, style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
+                Text(Dates.friendlyTime(ctx, time), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 2.dp)) {
+                Icon(categoryIcon(cat), contentDescription = null, tint = categoryColor(cat), modifier = Modifier.size(16.dp))
+                Spacer(Modifier.width(6.dp))
+                Text(
+                    if (to != null) statusName(ctx, to) else activityName(ctx, type),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = to?.let { statusColor(it) } ?: MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            a.text?.takeIf { it.isNotBlank() }?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 4) }
         }
-        Text(
-            if (to != null) statusName(ctx, to) else activityName(ctx, type),
-            style = MaterialTheme.typography.bodyLarge,
-            fontWeight = FontWeight.SemiBold,
-            color = to?.let { statusColor(it) } ?: MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        a.text?.takeIf { it.isNotBlank() }?.let { Text(it, style = MaterialTheme.typography.bodyMedium, maxLines = 4) }
     }
-    HorizontalDivider()
 }

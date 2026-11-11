@@ -1,32 +1,41 @@
 package io.github.kiraherk.smarttodo.ui.voice
 
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material.icons.filled.FormatQuote
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -37,14 +46,26 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import io.github.kiraherk.smarttodo.R
+import io.github.kiraherk.smarttodo.ai.ActionType
+import io.github.kiraherk.smarttodo.ui.actionIcon
+import io.github.kiraherk.smarttodo.ui.components.ChipFlow
+import io.github.kiraherk.smarttodo.ui.components.IconTile
+import io.github.kiraherk.smarttodo.ui.components.tint
 import io.github.kiraherk.smarttodo.ui.theme.BigText
+import io.github.kiraherk.smarttodo.ui.theme.LocalBrand
 
 /** Full-width dialog that shows what is happening with his voice command, in big clear text. */
 @Composable
@@ -79,12 +100,13 @@ fun VoiceOverlayContent(
     onDismiss: () -> Unit,
 ) {
     Surface(
-        shape = RoundedCornerShape(24.dp),
+        shape = RoundedCornerShape(32.dp),
         color = MaterialTheme.colorScheme.surface,
-        modifier = Modifier.fillMaxWidth().padding(14.dp),
+        shadowElevation = 8.dp,
+        modifier = Modifier.fillMaxWidth().padding(12.dp),
     ) {
         Column(
-            Modifier.padding(20.dp).heightIn(max = 640.dp).verticalScroll(rememberScrollState()),
+            Modifier.padding(horizontal = 20.dp, vertical = 22.dp).heightIn(max = 660.dp).verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
@@ -102,13 +124,26 @@ fun VoiceOverlayContent(
 
 @Composable
 private fun Listening(state: VoiceViewModel.UiState.Listening, onFinish: () -> Unit, onCancel: () -> Unit) {
-    val scale by animateFloatAsState(1f + state.level * 0.35f, label = "mic")
-    Text(stringResource(R.string.listening), style = MaterialTheme.typography.titleLarge)
-    Box(
-        Modifier.size(110.dp).scale(scale).background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
-        contentAlignment = Alignment.Center,
-    ) {
-        Icon(Icons.Filled.Mic, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(60.dp))
+    val brand = LocalBrand.current
+    val level by animateFloatAsState(state.level, label = "level")
+    val waves = rememberInfiniteTransition(label = "waves")
+    val t by waves.animateFloat(0f, 1f, infiniteRepeatable(tween(1800, easing = LinearEasing)), label = "t")
+    Text(stringResource(R.string.listening), style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
+    Box(Modifier.size(190.dp), contentAlignment = Alignment.Center) {
+        Canvas(Modifier.fillMaxSize()) {
+            // Three rings drifting outwards, a little bigger when he speaks louder.
+            for (i in 0 until 3) {
+                val p = (t + i / 3f) % 1f
+                val r = size.minDimension / 2 * (0.52f + 0.48f * p) * (1f + level * 0.08f)
+                drawCircle(brand.heroGlow.copy(alpha = (1f - p) * 0.35f), radius = r)
+            }
+        }
+        Box(
+            Modifier.size(108.dp).scale(1f + level * 0.12f).clip(CircleShape).background(brand.heroBrush),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(Icons.Filled.Mic, contentDescription = null, tint = Color.White, modifier = Modifier.size(54.dp))
+        }
     }
     Text(
         state.text.ifBlank { stringResource(R.string.listening_hint) },
@@ -122,13 +157,27 @@ private fun Listening(state: VoiceViewModel.UiState.Listening, onFinish: () -> U
 
 @Composable
 private fun Thinking(state: VoiceViewModel.UiState.Thinking, onCancel: () -> Unit) {
-    CircularProgressIndicator(Modifier.size(64.dp), strokeWidth = 6.dp)
+    val brand = LocalBrand.current
+    val spin = rememberInfiniteTransition(label = "spin")
+    val angle by spin.animateFloat(0f, 360f, infiniteRepeatable(tween(1100, easing = LinearEasing)), label = "angle")
+    val primary = MaterialTheme.colorScheme.primary
+    Box(Modifier.size(104.dp), contentAlignment = Alignment.Center) {
+        Canvas(Modifier.fillMaxSize()) {
+            val stroke = 7.dp.toPx()
+            drawCircle(primary.copy(alpha = 0.10f), style = Stroke(stroke))
+            drawArc(
+                Brush.sweepGradient(listOf(brand.heroGlow.copy(alpha = 0f), brand.heroEnd, brand.heroStart)),
+                startAngle = angle, sweepAngle = 260f, useCenter = false, style = Stroke(stroke, cap = StrokeCap.Round),
+            )
+        }
+        Icon(Icons.Filled.AutoAwesome, contentDescription = null, tint = primary, modifier = Modifier.size(40.dp))
+    }
     Text(stringResource(R.string.thinking), style = MaterialTheme.typography.titleLarge)
-    Text("«${state.transcript}»", style = MaterialTheme.typography.bodyLarge, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    Quote(state.transcript)
     if (state.slow) {
         Text(stringResource(R.string.thinking_slow), style = MaterialTheme.typography.bodyLarge, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.tertiary)
     }
-    OutlinedButton(onClick = onCancel, modifier = Modifier.heightIn(min = 56.dp)) {
+    OutlinedButton(onClick = onCancel, modifier = Modifier.heightIn(min = 56.dp), shape = RoundedCornerShape(18.dp)) {
         Icon(Icons.Filled.Close, contentDescription = null)
         Spacer(Modifier.width(8.dp))
         Text(stringResource(R.string.cancel), style = MaterialTheme.typography.titleMedium)
@@ -137,29 +186,40 @@ private fun Thinking(state: VoiceViewModel.UiState.Thinking, onCancel: () -> Uni
 
 @Composable
 private fun Confirm(state: VoiceViewModel.UiState.Confirm, onConfirm: () -> Unit, onReject: () -> Unit, onSpeakAgain: () -> Unit) {
-    Text(stringResource(R.string.confirm_title), style = MaterialTheme.typography.titleLarge)
+    Text(stringResource(R.string.confirm_title), style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
     state.previews.forEach { p ->
-        Card(
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Column(Modifier.padding(14.dp)) {
-                Text(p.summary, style = BigText, color = MaterialTheme.colorScheme.onPrimaryContainer)
-                if (p.detail.isNotBlank()) {
-                    Text(p.detail, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onPrimaryContainer, modifier = Modifier.padding(top = 6.dp))
+        val color = if (p.type == ActionType.DELETE) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+        Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)).background(tint(color, 0.07f, 0.16f)).padding(16.dp)) {
+            Row(verticalAlignment = Alignment.Top) {
+                IconTile(actionIcon(p.type), color, size = 46.dp, iconSize = 26.dp, filled = true)
+                Spacer(Modifier.width(12.dp))
+                Text(p.summary, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
+            }
+            val parts = p.detail.split(" · ").filter { it.isNotBlank() }
+            if (parts.isNotEmpty()) {
+                Spacer(Modifier.size(10.dp))
+                ChipFlow {
+                    parts.forEach { part ->
+                        Text(
+                            part,
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.surface).padding(horizontal = 10.dp, vertical = 5.dp),
+                        )
+                    }
                 }
             }
         }
     }
-    Text("«${state.transcript}»", style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    Quote(state.transcript, small = true)
     BigButton(stringResource(R.string.yes_save), Icons.Filled.Check, onConfirm)
     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        OutlinedButton(onClick = onReject, modifier = Modifier.heightIn(min = 56.dp)) {
+        OutlinedButton(onClick = onReject, modifier = Modifier.heightIn(min = 56.dp), shape = RoundedCornerShape(18.dp)) {
             Icon(Icons.Filled.Close, contentDescription = null)
             Spacer(Modifier.width(8.dp))
             Text(stringResource(R.string.no_cancel), style = MaterialTheme.typography.titleMedium)
         }
-        OutlinedButton(onClick = onSpeakAgain, modifier = Modifier.heightIn(min = 56.dp)) {
+        OutlinedButton(onClick = onSpeakAgain, modifier = Modifier.heightIn(min = 56.dp), shape = RoundedCornerShape(18.dp)) {
             Icon(Icons.AutoMirrored.Filled.VolumeUp, contentDescription = stringResource(R.string.read_aloud))
         }
     }
@@ -167,16 +227,20 @@ private fun Confirm(state: VoiceViewModel.UiState.Confirm, onConfirm: () -> Unit
 
 @Composable
 private fun Answer(state: VoiceViewModel.UiState.Answer, onAskAgain: () -> Unit, onSpeakAgain: () -> Unit, onClose: () -> Unit) {
-    Text("«${state.question}»", style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant)
-    Text(state.answer, style = BigText)
+    val brand = LocalBrand.current
+    Box(Modifier.size(64.dp).clip(CircleShape).background(brand.heroBrush), contentAlignment = Alignment.Center) {
+        Icon(Icons.Filled.AutoAwesome, contentDescription = null, tint = Color.White, modifier = Modifier.size(32.dp))
+    }
+    Quote(state.question, small = true)
+    Text(state.answer, style = BigText, color = MaterialTheme.colorScheme.onSurface)
     BigButton(stringResource(R.string.ok), Icons.Filled.Check, onClose)
     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        OutlinedButton(onClick = onSpeakAgain, modifier = Modifier.heightIn(min = 56.dp)) {
+        OutlinedButton(onClick = onSpeakAgain, modifier = Modifier.heightIn(min = 56.dp), shape = RoundedCornerShape(18.dp)) {
             Icon(Icons.AutoMirrored.Filled.VolumeUp, contentDescription = null)
             Spacer(Modifier.width(8.dp))
             Text(stringResource(R.string.read_aloud))
         }
-        OutlinedButton(onClick = onAskAgain, modifier = Modifier.heightIn(min = 56.dp)) {
+        OutlinedButton(onClick = onAskAgain, modifier = Modifier.heightIn(min = 56.dp), shape = RoundedCornerShape(18.dp)) {
             Icon(Icons.Filled.Mic, contentDescription = null)
             Spacer(Modifier.width(8.dp))
             Text(stringResource(R.string.speak_again))
@@ -186,34 +250,56 @@ private fun Answer(state: VoiceViewModel.UiState.Answer, onAskAgain: () -> Unit,
 
 @Composable
 private fun Message(state: VoiceViewModel.UiState.Message, onRetry: () -> Unit, onSpeakAgain: () -> Unit, onClose: () -> Unit) {
-    Text(
-        state.text,
-        style = BigText,
-        textAlign = TextAlign.Center,
-        color = if (state.error) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
-    )
+    val brand = LocalBrand.current
+    val (icon: ImageVector, color: Color) = when {
+        state.error -> Icons.Filled.ErrorOutline to MaterialTheme.colorScheme.error
+        state.canRetry -> Icons.Filled.Info to MaterialTheme.colorScheme.secondary
+        else -> Icons.Filled.CheckCircle to brand.success
+    }
+    Box(Modifier.size(76.dp).clip(CircleShape).background(tint(color, 0.14f, 0.26f)), contentAlignment = Alignment.Center) {
+        Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(44.dp))
+    }
+    Text(state.text, style = BigText, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurface)
     BigButton(stringResource(R.string.ok), Icons.Filled.Check, onClose)
     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         if (state.canRetry) {
-            OutlinedButton(onClick = onRetry, modifier = Modifier.heightIn(min = 56.dp)) {
+            OutlinedButton(onClick = onRetry, modifier = Modifier.heightIn(min = 56.dp), shape = RoundedCornerShape(18.dp)) {
                 Icon(Icons.Filled.Refresh, contentDescription = null)
                 Spacer(Modifier.width(8.dp))
                 Text(stringResource(R.string.speak_again))
             }
         }
-        OutlinedButton(onClick = onSpeakAgain, modifier = Modifier.heightIn(min = 56.dp)) {
+        OutlinedButton(onClick = onSpeakAgain, modifier = Modifier.heightIn(min = 56.dp), shape = RoundedCornerShape(18.dp)) {
             Icon(Icons.AutoMirrored.Filled.VolumeUp, contentDescription = stringResource(R.string.read_aloud))
         }
     }
 }
 
+/** What he said, shown as a soft quote. */
 @Composable
-private fun BigButton(text: String, icon: androidx.compose.ui.graphics.vector.ImageVector, onClick: () -> Unit) {
+private fun Quote(text: String, small: Boolean = false) {
+    Row(
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(MaterialTheme.colorScheme.surfaceContainer).padding(horizontal = 14.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.Top,
+    ) {
+        Icon(Icons.Filled.FormatQuote, contentDescription = null, tint = MaterialTheme.colorScheme.outline, modifier = Modifier.size(22.dp))
+        Spacer(Modifier.width(8.dp))
+        Text(
+            text,
+            style = if (small) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(1f),
+        )
+    }
+}
+
+@Composable
+private fun BigButton(text: String, icon: ImageVector, onClick: () -> Unit) {
     Button(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth().heightIn(min = 64.dp),
         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(20.dp),
     ) {
         Icon(icon, contentDescription = null, modifier = Modifier.size(28.dp))
         Spacer(Modifier.width(10.dp))

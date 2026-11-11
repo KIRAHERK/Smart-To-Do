@@ -30,6 +30,15 @@ object Dates {
         else -> date.format(DateTimeFormatter.ofPattern(if (date.year == today.year) "EEEE d MMMM" else "EEEE d MMMM yyyy", LocaleHelper.locale(context)))
     }
 
+    /** Hijri (Umm al-Qura) date in Arabic, e.g. "21 جمادى الأولى 1448 هـ"; null when the app is in English. */
+    fun hijriDate(context: Context, date: LocalDate): String? {
+        if (!LocaleHelper.isArabic(context)) return null
+        return runCatching {
+            java.time.chrono.HijrahDate.from(date)
+                .format(DateTimeFormatter.ofPattern("d MMMM y", LocaleHelper.locale(context)).withChronology(java.time.chrono.HijrahChronology.INSTANCE)) + " هـ"
+        }.getOrNull()
+    }
+
     fun fullDate(context: Context, date: LocalDate): String =
         date.format(DateTimeFormatter.ofPattern("EEEE d MMMM yyyy", LocaleHelper.locale(context)))
 

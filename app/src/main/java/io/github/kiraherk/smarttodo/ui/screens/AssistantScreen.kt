@@ -48,6 +48,22 @@ import io.github.kiraherk.smarttodo.AppContainer
 import io.github.kiraherk.smarttodo.R
 import io.github.kiraherk.smarttodo.domain.ChatRole
 import io.github.kiraherk.smarttodo.ui.components.BigMicButton
+import io.github.kiraherk.smarttodo.ui.components.AppCard
+import io.github.kiraherk.smarttodo.ui.components.ScreenHeader
+import io.github.kiraherk.smarttodo.ui.theme.LocalBrand
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import io.github.kiraherk.smarttodo.ui.components.ConfirmDialog
 import io.github.kiraherk.smarttodo.ui.components.EmptyState
 import io.github.kiraherk.smarttodo.ui.theme.BigText
@@ -82,14 +98,17 @@ fun AssistantScreen() {
 
     LaunchedEffect(messages.size) { if (messages.isNotEmpty()) listState.animateScrollToItem(messages.size - 1) }
 
+    val brand = LocalBrand.current
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.assistant_title)) },
-                actions = {
-                    if (messages.isNotEmpty()) IconButton(onClick = { confirmClear = true }) { Icon(Icons.Filled.DeleteSweep, contentDescription = stringResource(R.string.clear_chat)) }
-                },
-            )
+            ScreenHeader(stringResource(R.string.assistant_title)) {
+                if (messages.isNotEmpty()) {
+                    IconButton(onClick = { confirmClear = true }, modifier = Modifier.size(52.dp)) {
+                        Icon(Icons.Filled.DeleteSweep, contentDescription = stringResource(R.string.clear_chat), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            }
         },
         floatingActionButton = { BigMicButton(onClick = { voice.start(VoiceViewModel.Request()) }, label = stringResource(R.string.ask)) },
         floatingActionButtonPosition = FabPosition.Center,
@@ -98,46 +117,103 @@ fun AssistantScreen() {
             LazyColumn(
                 state = listState,
                 modifier = Modifier.weight(1f).fillMaxWidth(),
-                contentPadding = PaddingValues(12.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                if (messages.isEmpty()) item { EmptyState(emptyText) }
+                if (messages.isEmpty()) {
+                    item { EmptyState(emptyText, Icons.Filled.AutoAwesome) }
+                    items(suggestions) { s ->
+                        AppCard(onClick = { voice.ask(s) }, padding = PaddingValues(horizontal = 16.dp, vertical = 14.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Filled.AutoAwesome, contentDescription = null, tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.size(22.dp))
+                                Spacer(Modifier.width(12.dp))
+                                Text(s, style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
+                            }
+                        }
+                    }
+                }
                 items(messages, key = { it.id }) { m ->
                     val mine = m.role == ChatRole.USER.name
-                    Box(Modifier.fillMaxWidth(), contentAlignment = if (mine) Alignment.CenterEnd else Alignment.CenterStart) {
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = if (mine) Arrangement.End else Arrangement.Start,
+                        verticalAlignment = Alignment.Top,
+                    ) {
+                        if (!mine) {
+                            Box(Modifier.size(38.dp).clip(CircleShape).background(brand.heroBrush), contentAlignment = Alignment.Center) {
+                                Icon(Icons.Filled.AutoAwesome, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
+                            }
+                            Spacer(Modifier.width(8.dp))
+                        }
                         Surface(
-                            shape = RoundedCornerShape(18.dp),
-                            color = if (mine) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
-                            modifier = Modifier.widthIn(max = 340.dp),
+                            shape = if (mine) RoundedCornerShape(22.dp, 6.dp, 22.dp, 22.dp) else RoundedCornerShape(6.dp, 22.dp, 22.dp, 22.dp),
+                            color = if (mine) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
+                            border = if (mine) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                            shadowElevation = if (mine) 0.dp else 1.dp,
+                            modifier = Modifier.widthIn(max = 320.dp),
                         ) {
-                            Row(Modifier.padding(12.dp), verticalAlignment = Alignment.Top) {
-                                Text(m.text, style = if (mine) MaterialTheme.typography.bodyLarge else BigText, modifier = Modifier.weight(1f, fill = false))
-                                if (!mine) IconButton(onClick = { vm.speak(m.text) }) { Icon(Icons.AutoMirrored.Filled.VolumeUp, contentDescription = null) }
+                            Column(Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
+                                Text(
+                                    m.text,
+                                    style = if (mine) MaterialTheme.typography.bodyLarge else BigText,
+                                    color = if (mine) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+                                )
+                                if (!mine) {
+                                    Row(
+                                        Modifier.clip(RoundedCornerShape(12.dp)).clickable { vm.speak(m.text) }.padding(vertical = 4.dp, horizontal = 2.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                    ) {
+                                        Icon(Icons.AutoMirrored.Filled.VolumeUp, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                                        Spacer(Modifier.width(6.dp))
+                                        Text(stringResource(R.string.read_aloud), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                                    }
+                                }
                             }
                         }
                     }
                 }
             }
-            Row(
-                Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                suggestions.forEach { s -> AssistChip(onClick = { voice.ask(s) }, label = { Text(s, style = MaterialTheme.typography.bodyMedium) }) }
+            if (messages.isNotEmpty()) {
+                Row(
+                    Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 14.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    suggestions.forEach { s ->
+                        Text(
+                            s,
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                            modifier = Modifier.clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.secondaryContainer)
+                                .clickable { voice.ask(s) }.padding(horizontal = 14.dp, vertical = 9.dp),
+                        )
+                    }
+                }
             }
-            Row(Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, top = 6.dp, bottom = 150.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().padding(start = 14.dp, end = 14.dp, top = 6.dp, bottom = 116.dp), verticalAlignment = Alignment.CenterVertically) {
                 OutlinedTextField(
                     value = typed,
                     onValueChange = { typed = it },
                     modifier = Modifier.weight(1f),
                     placeholder = { Text(stringResource(R.string.type_instead)) },
                     singleLine = true,
+                    shape = RoundedCornerShape(24.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                    ),
                 )
-                IconButton(onClick = {
-                    if (typed.isNotBlank()) {
-                        voice.processText(typed, VoiceViewModel.Request())
-                        typed = ""
-                    }
-                }) { Icon(Icons.AutoMirrored.Filled.Send, contentDescription = stringResource(R.string.send)) }
+                Spacer(Modifier.width(8.dp))
+                FilledIconButton(
+                    onClick = {
+                        if (typed.isNotBlank()) {
+                            voice.processText(typed, VoiceViewModel.Request())
+                            typed = ""
+                        }
+                    },
+                    modifier = Modifier.size(56.dp),
+                    colors = IconButtonDefaults.filledIconButtonColors(containerColor = MaterialTheme.colorScheme.primary),
+                ) { Icon(Icons.AutoMirrored.Filled.Send, contentDescription = stringResource(R.string.send)) }
             }
         }
     }

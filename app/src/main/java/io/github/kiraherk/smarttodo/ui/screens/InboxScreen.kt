@@ -42,6 +42,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.kiraherk.smarttodo.AppContainer
 import io.github.kiraherk.smarttodo.R
 import io.github.kiraherk.smarttodo.ui.components.ConfirmDialog
+import io.github.kiraherk.smarttodo.ui.components.AppCard
+import io.github.kiraherk.smarttodo.ui.components.ScreenHeader
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.filled.Inbox
 import io.github.kiraherk.smarttodo.ui.components.EmptyState
 import io.github.kiraherk.smarttodo.ui.theme.BigText
 import io.github.kiraherk.smarttodo.ui.voice.VoiceViewModel
@@ -69,32 +73,29 @@ fun InboxScreen(onBack: () -> Unit) {
     val empty = stringResource(R.string.inbox_empty)
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.inbox_title)) },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back)) } },
-            )
-        },
+        containerColor = MaterialTheme.colorScheme.background,
+        topBar = { ScreenHeader(stringResource(R.string.inbox_title), onBack = onBack) },
     ) { padding ->
-        LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = padding.calculateTopPadding(), bottom = padding.calculateBottomPadding() + 24.dp)) {
-            item { Text(explain, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(vertical = 8.dp)) }
-            if (items.isEmpty()) item { EmptyState(empty) }
+        LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = padding.calculateTopPadding(), bottom = padding.calculateBottomPadding() + 24.dp)) {
+            item { Text(explain, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(vertical = 8.dp, horizontal = 4.dp)) }
+            if (items.isEmpty()) item { EmptyState(empty, Icons.Filled.Inbox) }
             items(items, key = { it.id }) { item ->
-                Card(Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
-                    Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                AppCard(modifier = Modifier.padding(vertical = 6.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(Dates.dateTimeOf(ctx, item.createdAt), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Text(item.text, style = BigText)
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                             Button(
                                 onClick = { voice.processText(item.text, VoiceViewModel.Request(inboxId = item.id)) },
                                 modifier = Modifier.weight(1f).heightIn(min = 56.dp),
+                                shape = RoundedCornerShape(18.dp),
                             ) {
                                 Icon(Icons.Filled.AutoAwesome, contentDescription = null)
                                 Spacer(Modifier.width(8.dp))
                                 Text(stringResource(R.string.understand_now))
                             }
-                            OutlinedButton(onClick = { toDelete = item.id }, modifier = Modifier.heightIn(min = 56.dp)) {
-                                Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.delete))
+                            OutlinedButton(onClick = { toDelete = item.id }, modifier = Modifier.heightIn(min = 56.dp), shape = RoundedCornerShape(18.dp)) {
+                                Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.delete), tint = MaterialTheme.colorScheme.error)
                             }
                         }
                     }
