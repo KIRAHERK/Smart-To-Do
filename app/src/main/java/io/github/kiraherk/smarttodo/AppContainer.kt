@@ -20,6 +20,7 @@ import io.github.kiraherk.smarttodo.reminders.ReminderScheduler
 import io.github.kiraherk.smarttodo.update.UpdateChecker
 import io.github.kiraherk.smarttodo.update.UpdateInstaller
 import io.github.kiraherk.smarttodo.util.LocaleHelper
+import io.github.kiraherk.smarttodo.voice.Pcm
 import io.github.kiraherk.smarttodo.voice.Speaker
 import io.github.kiraherk.smarttodo.voice.SpeechCapture
 import kotlinx.coroutines.sync.Mutex
@@ -71,7 +72,29 @@ class AppContainer(val app: Application) {
 
     /** Created on first use, on the main thread. */
     val speech: SpeechCapture by lazy { SpeechCapture(app) }
-    val speaker: Speaker by lazy { Speaker(app) { language() } }
+    val speaker: Speaker by lazy {
+        Speaker(
+            context = app,
+            languageTag = { language() },
+            voiceName = { settings.current().voiceName },
+            natural = { text, voice -> naturalSpeech(text, voice) },
+        )
+    }
+
+    /** Recently spoken sentences, so "read again" doesn't use up the free daily limit. */
+    private val speechCache = object : LinkedHashMap<String, Pcm>(16, 0.75f, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Pcm>?) = size > 12
+    }
+
+    private suspend fun naturalSpeech(text: String, voice: String): Pcm? {
+        if (!secrets.hasApiKey()) return null
+        val key = "$voice|$text"
+        synchronized(speechCache) { speechCache[key] }?.let { return it }
+        val audio = ai.speech(text, voice)
+        val pcm = Pcm.decode(audio.bytes, audio.mimeType)
+        synchronized(speechCache) { speechCache[key] = pcm }
+        return pcm
+    }
 
     val maintenance: Maintenance = Maintenance()
 

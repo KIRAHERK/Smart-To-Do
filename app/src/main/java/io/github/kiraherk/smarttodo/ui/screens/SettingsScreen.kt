@@ -73,6 +73,7 @@ import io.github.kiraherk.smarttodo.ai.AiException
 import io.github.kiraherk.smarttodo.ai.ModelRanking
 import io.github.kiraherk.smarttodo.data.settings.AppSettings
 import io.github.kiraherk.smarttodo.reminders.Notifications
+import io.github.kiraherk.smarttodo.ui.voiceLabel
 import io.github.kiraherk.smarttodo.ui.components.ChoiceDialog
 import io.github.kiraherk.smarttodo.ui.components.ConfirmDialog
 import io.github.kiraherk.smarttodo.ui.components.SectionHeader
@@ -81,6 +82,7 @@ import io.github.kiraherk.smarttodo.update.UpdateInfo
 import io.github.kiraherk.smarttodo.update.UpdateInstaller
 import io.github.kiraherk.smarttodo.util.Dates
 import io.github.kiraherk.smarttodo.util.LocaleHelper
+import io.github.kiraherk.smarttodo.voice.Speaker
 import io.github.kiraherk.smarttodo.voice.SpeechCapture
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -153,6 +155,10 @@ class SettingsViewModel(private val c: AppContainer) : ViewModel() {
     fun setVoicePopup(v: Boolean) = viewModelScope.launch { c.settings.setVoicePopup(v) }
     fun setTextScale(v: Float) = viewModelScope.launch { c.settings.setTextScale(v) }
     fun testVoice() = c.speaker.speakNow(str(R.string.voice_test_sentence))
+    fun setVoice(v: String) = viewModelScope.launch {
+        c.settings.setVoiceName(v)
+        c.speaker.speakNow(str(R.string.voice_test_sentence))
+    }
 
     fun setMorning(enabled: Boolean, time: String) = viewModelScope.launch { c.settings.setMorning(enabled, time); c.checkInScheduler.scheduleAll() }
     fun setEvening(enabled: Boolean, time: String) = viewModelScope.launch { c.settings.setEvening(enabled, time); c.checkInScheduler.scheduleAll() }
@@ -261,6 +267,7 @@ fun SettingsScreen(openUpdate: Boolean, onUpdateOpened: () -> Unit, onOpenSetup:
             SectionHeader(stringResource(R.string.section_voice))
             SettingRow(Icons.Filled.RecordVoiceOver, stringResource(R.string.dialect), Locale.forLanguageTag(s.dialect).getDisplayName(locale)) { dialog = "dialect" }
             SwitchRow(Icons.AutoMirrored.Filled.VolumeUp, stringResource(R.string.read_aloud_setting), s.readAloud) { vm.setReadAloud(it) }
+            SettingRow(Icons.Filled.RecordVoiceOver, stringResource(R.string.voice_choice), voiceLabel(ctx, s.voiceName)) { dialog = "voice" }
             SwitchRow(Icons.Filled.Checklist, stringResource(R.string.auto_confirm), s.autoConfirm) { vm.setAutoConfirm(it) }
             SwitchRow(Icons.Filled.RecordVoiceOver, stringResource(R.string.voice_popup_setting), s.voicePopup) { vm.setVoicePopup(it) }
             SettingRow(Icons.AutoMirrored.Filled.VolumeUp, stringResource(R.string.test_voice), stringResource(R.string.test_voice_hint)) { vm.testVoice() }
@@ -332,6 +339,13 @@ fun SettingsScreen(openUpdate: Boolean, onUpdateOpened: () -> Unit, onOpenSetup:
                 onDismiss = { dialog = null },
             )
         }
+        "voice" -> ChoiceDialog(
+            title = stringResource(R.string.voice_choice),
+            options = (Speaker.NATURAL_VOICES + "").map { it to voiceLabel(ctx, it) },
+            selected = s.voiceName,
+            onSelect = { vm.setVoice(it) },
+            onDismiss = { dialog = null },
+        )
         "dialect" -> ChoiceDialog(
             title = stringResource(R.string.dialect),
             options = SpeechCapture.DIALECTS.map { it to Locale.forLanguageTag(it).getDisplayName(locale) },

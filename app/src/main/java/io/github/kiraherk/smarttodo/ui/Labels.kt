@@ -89,6 +89,7 @@ fun actionName(ctx: Context, type: String): String = ctx.getString(
         ActionType.CHANGE_RECURRENCE -> R.string.act_recurrence
         ActionType.POSTPONE -> R.string.act_postpone
         ActionType.DELETE -> R.string.act_delete
+        ActionType.RESTORE -> R.string.act_restore
         else -> R.string.act_other
     }
 )
@@ -123,3 +124,16 @@ private fun arCount(n: Int, one: String, two: String, few: String, many: String)
 }
 
 private fun enCount(n: Int, unit: String) = if (n <= 1) "Every $unit" else "Every $n ${unit}s"
+
+/** How a reading voice is described to him ("" = the phone's own voice). */
+fun voiceLabel(ctx: Context, name: String): String = ctx.getString(
+    when (name) {
+        "Kore" -> R.string.voice_kore
+        "Aoede" -> R.string.voice_aoede
+        "Leda" -> R.string.voice_leda
+        "Charon" -> R.string.voice_charon
+        "Orus" -> R.string.voice_orus
+        "Puck" -> R.string.voice_puck
+        else -> R.string.voice_phone
+    }
+)

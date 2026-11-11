@@ -46,4 +46,16 @@ class ModelRankingTest {
         assertEquals(null, ModelRanking.temperatureFor("gemini-flash-lite-latest", 0.1))
         assertEquals(0.1, ModelRanking.temperatureFor("gemini-2.5-flash-lite", 0.1)!!, 0.0)
     }
+
+    @Test
+    fun speechModelsFastestFirst() {
+        val all = listOf(
+            "gemini-3.1-flash-tts-preview", "gemini-3.8-flash-tts", "gemini-3.8-flash-lite-tts", "gemini-2.5-flash-preview-tts",
+            "gemini-3.8-flash", "gemini-2.5-flash-native-audio-latest", "gemini-3.1-flash-live-preview",
+        )
+        assertEquals(
+            listOf("gemini-3.8-flash-lite-tts", "gemini-3.8-flash-tts", "gemini-3.1-flash-tts-preview", "gemini-2.5-flash-preview-tts"),
+            ModelRanking.rankTts(all),
+        )
+    }
 }

@@ -41,6 +41,19 @@ object ModelRanking {
             .thenBy { it.length }
     )
 
+    /** Speech models ("…-tts"): the fast "lite" one first, stable before preview, newest first. */
+    fun rankTts(ids: List<String>): List<String> = ids.map { it.lowercase() }
+        .filter { it.startsWith("gemini") && "tts" in it }
+        .distinct()
+        .sortedWith(
+            compareBy<String> { if (isLite(it)) 0 else 1 }
+                .thenBy { if (isPreview(it)) 1 else 0 }
+                .thenByDescending { version(it) }
+        )
+
+    /** Used when the model list has no speech model (or couldn't be fetched). */
+    val TTS_FALLBACK = listOf("gemini-3.8-flash-lite-tts", "gemini-3.1-flash-tts-preview", "gemini-2.5-flash-preview-tts")
+
     /**
      * Gemini 2.x models follow a low temperature well; Gemini 3 and later (and the "-latest"
      * aliases, which point to them) should run at their default, so null is returned for them.
@@ -145,6 +158,39 @@ class AiService(
         throw last ?: AiException.Timeout(null)
     }
 
+    /**
+     * Turns [text] into speech with Gemini's natural voices. Fast or nothing: if it can't answer
+     * within a few seconds the caller uses the phone's own voice instead.
+     */
+    suspend fun speech(text: String, voice: String, budgetMs: Long = SPEECH_BUDGET_MS): GeminiClient.Audio {
+        val models = ModelRanking.rankTts(knownModels()).ifEmpty { ModelRanking.TTS_FALLBACK }.take(3)
+        val start = now()
+        val usable = models.filter { (cooldownUntil[it] ?: 0L) < start }
+        var last: AiException? = null
+        for (model in usable) {
+            val left = budgetMs - (now() - start)
+            if (left < 1_500) break
+            try {
+                return gemini.speech(model, text, voice, SPEECH_STYLE, timeoutMs = left)
+            } catch (e: AiException.Quota) {
+                rest(model, 60 * MINUTE, e).also { last = it }
+            } catch (e: AiException.ModelUnavailable) {
+                rest(model, 24 * 60 * MINUTE, e).also { last = it }
+            } catch (e: AiException.Timeout) {
+                rest(model, 5 * MINUTE, e).also { last = it }
+            } catch (e: AiException.Server) {
+                rest(model, 5 * MINUTE, e).also { last = it }
+            } catch (e: AiException.BadRequest) {
+                rest(model, 60 * MINUTE, e).also { last = it }
+            } catch (e: AiException.Blocked) {
+                last = e
+            } catch (e: AiException.BadResponse) {
+                last = e
+            }
+        }
+        throw last ?: AiException.Quota(null, "no speech model available")
+    }
+
     private fun rest(model: String, ms: Long, e: AiException): AiException {
         cooldownUntil[model] = now() + ms
         if (lastGood.values.contains(model)) lastGood.entries.removeIf { it.value == model }
@@ -160,5 +206,8 @@ class AiService(
         const val ASSISTANT_BUDGET_MS = 55_000L
         /** Far more than any real answer needs; stops a model that rambles from running for minutes. */
         const val MAX_OUTPUT_TOKENS = 4096
+        const val SPEECH_BUDGET_MS = 9_000L
+        /** Spoken-style direction for the natural voice; the text to read follows on the next line. */
+        const val SPEECH_STYLE = "Read the following aloud in a warm, calm and friendly voice, at a relaxed pace:"
     }
 }
