@@ -100,6 +100,12 @@ class ActionExecutor(private val repo: TaskRepository) {
                 repo.archive(id, summary)
                 id
             }
+            ActionType.RESTORE -> {
+                val id = existing(a) ?: return null
+                if (repo.task(id)?.archived != true) return id
+                repo.restore(id, summary)
+                id
+            }
             else -> null
         }
     }

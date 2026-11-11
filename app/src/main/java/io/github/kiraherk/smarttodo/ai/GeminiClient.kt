@@ -124,6 +124,46 @@ class GeminiClient(
         return extractText(await(request, model, timeoutMs))
     }
 
+    /** Audio from a speech model: the bytes and their MIME type (a WAV file or bare 16-bit samples). */
+    class Audio(val bytes: ByteArray, val mimeType: String?)
+
+    /**
+     * Reads [text] aloud with one of Gemini's speech models ("…-tts") and a prebuilt voice such
+     * as "Kore". [style] is a short spoken-style direction placed before the text.
+     */
+    suspend fun speech(model: String, text: String, voice: String, style: String, timeoutMs: Long): Audio {
+        val key = requireKey()
+        val body = buildJsonObject {
+            putJsonArray("contents") {
+                addJsonObject {
+                    put("role", "user")
+                    putJsonArray("parts") { addJsonObject { put("text", "$style\n$text") } }
+                }
+            }
+            putJsonObject("generationConfig") {
+                putJsonArray("responseModalities") { add(kotlinx.serialization.json.JsonPrimitive("AUDIO")) }
+                putJsonObject("speechConfig") {
+                    putJsonObject("voiceConfig") { putJsonObject("prebuiltVoiceConfig") { put("voiceName", voice) } }
+                }
+            }
+        }
+        val request = Request.Builder()
+            .url("${baseUrl()}/models/$model:generateContent")
+            .header(KEY_HEADER, key)
+            .post(body.toString().toRequestBody(JSON_MEDIA))
+            .build()
+        val response = await(request, model, timeoutMs)
+        val obj = runCatching { json.parseToJsonElement(response).jsonObject }.getOrElse { throw AiException.BadResponse("not json") }
+        val inline = obj["candidates"]?.jsonArray?.firstOrNull()?.jsonObject
+            ?.get("content")?.jsonObject?.get("parts")?.jsonArray
+            ?.firstNotNullOfOrNull { it.jsonObject["inlineData"]?.jsonObject ?: it.jsonObject["inline_data"]?.jsonObject }
+            ?: throw AiException.Blocked("no audio")
+        val data = inline["data"]?.jsonPrimitive?.contentOrNull ?: throw AiException.Blocked("no audio")
+        val mime = (inline["mimeType"] ?: inline["mime_type"])?.jsonPrimitive?.contentOrNull
+        val bytes = runCatching { java.util.Base64.getDecoder().decode(data) }.getOrElse { throw AiException.BadResponse("bad audio") }
+        return Audio(bytes, mime)
+    }
+
     /** Runs the call on OkHttp's own threads so that cancelling the coroutine aborts the request. */
     private suspend fun await(request: Request, model: String?, timeoutMs: Long): String =
         suspendCancellableCoroutine { cont ->

@@ -17,6 +17,7 @@ interface TaskDao {
     @Query("SELECT * FROM tasks WHERE id = :id") fun observe(id: Long): Flow<TaskEntity?>
     @Query("SELECT * FROM tasks WHERE archived = 0 ORDER BY updatedAt DESC") suspend fun active(): List<TaskEntity>
     @Query("SELECT * FROM tasks WHERE archived = 0 AND recurrenceJson IS NOT NULL") suspend fun activeRecurring(): List<TaskEntity>
+    @Query("SELECT * FROM tasks WHERE archived = 1 ORDER BY updatedAt DESC LIMIT :limit") suspend fun recentlyDeleted(limit: Int = 15): List<TaskEntity>
     @Query("SELECT * FROM tasks WHERE searchText LIKE '%' || :q || '%' ORDER BY archived, updatedAt DESC LIMIT :limit")
     suspend fun search(q: String, limit: Int = 50): List<TaskEntity>
 

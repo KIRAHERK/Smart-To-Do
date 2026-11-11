@@ -64,6 +64,7 @@
     <string name="act_recurrence">تكرار</string>
     <string name="act_postpone">تأجيل</string>
     <string name="act_delete">حذف مهمة</string>
+    <string name="act_restore">استرجاع مهمة</string>
     <string name="act_other">أخرى</string>
 
     <string name="listening">أنا أسمعك…</string>
@@ -178,6 +179,15 @@
     <string name="auto_confirm">احفظ المهام الجديدة بدون سؤال</string>
     <string name="test_voice">تجربة الصوت</string>
     <string name="test_voice_hint">اضغط لسماع جملة</string>
+    <string name="voice_choice">صوت القراءة</string>
+    <string name="voice_phone">صوت الهاتف (يعمل بدون إنترنت)</string>
+    <string name="voice_natural_hint">الأصوات الطبيعية تحتاج الإنترنت، وإذا لم تتوفر يقرأ صوت الهاتف بدلاً منها.</string>
+    <string name="voice_kore">صوت امرأة · هادئ وواضح</string>
+    <string name="voice_aoede">صوت امرأة · خفيف ودافئ</string>
+    <string name="voice_leda">صوت امرأة · شابّ</string>
+    <string name="voice_charon">صوت رجل · واضح</string>
+    <string name="voice_orus">صوت رجل · رزين وعميق</string>
+    <string name="voice_puck">صوت رجل · مرح</string>
     <string name="voice_test_sentence">مرحباً! هكذا سأقرأ لك مهامك.</string>
     <string name="section_checkins">المتابعة اليومية والأسبوعية</string>
     <string name="morning_summary">ملخص الصباح</string>

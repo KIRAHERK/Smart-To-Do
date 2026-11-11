@@ -42,6 +42,12 @@ class ContextBuilder(
         }
     }
 
+    /** Tasks he deleted, newest first, so "bring it back" can find them. */
+    suspend fun deletedList(limit: Int = 15): String = db.tasks().recentlyDeleted(limit).joinToString("\n") { t ->
+        val at = Instant.ofEpochMilli(t.updatedAt).atZone(zone())
+        "#${t.id} | ${t.title} | ${t.category} | deleted ${at.toLocalDate()} ${"%02d:%02d".format(at.hour, at.minute)}"
+    }
+
     /** Everything relevant for answering a question: open tasks, recent history, notes, and older matches. */
     suspend fun assistantDigest(question: String, maxChars: Int = 60_000): String {
         val today = repo.today()

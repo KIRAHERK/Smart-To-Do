@@ -35,6 +35,8 @@ data class AppSettings(
     /** Used when he asks for a reminder without saying a time. */
     val defaultReminderTime: String = "09:00",
     val readAloud: Boolean = true,
+    /** Gemini voice name for the natural voice (e.g. "Kore"), or "" for the phone's own voice. */
+    val voiceName: String = "Kore",
     val autoConfirm: Boolean = false,
     /** Use Google's listening popup instead of listening inside the app (set automatically if needed). */
     val voicePopup: Boolean = false,
@@ -61,6 +63,7 @@ class SettingsRepository(private val context: Context) {
         val weeklyTime = stringPreferencesKey("weekly_time")
         val defaultReminderTime = stringPreferencesKey("default_reminder_time")
         val readAloud = booleanPreferencesKey("read_aloud")
+        val voiceName = stringPreferencesKey("voice_name")
         val autoConfirm = booleanPreferencesKey("auto_confirm")
         val voicePopup = booleanPreferencesKey("voice_popup")
         val textScale = floatPreferencesKey("text_scale")
@@ -86,6 +89,7 @@ class SettingsRepository(private val context: Context) {
             weeklyTime = p[Keys.weeklyTime] ?: d.weeklyTime,
             defaultReminderTime = p[Keys.defaultReminderTime] ?: d.defaultReminderTime,
             readAloud = p[Keys.readAloud] ?: d.readAloud,
+            voiceName = p[Keys.voiceName] ?: d.voiceName,
             autoConfirm = p[Keys.autoConfirm] ?: d.autoConfirm,
             voicePopup = p[Keys.voicePopup] ?: d.voicePopup,
             textScale = p[Keys.textScale] ?: d.textScale,
@@ -107,6 +111,7 @@ class SettingsRepository(private val context: Context) {
     suspend fun setWeekly(enabled: Boolean, day: Int, time: String) { put(Keys.weeklyEnabled, enabled); put(Keys.weeklyDay, day); put(Keys.weeklyTime, time) }
     suspend fun setDefaultReminderTime(v: String) = put(Keys.defaultReminderTime, v)
     suspend fun setReadAloud(v: Boolean) = put(Keys.readAloud, v)
+    suspend fun setVoiceName(v: String) = put(Keys.voiceName, v)
     suspend fun setAutoConfirm(v: Boolean) = put(Keys.autoConfirm, v)
     suspend fun setVoicePopup(v: Boolean) = put(Keys.voicePopup, v)
     suspend fun setTextScale(v: Float) = put(Keys.textScale, v)

@@ -3,12 +3,35 @@ package io.github.kiraherk.smarttodo.voice
 import android.content.Context
 import android.content.Intent
 import android.speech.tts.TextToSpeech
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import java.util.Locale
 
-/** Reads confirmations and answers aloud. Prefers Google's TTS engine, which has good Arabic voices. */
-class Speaker(context: Context, private val languageTag: () -> String) : TextToSpeech.OnInitListener {
+/**
+ * Reads confirmations and answers aloud.
+ *
+ * With a natural voice chosen (the default), the text is spoken by one of Google's Gemini voices,
+ * which sound like a real person. If that is not possible within a few seconds (no internet, the
+ * free daily limit is used up, Google is busy), the phone's own voice reads it instead, so he
+ * always hears the answer.
+ */
+class Speaker(
+    context: Context,
+    private val languageTag: () -> String,
+    /** The chosen Gemini voice, or "" for the phone's voice. */
+    private val voiceName: suspend () -> String = { "" },
+    /** Makes natural speech; null when it isn't possible right now. */
+    private val natural: (suspend (text: String, voice: String) -> Pcm?)? = null,
+) : TextToSpeech.OnInitListener {
     private val appContext = context.applicationContext
     private val tts: TextToSpeech
+    private val player = PcmPlayer()
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    private var job: Job? = null
     private var ready = false
     private var pending: String? = null
 
@@ -17,6 +40,10 @@ class Speaker(context: Context, private val languageTag: () -> String) : TextToS
         private set
 
     var enabled: Boolean = true
+
+    /** What the last request was spoken with (for tests and the settings screen). */
+    @Volatile var lastSpokenWith: String = ""
+        private set
 
     init {
         val engines = runCatching {
@@ -33,35 +60,80 @@ class Speaker(context: Context, private val languageTag: () -> String) : TextToS
         }
         ready = true
         applyLanguage()
-        pending?.let { speak(it) }
+        pending?.let { phone(it) }
         pending = null
     }
 
     private fun applyLanguage() {
-        val result = runCatching { tts.setLanguage(Locale.forLanguageTag(languageTag())) }.getOrDefault(TextToSpeech.LANG_NOT_SUPPORTED)
+        val locale = Locale.forLanguageTag(languageTag())
+        val result = runCatching { tts.setLanguage(locale) }.getOrDefault(TextToSpeech.LANG_NOT_SUPPORTED)
         voiceAvailable = result >= TextToSpeech.LANG_AVAILABLE
+        // The default voice is often not the best one installed: pick the clearest voice that
+        // works offline (this voice is the fallback for when there is no internet).
+        runCatching {
+            tts.voices
+                ?.filter { it.locale.language == locale.language && !it.isNetworkConnectionRequired && "notInstalled" !in it.features }
+                ?.maxByOrNull { it.quality }
+                ?.let { if (tts.voice?.name != it.name) tts.voice = it }
+        }
         tts.setSpeechRate(0.92f)
     }
 
+    /** Speaks if read-aloud is on. A new text interrupts the one being spoken. */
     fun speak(text: String) {
-        if (!enabled || text.isBlank()) return
+        if (!enabled) return
+        say(text)
+    }
+
+    /** Speaks even when read-aloud is switched off (for the explicit "read" buttons). */
+    fun speakNow(text: String) = say(text)
+
+    private fun say(text: String) {
+        val clean = text.replace("*", "").trim()
+        if (clean.isEmpty()) return
+        stop()
+        job = scope.launch {
+            val voice = runCatching { voiceName() }.getOrDefault("")
+            val audio = if (voice.isNotBlank() && natural != null) {
+                try {
+                    natural.invoke(clean, voice)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    null
+                }
+            } else {
+                null
+            }
+            if (audio != null && audio.data.isNotEmpty()) {
+                lastSpokenWith = voice
+                try {
+                    player.play(audio)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    phone(clean)
+                }
+            } else {
+                phone(clean)
+            }
+        }
+    }
+
+    private fun phone(text: String) {
+        lastSpokenWith = ""
         if (!ready) {
             pending = text
             return
         }
         applyLanguage()
-        tts.speak(text.replace("*", ""), TextToSpeech.QUEUE_FLUSH, null, "smarttodo-${System.nanoTime()}")
-    }
-
-    /** Speaks even when read-aloud is switched off (for the explicit "read" buttons). */
-    fun speakNow(text: String) {
-        val was = enabled
-        enabled = true
-        speak(text)
-        enabled = was
+        tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, "smarttodo-${System.nanoTime()}")
     }
 
     fun stop() {
+        job?.cancel()
+        job = null
+        player.stop()
         if (ready) runCatching { tts.stop() }
         pending = null
     }
@@ -71,5 +143,8 @@ class Speaker(context: Context, private val languageTag: () -> String) : TextToS
 
     companion object {
         private const val GOOGLE_TTS = "com.google.android.tts"
+
+        /** Gemini voices offered in Settings (all speak Arabic); "" = the phone's voice. */
+        val NATURAL_VOICES = listOf("Kore", "Aoede", "Leda", "Charon", "Orus", "Puck")
     }
 }

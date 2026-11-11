@@ -105,6 +105,25 @@ class GeminiFlowTest {
     }
 
     @Test
+    fun aDeletedTaskCanBeBroughtBackByVoice() = runBlocking {
+        val repo = TaskRepository(db, { "09:00" }, clock)
+        val id = repo.createTask(TaskRepository.NewTask("الاتصال باحمد شماط"))
+        repo.archive(id)
+        server.enqueue(MockResponse().setBody(models))
+        server.enqueue(MockResponse().setBody(reply("""{"actions":[{"type":"restore_task","taskId":$id,"spokenSummary":"سأسترجع مهمة الاتصال باحمد شماط."}]}""")))
+
+        val parsed = CommandInterpreter(AiService(gemini, settings), ContextBuilder(db, repo), clock) { "ar" }.interpret("رجّعها")
+        server.takeRequest()
+        val body = server.takeRequest().body.readUtf8()
+        assertTrue("deleted tasks must be listed for the AI", body.contains("RECENTLY DELETED TASKS") && body.contains("#$id | الاتصال باحمد شماط"))
+        assertTrue(body.contains("restore_task"))
+
+        assertEquals(1, ActionExecutor(repo).apply(parsed, "رجّعها").applied)
+        assertEquals(false, db.tasks().get(id)!!.archived)
+        assertEquals(listOf("CREATED", "ARCHIVED", "RESTORED"), db.activity().all().sortedBy { it.id }.map { it.type })
+    }
+
+    @Test
     fun ifTheRetryIsAlsoBrokenTheNameIsCleanedUp() = runBlocking {
         val leaked = """{"actions":[{"type":"create_task","title":"Wait, let's look at the title: الاتصال باحمد شماط. Category: WORK.","spokenSummary":"سأضيف مهمة"}]}"""
         server.enqueue(MockResponse().setBody(models))
@@ -151,6 +170,28 @@ class GeminiFlowTest {
         val tookMs = (System.nanoTime() - started) / 1_000_000
         assertEquals(null, result)
         assertTrue("took $tookMs ms", tookMs < 2_000)
+    }
+
+    @Test
+    fun naturalVoiceAsksTheFastSpeechModelWithTheChosenVoice() = runBlocking {
+        val withTts = models.substringBeforeLast("]}") +
+            """,{"name":"models/gemini-3.8-flash-lite-tts","supportedGenerationMethods":["generateContent"]},{"name":"models/gemini-3.1-flash-tts-preview","supportedGenerationMethods":["generateContent"]}]}"""
+        val audio = java.util.Base64.getEncoder().encodeToString(ByteArray(4800) { 1 })
+        server.enqueue(MockResponse().setBody(withTts))
+        server.enqueue(MockResponse().setResponseCode(429).setBody("""{"error":{"code":429,"message":"Quota exceeded"}}"""))
+        server.enqueue(MockResponse().setBody("""{"candidates":[{"content":{"parts":[{"inlineData":{"mimeType":"audio/L16;codec=pcm;rate=24000","data":"$audio"}}]}}]}"""))
+
+        val result = AiService(gemini, settings).speech("سأضيف مهمة", "Kore")
+        val pcm = io.github.kiraherk.smarttodo.voice.Pcm.decode(result.bytes, result.mimeType)
+        assertEquals(24_000, pcm.sampleRate)
+        assertEquals(100, pcm.durationMs)
+
+        server.takeRequest()
+        assertTrue(server.takeRequest().path!!.contains("gemini-3.8-flash-lite-tts:generateContent"))
+        val second = server.takeRequest()
+        assertTrue(second.path!!.contains("gemini-3.1-flash-tts-preview:generateContent"))
+        val body = second.body.readUtf8()
+        assertTrue(body, body.contains("\"responseModalities\":[\"AUDIO\"]") && body.contains("\"voiceName\":\"Kore\"") && body.contains("سأضيف مهمة"))
     }
 
     @Test(expected = AiException.InvalidKey::class)
