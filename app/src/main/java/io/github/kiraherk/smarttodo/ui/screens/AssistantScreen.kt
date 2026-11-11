@@ -120,18 +120,7 @@ fun AssistantScreen() {
                 contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                if (messages.isEmpty()) {
-                    item { EmptyState(emptyText, Icons.Filled.AutoAwesome) }
-                    items(suggestions) { s ->
-                        AppCard(onClick = { voice.ask(s) }, padding = PaddingValues(horizontal = 16.dp, vertical = 14.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Filled.AutoAwesome, contentDescription = null, tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.size(22.dp))
-                                Spacer(Modifier.width(12.dp))
-                                Text(s, style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
-                            }
-                        }
-                    }
-                }
+                if (messages.isEmpty()) item { EmptyState(emptyText, Icons.Filled.AutoAwesome) }
                 items(messages, key = { it.id }) { m ->
                     val mine = m.role == ChatRole.USER.name
                     Row(
@@ -173,19 +162,20 @@ fun AssistantScreen() {
                     }
                 }
             }
-            if (messages.isNotEmpty()) {
-                Row(
-                    Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 14.dp, vertical = 4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    suggestions.forEach { s ->
-                        Text(
-                            s,
-                            style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer,
-                            modifier = Modifier.clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.secondaryContainer)
-                                .clickable { voice.ask(s) }.padding(horizontal = 14.dp, vertical = 9.dp),
-                        )
+            // Ready-made questions: always visible, one tap each.
+            Row(
+                Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 14.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                suggestions.forEach { s ->
+                    Row(
+                        Modifier.clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.secondaryContainer)
+                            .clickable { voice.ask(s) }.padding(horizontal = 14.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(Icons.Filled.AutoAwesome, contentDescription = null, tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text(s, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSecondaryContainer)
                     }
                 }
             }
