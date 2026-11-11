@@ -226,4 +226,17 @@ class ScreenshotTest {
         }
         save("answer")
     }
+
+    @Test
+    fun recordingOverlay() {
+        compose.setContent {
+            SmartTodoTheme(1.15f) {
+                VoiceOverlayContent(
+                    state = VoiceViewModel.UiState.Listening("", 0.3f, recording = true, elapsedMs = 14_000),
+                    onFinish = {}, onConfirm = {}, onReject = {}, onRetry = {}, onSpeakAgain = {}, onDismiss = {},
+                )
+            }
+        }
+        save("recording")
+    }
 }

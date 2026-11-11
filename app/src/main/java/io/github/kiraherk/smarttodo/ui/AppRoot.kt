@@ -100,6 +100,10 @@ fun AppRoot(navRequests: StateFlow<NavRequest?>, onNavHandled: () -> Unit) {
                     .putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, language)
                     .putExtra(RecognizerIntent.EXTRA_PROMPT, popupPrompt)
                     .putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
+                    // Ask for more patience with pauses (not every phone honours this).
+                    .putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 4_000L)
+                    .putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 3_500L)
+                    .putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 6_000L)
                 try {
                     speechPopup.launch(intent)
                 } catch (e: ActivityNotFoundException) {

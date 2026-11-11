@@ -149,12 +149,19 @@ private fun Listening(state: VoiceViewModel.UiState.Listening, onFinish: () -> U
             Icon(Icons.Filled.Mic, contentDescription = null, tint = Color.White, modifier = Modifier.size(54.dp))
         }
     }
-    Text(
-        state.text.ifBlank { stringResource(R.string.listening_hint) },
-        style = BigText,
-        textAlign = TextAlign.Center,
-        color = if (state.text.isBlank()) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
-    )
+    if (state.recording) {
+        // Recording: no live text, but a running clock and a reminder that there is no hurry.
+        val seconds = state.elapsedMs / 1000
+        Text(String.format(java.util.Locale.US, "%d:%02d", seconds / 60, seconds % 60), style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.primary)
+        Text(stringResource(R.string.recording_hint), style = BigText, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    } else {
+        Text(
+            state.text.ifBlank { stringResource(R.string.listening_hint) },
+            style = BigText,
+            textAlign = TextAlign.Center,
+            color = if (state.text.isBlank()) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
+        )
+    }
     BigButton(stringResource(R.string.done_speaking), Icons.Filled.Check, onFinish)
     TextButton(onClick = onCancel) { Text(stringResource(R.string.cancel), style = MaterialTheme.typography.titleMedium) }
 }

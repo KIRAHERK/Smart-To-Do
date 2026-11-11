@@ -24,6 +24,7 @@ import io.github.kiraherk.smarttodo.voice.Pcm
 import io.github.kiraherk.smarttodo.voice.Speaker
 import io.github.kiraherk.smarttodo.voice.SpeechCache
 import io.github.kiraherk.smarttodo.voice.SpeechCapture
+import io.github.kiraherk.smarttodo.voice.VoiceRecorder
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import okhttp3.OkHttpClient
@@ -74,6 +75,8 @@ class AppContainer(val app: Application) {
 
     /** Created on first use, on the main thread. */
     val speech: SpeechCapture by lazy { SpeechCapture(app) }
+    /** Records his voice when the phone's speech recognition can't work inside the app. */
+    val recorder: VoiceRecorder by lazy { VoiceRecorder() }
     val speaker: Speaker by lazy {
         Speaker(
             context = app,

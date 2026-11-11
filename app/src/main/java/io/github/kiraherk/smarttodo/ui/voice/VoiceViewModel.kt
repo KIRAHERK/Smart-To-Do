@@ -8,6 +8,9 @@ import io.github.kiraherk.smarttodo.R
 import io.github.kiraherk.smarttodo.ai.ActionType
 import io.github.kiraherk.smarttodo.ai.AiAction
 import io.github.kiraherk.smarttodo.ai.AiException
+import io.github.kiraherk.smarttodo.data.settings.LISTEN_AUTO
+import io.github.kiraherk.smarttodo.data.settings.LISTEN_POPUP
+import io.github.kiraherk.smarttodo.data.settings.LISTEN_RECORD
 import io.github.kiraherk.smarttodo.data.db.InboxEntity
 import io.github.kiraherk.smarttodo.domain.CategoryKey
 import io.github.kiraherk.smarttodo.domain.NoteSource
@@ -47,7 +50,8 @@ class VoiceViewModel(private val c: AppContainer) : ViewModel() {
 
     sealed interface UiState {
         data object Idle : UiState
-        data class Listening(val text: String, val level: Float) : UiState
+        /** [recording] = recording with no time limit (he presses Done); [elapsedMs] = how long so far. */
+        data class Listening(val text: String, val level: Float, val recording: Boolean = false, val elapsedMs: Long = 0) : UiState
         /** [slow] = it is taking long (Google busy), so the screen says so and offers Cancel. */
         data class Thinking(val transcript: String, val slow: Boolean = false) : UiState
         data class Confirm(val transcript: String, val previews: List<Preview>) : UiState
@@ -69,6 +73,8 @@ class VoiceViewModel(private val c: AppContainer) : ViewModel() {
     /** The current "understand / answer" work, so Cancel can stop it. */
     private var workJob: Job? = null
     private var popupRequest: Request? = null
+    /** Set while recording (the request the recording is for). */
+    private var recordRequest: Request? = null
     /** Failed in-app listening attempts in a row. */
     private var inAppFailures = 0
 
@@ -85,10 +91,21 @@ class VoiceViewModel(private val c: AppContainer) : ViewModel() {
         viewModelScope.launch {
             val s = c.settings.current()
             c.speaker.enabled = s.readAloud
-            // Phones where the in-app listener can't work use Google's standard listening popup.
-            if (s.voicePopup || !c.speech.isAvailable()) {
-                openPopup(request, s.dialect)
-                return@launch
+            val hasKey = c.secrets.hasApiKey()
+            when {
+                s.listenMode == LISTEN_POPUP -> {
+                    openPopup(request, s.dialect)
+                    return@launch
+                }
+                s.listenMode == LISTEN_RECORD && hasKey -> {
+                    startRecording(request)
+                    return@launch
+                }
+                // No speech recognition on this phone: record (or, without an AI key, Google's window).
+                !c.speech.isAvailable() -> {
+                    if (hasKey) startRecording(request) else openPopup(request, s.dialect)
+                    return@launch
+                }
             }
             listenJob?.cancel()
             listenJob = viewModelScope.launch {
@@ -97,6 +114,54 @@ class VoiceViewModel(private val c: AppContainer) : ViewModel() {
             c.speech.start(s.dialect) { text, error ->
                 listenJob?.cancel()
                 onTranscript(request, text, error, s.dialect)
+            }
+        }
+    }
+
+    /**
+     * Records with no time limit: pauses are fine, it only ends when he presses Done (or after two
+     * minutes). The AI then writes down what he said.
+     */
+    private fun startRecording(request: Request) {
+        recordRequest = request
+        c.recorder.onLimitReached = { viewModelScope.launch { finishListening() } }
+        if (!c.recorder.start()) {
+            recordRequest = null
+            _state.value = UiState.Message(str(R.string.voice_mic_busy), error = true, canRetry = true)
+            return
+        }
+        listenJob?.cancel()
+        listenJob = viewModelScope.launch {
+            c.recorder.state.collect { st ->
+                if (st.recording) _state.value = UiState.Listening("", st.level, recording = true, elapsedMs = st.elapsedMs)
+            }
+        }
+    }
+
+    private fun finishRecording() {
+        val request = recordRequest ?: return
+        recordRequest = null
+        launchWork {
+            val wav = c.recorder.stop()
+            listenJob?.cancel()
+            if (wav == null) {
+                _state.value = UiState.Message(str(R.string.voice_nothing_heard), error = true, canRetry = true)
+                return@launchWork
+            }
+            thinking(str(R.string.voice_writing))
+            val text = try {
+                val dialect = c.settings.current().dialect
+                c.ai.transcribe(wav, if (dialect.startsWith("en")) "English" else "Arabic")
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                say(UiState.Message(errorMessage(e), error = true, canRetry = true))
+                return@launchWork
+            }
+            if (text.isBlank()) {
+                _state.value = UiState.Message(str(R.string.voice_nothing_heard), error = true, canRetry = true)
+            } else {
+                handle(text, request)
             }
         }
     }
@@ -123,11 +188,14 @@ class VoiceViewModel(private val c: AppContainer) : ViewModel() {
     /** The phone has no speech popup at all (no Google app). */
     fun onPopupUnavailable() {
         popupRequest = null
-        viewModelScope.launch { c.settings.setVoicePopup(false) }
+        viewModelScope.launch { c.settings.setListenMode(LISTEN_AUTO) }
         _state.value = UiState.Message(str(R.string.voice_not_available), error = true)
     }
 
-    fun finishListening() = c.speech.finish()
+    /** He pressed "Done". */
+    fun finishListening() {
+        if (recordRequest != null) finishRecording() else c.speech.finish()
+    }
 
     fun retry() = start(lastRequest)
 
@@ -135,6 +203,8 @@ class VoiceViewModel(private val c: AppContainer) : ViewModel() {
     fun dismiss() {
         workJob?.cancel()
         workJob = null
+        recordRequest = null
+        c.recorder.cancel()
         c.speech.cancel()
         c.speaker.stop()
         listenJob?.cancel()
@@ -195,12 +265,16 @@ class VoiceViewModel(private val c: AppContainer) : ViewModel() {
                     error in SpeechCapture.NETWORK_ERRORS ->
                         _state.value = UiState.Message(str(R.string.voice_error_network), error = true, canRetry = true)
                     else -> {
-                        // Listening inside the app failed: use Google's listening window this time.
-                        // Only if it keeps failing (not after one hiccup, like the microphone being
-                        // busy for a moment) switch to that window for good (Settings can undo it).
+                        // The phone's speech recognition failed inside the app. Carry on listening
+                        // by recording (no time limit, he presses Done). If it keeps failing on
+                        // this phone, record straight away from now on (Settings can change it).
                         inAppFailures++
-                        if (inAppFailures >= SWITCH_AFTER_FAILURES) c.settings.setVoicePopup(true)
-                        openPopup(request, language)
+                        if (c.secrets.hasApiKey()) {
+                            if (inAppFailures >= SWITCH_AFTER_FAILURES) c.settings.setListenMode(LISTEN_RECORD)
+                            startRecording(request)
+                        } else {
+                            openPopup(request, language)
+                        }
                     }
                 }
                 return@launchWork
@@ -337,6 +411,6 @@ class VoiceViewModel(private val c: AppContainer) : ViewModel() {
 
     companion object {
         const val SLOW_AFTER_MS = 12_000L
-        const val SWITCH_AFTER_FAILURES = 3
+        const val SWITCH_AFTER_FAILURES = 2
     }
 }

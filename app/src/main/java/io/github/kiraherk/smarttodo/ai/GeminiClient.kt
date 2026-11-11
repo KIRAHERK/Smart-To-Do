@@ -102,15 +102,27 @@ class GeminiClient(
         temperature: Double? = null,
         maxOutputTokens: Int? = null,
         timeoutMs: Long = DEFAULT_TIMEOUT_MS,
+        audioWav: ByteArray? = null,
     ): String {
         val key = requireKey()
         val body = buildJsonObject {
             putJsonObject("systemInstruction") { putJsonArray("parts") { addJsonObject { put("text", system) } } }
             putJsonArray("contents") {
-                turns.forEach { turn ->
+                turns.forEachIndexed { i, turn ->
                     addJsonObject {
                         put("role", turn.role)
-                        putJsonArray("parts") { addJsonObject { put("text", turn.text) } }
+                        putJsonArray("parts") {
+                            addJsonObject { put("text", turn.text) }
+                            // A recording goes with the last message (what he just said).
+                            if (audioWav != null && i == turns.lastIndex) {
+                                addJsonObject {
+                                    putJsonObject("inlineData") {
+                                        put("mimeType", "audio/wav")
+                                        put("data", java.util.Base64.getEncoder().encodeToString(audioWav))
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }

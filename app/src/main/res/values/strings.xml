@@ -77,6 +77,14 @@
     <!-- Voice overlay -->
     <string name="listening">I\'m listening…</string>
     <string name="listening_hint">Speak normally. Tap Done when you finish.</string>
+    <string name="recording_hint">Take your time and pause whenever you like, I won\'t cut you off. Press Done when you finish.</string>
+    <string name="voice_writing">Writing down what you said…</string>
+    <string name="voice_mic_busy">The microphone is busy right now. End any call or app using it, then try again.</string>
+    <string name="listen_mode">How to listen</string>
+    <string name="listen_auto">Automatic: shows your words as you speak</string>
+    <string name="listen_record">Record with no time limit: take your time, then press Done</string>
+    <string name="listen_popup">Google\'s listening window</string>
+    <string name="listen_problem">Last listening problem inside the app: %1$s</string>
     <string name="done_speaking">Done</string>
     <string name="thinking">One moment, I\'m organising it…</string>
     <string name="thinking_slow">Google is slow right now… you can wait a little, or press Cancel and try again later.</string>
@@ -200,7 +208,6 @@
     <string name="section_voice">Voice</string>
     <string name="dialect">Speech language</string>
     <string name="read_aloud_setting">Read answers aloud</string>
-    <string name="voice_popup_setting">Listen with Google\'s voice window</string>
     <string name="auto_confirm">Save new tasks without asking</string>
     <string name="test_voice">Test the voice</string>
     <string name="test_voice_hint">Tap to hear a sentence</string>

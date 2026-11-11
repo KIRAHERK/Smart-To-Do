@@ -7,6 +7,7 @@ import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.compose.ui.test.performClick
@@ -15,6 +16,7 @@ import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
 import androidx.test.core.app.ActivityScenario
+import androidx.test.rule.GrantPermissionRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
@@ -47,6 +49,10 @@ import java.time.LocalTime
 class AppOnDeviceTest {
     @get:Rule
     val compose = createEmptyComposeRule()
+
+    /** The microphone permission, so the talk button can start listening without a dialog. */
+    @get:Rule
+    val mic: GrantPermissionRule = GrantPermissionRule.grant(android.Manifest.permission.RECORD_AUDIO)
 
     private var scenario: ActivityScenario<MainActivity>? = null
 
@@ -137,6 +143,40 @@ class AppOnDeviceTest {
         compose.waitUntilTrue { runBlocking { c.repo.currentOccurrence(id)?.progress } == 50 }
         assertEquals(TaskStatus.PARTIALLY_DONE, statusOf(id))
         shot("05-task-detail")
+    }
+
+    @Test
+    fun recordingWithNoTimeLimitIsWrittenDownAndUnderstood() {
+        reset()
+        FakeGemini().use { gemini ->
+            // The recording is written down (request without a schema), then understood (with one).
+            gemini.assistantReply = "ذكرني بكرة الساعة 12 الظهر اتصل بأحمد شماط"
+            gemini.commandReply = """{"actions":[{"type":"create_task","title":"الاتصال بأحمد شماط","category":"WORK",
+                "date":"2026-11-12","time":"12:00","reminder":true,
+                "spokenSummary":"سأضيف مهمة: الاتصال بأحمد شماط غداً الساعة 12 ظهراً مع تذكير."}]}"""
+            c.geminiBaseUrl = gemini.baseUrl
+            c.secrets.setApiKey("test-key")
+            runBlocking { c.settings.setListenMode(io.github.kiraherk.smarttodo.data.settings.LISTEN_RECORD) }
+            launch()
+            compose.waitForText(str(R.string.today_title))
+            compose.onAllNodes(hasText(str(R.string.talk)) and hasClickAction()).onFirst().performSemanticsAction(SemanticsActions.OnClick)
+
+            // Recording: the clock runs and there is no hurry; it only ends when he presses Done.
+            compose.waitForText(str(R.string.recording_hint), timeoutMs = 10_000)
+            Thread.sleep(3_500)
+            compose.waitForText(str(R.string.recording_hint))
+            shot("09-recording")
+            compose.clickable(str(R.string.done_speaking)).performClick()
+
+            compose.waitForText(str(R.string.confirm_title), timeoutMs = 30_000)
+            compose.waitForText("ذكرني بكرة الساعة 12 الظهر اتصل بأحمد شماط", substring = true)
+            compose.waitForText("سأضيف مهمة: الاتصال بأحمد شماط", substring = true)
+            compose.clickable(str(R.string.yes_save)).performClick()
+            compose.waitForText(str(R.string.saved_ok))
+            assertEquals("الاتصال بأحمد شماط", runBlocking { c.db.tasks().all() }.single().title)
+            compose.clickable(str(R.string.ok)).performClick()
+            runBlocking { c.settings.setListenMode(io.github.kiraherk.smarttodo.data.settings.LISTEN_AUTO) }
+        }
     }
 
     @Test

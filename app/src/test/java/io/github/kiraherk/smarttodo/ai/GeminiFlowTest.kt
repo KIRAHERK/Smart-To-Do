@@ -197,6 +197,29 @@ class GeminiFlowTest {
     }
 
     @Test
+    fun aRecordingIsSentToTheAiAndWrittenDown() = runBlocking {
+        server.enqueue(MockResponse().setBody(models))
+        server.enqueue(MockResponse().setBody(reply("«ذكرني بكرة الساعة 12 الظهر اتصل بأحمد شماط»\n")))
+        val wav = io.github.kiraherk.smarttodo.voice.Pcm(16_000, 1, ByteArray(32_000)).toWav()
+
+        val text = AiService(gemini, settings).transcribe(wav, "Arabic")
+        assertEquals("ذكرني بكرة الساعة 12 الظهر اتصل بأحمد شماط", text)
+
+        server.takeRequest()
+        val body = server.takeRequest().body.readUtf8()
+        assertTrue(body, body.contains("\"inlineData\":{\"mimeType\":\"audio/wav\",\"data\":\""))
+        assertTrue(body, body.contains(java.util.Base64.getEncoder().encodeToString(wav)))
+        assertTrue("no schema: plain text back", !body.contains("responseSchema"))
+    }
+
+    @Test
+    fun anEmptyRecordingGivesNoText() {
+        assertEquals("", AiService.cleanTranscript("  \"\" "))
+        assertEquals("", AiService.cleanTranscript("(silence)"))
+        assertEquals("اتصل بالبنك", AiService.cleanTranscript("Transcript: اتصل بالبنك"))
+    }
+
+    @Test
     fun aPerMinuteLimitRestsTheVoiceBrieflyADailyLimitForHours() {
         val minute = """{"error":{"code":429,"details":[{"violations":[{"quotaId":"GenerateRequestsPerMinutePerProjectPerModel-FreeTier"}]},{"retryDelay":"34s"}]}}"""
         val daily = """{"error":{"code":429,"details":[{"violations":[{"quotaId":"GenerateRequestsPerDayPerProjectPerModel-FreeTier"}]}]}}"""
