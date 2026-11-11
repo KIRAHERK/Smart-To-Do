@@ -254,6 +254,7 @@
     <string name="update_available_title">إصدار جديد %1$s</string>
     <string name="update_available_text">اضغط للتحديث. تبقى مهامك وسجلك كما هي.</string>
     <string name="update_now">حدّث الآن</string>
+    <string name="update_in_browser">تنزيل التحديث من المتصفح</string>
     <string name="update_downloading">جارٍ التنزيل… %1$d%%</string>
     <string name="update_installing">جارٍ التثبيت… وافق على الشاشة إن طُلب منك.</string>
     <string name="update_needs_permission">اسمح لتطبيق «مهامي الذكية» بتثبيت التحديثات (مرة واحدة)، ثم اضغط «حدّث الآن».</string>

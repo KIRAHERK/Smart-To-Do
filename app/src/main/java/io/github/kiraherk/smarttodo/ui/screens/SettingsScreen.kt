@@ -118,7 +118,8 @@ sealed interface UpdateState {
     data class Downloading(val progress: Float) : UpdateState
     data object Installing : UpdateState
     data class NeedsPermission(val info: UpdateInfo) : UpdateState
-    data class Error(val message: String) : UpdateState
+    /** [info] = the update that failed, so it can still be downloaded with the browser. */
+    data class Error(val message: String, val info: UpdateInfo? = null) : UpdateState
 }
 
 class SettingsViewModel(private val c: AppContainer) : ViewModel() {
@@ -254,11 +255,11 @@ class SettingsViewModel(private val c: AppContainer) : ViewModel() {
         } catch (e: UpdateInstaller.Problem.DebugBuild) {
             UpdateState.Error(str(R.string.update_debug_build))
         } catch (e: UpdateInstaller.Problem.WrongSignature) {
-            UpdateState.Error(str(R.string.update_bad_signature))
+            UpdateState.Error(str(R.string.update_bad_signature), info)
         } catch (e: UpdateInstaller.Problem.NotNewer) {
             UpdateState.UpToDate
         } catch (e: Exception) {
-            UpdateState.Error(str(R.string.update_failed) + " " + (e.message ?: ""))
+            UpdateState.Error(str(R.string.update_failed) + " " + (e.message ?: ""), info)
         }
     }
 }
@@ -558,6 +559,7 @@ private fun Group(content: @Composable androidx.compose.foundation.layout.Column
 
 @Composable
 private fun UpdateCard(state: UpdateState, onInstall: (UpdateInfo) -> Unit, onPermission: () -> Unit) {
+    val ctx = LocalContext.current
     val text: String = when (state) {
         UpdateState.Idle -> return
         UpdateState.Checking -> stringResource(R.string.update_checking)
@@ -577,6 +579,12 @@ private fun UpdateCard(state: UpdateState, onInstall: (UpdateInfo) -> Unit, onPe
                 is UpdateState.NeedsPermission -> Row {
                     TextButton(onClick = onPermission) { Text(stringResource(R.string.allow_install)) }
                     TextButton(onClick = { onInstall(state.info) }) { Text(stringResource(R.string.update_now)) }
+                }
+                // Always a way out: download the new version with the browser and open it.
+                is UpdateState.Error -> state.info?.let { info ->
+                    TextButton(onClick = { runCatching { ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(info.apkUrl))) } }) {
+                        Text(stringResource(R.string.update_in_browser), style = MaterialTheme.typography.titleMedium)
+                    }
                 }
                 else -> Unit
             }
