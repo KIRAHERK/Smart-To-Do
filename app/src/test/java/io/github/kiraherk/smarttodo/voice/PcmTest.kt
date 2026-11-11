@@ -47,4 +47,21 @@ class PcmTest {
     fun refusesOtherFormats() {
         Pcm.decode(ByteArray(100), "audio/mpeg")
     }
+
+    @Test
+    fun recordingsAreSavedAsWavFilesTheAiCanRead() {
+        val recorded = Pcm(16_000, 1, samples)
+        val wav = recorded.toWav()
+        assertEquals(44 + samples.size, wav.size)
+        val back = Pcm.decode(wav, "audio/wav")
+        assertEquals(16_000, back.sampleRate)
+        assertArrayEquals(samples, back.data)
+    }
+
+    @Test
+    fun loudnessForTheMovingRings() {
+        assertEquals(0f, VoiceRecorder.level(ByteArray(320), 320), 0f)
+        val loud = ByteArray(320) { if (it % 2 == 0) 0 else 0x40 } // samples of 16384
+        assertEquals(1f, VoiceRecorder.level(loud, loud.size), 0f)
+    }
 }

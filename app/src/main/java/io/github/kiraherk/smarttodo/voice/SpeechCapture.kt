@@ -51,8 +51,14 @@ class SpeechCapture(private val context: Context) {
     private var candidates: List<ComponentName?> = emptyList()
     private var candidateIndex = 0
     private var busyRetries = 0
-    /** The current recognizer has shown it works (it got ready or heard something). */
+    /** The current recognizer has shown it works: it turned his words into text. */
     private var working = false
+
+    /** The last listening problem (error code and speech service), shown in Settings to help fix it. */
+    @Volatile var lastProblem: String? = null
+        private set
+
+    private val prefs = context.getSharedPreferences("speech", Context.MODE_PRIVATE)
 
     fun isAvailable(): Boolean = SpeechRecognizer.isRecognitionAvailable(context) || recognitionServices().isNotEmpty()
 
@@ -100,10 +106,18 @@ class SpeechCapture(private val context: Context) {
         val google = preferred.flatMap { pkg -> services.filter { it.packageName == pkg } }
         val others = services.filter { it.packageName !in preferred }
         val list = mutableListOf<ComponentName?>()
+        // The service that worked last time on this phone goes first.
+        prefs.getString(KEY_GOOD, null)?.let { ComponentName.unflattenFromString(it) }?.takeIf { it in services }?.let { list += it }
         if (SpeechRecognizer.isRecognitionAvailable(context)) list += null
         list += google
         list += others
         return list.distinct().ifEmpty { listOf(null) }
+    }
+
+    private fun rememberWorking() {
+        if (working) return
+        working = true
+        candidates.getOrNull(candidateIndex)?.let { prefs.edit().putString(KEY_GOOD, it.flattenToString()).apply() }
     }
 
     private fun create(component: ComponentName?): SpeechRecognizer {
@@ -167,13 +181,8 @@ class SpeechCapture(private val context: Context) {
     private inner class Listener(private val mySession: Int) : RecognitionListener {
         private fun active() = mySession == session
 
-        override fun onReadyForSpeech(params: Bundle?) {
-            if (active()) working = true
-        }
-
-        override fun onBeginningOfSpeech() {
-            if (active()) working = true
-        }
+        override fun onReadyForSpeech(params: Bundle?) {}
+        override fun onBeginningOfSpeech() {}
 
         override fun onBufferReceived(buffer: ByteArray?) {}
         override fun onEndOfSpeech() {}
@@ -186,14 +195,14 @@ class SpeechCapture(private val context: Context) {
         override fun onPartialResults(partialResults: Bundle?) {
             if (!active()) return
             val partial = partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull().orEmpty()
-            if (partial.isNotBlank()) working = true
+            if (partial.isNotBlank()) rememberWorking()
             _state.value = _state.value.copy(partial = partial)
         }
 
         override fun onResults(results: Bundle?) {
             if (!active()) return
-            working = true
             val text = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull().orEmpty()
+            if (text.isNotBlank()) rememberWorking()
             val joined = listOf(_state.value.text, text.ifBlank { _state.value.partial }).filter { it.isNotBlank() }.joinToString(" ")
             _state.value = _state.value.copy(text = joined, partial = "")
             silentRounds = 0
@@ -202,6 +211,9 @@ class SpeechCapture(private val context: Context) {
 
         override fun onError(error: Int) {
             if (!active()) return
+            if (error != SpeechRecognizer.ERROR_NO_MATCH && error != SpeechRecognizer.ERROR_SPEECH_TIMEOUT) {
+                lastProblem = "$error " + (candidates.getOrNull(candidateIndex)?.packageName ?: "default")
+            }
             if (finishing) {
                 deliver(null)
                 return
@@ -232,6 +244,7 @@ class SpeechCapture(private val context: Context) {
     companion object {
         private const val GOOGLE_APP = "com.google.android.googlequicksearchbox"
         private const val GOOGLE_SPEECH_SERVICES = "com.google.android.tts"
+        private const val KEY_GOOD = "good_service"
 
         /** Errors that mean "no internet", not "this speech service can't work on this phone". */
         val NETWORK_ERRORS = setOf(SpeechRecognizer.ERROR_NETWORK, SpeechRecognizer.ERROR_NETWORK_TIMEOUT)

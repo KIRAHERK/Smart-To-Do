@@ -16,6 +16,10 @@ import kotlinx.coroutines.flow.map
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
+const val LISTEN_AUTO = "auto"
+const val LISTEN_RECORD = "record"
+const val LISTEN_POPUP = "popup"
+
 data class AppSettings(
     /** BCP-47 tag for speech recognition, e.g. "ar-SA", "ar-EG", "ar-LB". */
     val dialect: String = "ar-SA",
@@ -38,8 +42,12 @@ data class AppSettings(
     /** Gemini voice name for the natural voice (e.g. "Kore"), or "" for the phone's own voice. */
     val voiceName: String = "Kore",
     val autoConfirm: Boolean = false,
-    /** Use Google's listening popup instead of listening inside the app (set automatically if needed). */
-    val voicePopup: Boolean = false,
+    /**
+     * How to listen: [LISTEN_AUTO] = inside the app, writing his words as he speaks (if the phone
+     * can't, it records instead); [LISTEN_RECORD] = record with no time limit and let the AI write
+     * it down; [LISTEN_POPUP] = Google's listening window.
+     */
+    val listenMode: String = LISTEN_AUTO,
     val textScale: Float = 1.15f,
     val backupTreeUri: String = "",
     val lastBackupAt: Long = 0,
@@ -65,9 +73,7 @@ class SettingsRepository(private val context: Context) {
         val readAloud = booleanPreferencesKey("read_aloud")
         val voiceName = stringPreferencesKey("voice_name")
         val autoConfirm = booleanPreferencesKey("auto_confirm")
-        // New name in 0.2.2: older versions switched to Google's window after a single hiccup,
-        // so everyone starts again with listening inside the app.
-        val voicePopup = booleanPreferencesKey("voice_popup_v2")
+        val listenMode = stringPreferencesKey("listen_mode")
         val textScale = floatPreferencesKey("text_scale")
         val backupTreeUri = stringPreferencesKey("backup_tree_uri")
         val lastBackupAt = longPreferencesKey("last_backup_at")
@@ -93,7 +99,7 @@ class SettingsRepository(private val context: Context) {
             readAloud = p[Keys.readAloud] ?: d.readAloud,
             voiceName = p[Keys.voiceName] ?: d.voiceName,
             autoConfirm = p[Keys.autoConfirm] ?: d.autoConfirm,
-            voicePopup = p[Keys.voicePopup] ?: d.voicePopup,
+            listenMode = p[Keys.listenMode] ?: d.listenMode,
             textScale = p[Keys.textScale] ?: d.textScale,
             backupTreeUri = p[Keys.backupTreeUri] ?: d.backupTreeUri,
             lastBackupAt = p[Keys.lastBackupAt] ?: d.lastBackupAt,
@@ -115,7 +121,7 @@ class SettingsRepository(private val context: Context) {
     suspend fun setReadAloud(v: Boolean) = put(Keys.readAloud, v)
     suspend fun setVoiceName(v: String) = put(Keys.voiceName, v)
     suspend fun setAutoConfirm(v: Boolean) = put(Keys.autoConfirm, v)
-    suspend fun setVoicePopup(v: Boolean) = put(Keys.voicePopup, v)
+    suspend fun setListenMode(v: String) = put(Keys.listenMode, v)
     suspend fun setTextScale(v: Float) = put(Keys.textScale, v)
     suspend fun setBackupTreeUri(v: String) = put(Keys.backupTreeUri, v)
     suspend fun setLastBackupAt(v: Long) = put(Keys.lastBackupAt, v)

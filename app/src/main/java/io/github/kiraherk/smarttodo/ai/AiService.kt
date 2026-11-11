@@ -119,6 +119,7 @@ class AiService(
         temperature: Double = 0.2,
         avoid: Set<String> = emptySet(),
         budgetMs: Long = if (purpose == AiPurpose.COMMAND) COMMAND_BUDGET_MS else ASSISTANT_BUDGET_MS,
+        audioWav: ByteArray? = null,
     ): Generated {
         val chain = chain(purpose)
         val start = now()
@@ -135,6 +136,7 @@ class AiService(
                     temperature = ModelRanking.temperatureFor(model, temperature),
                     maxOutputTokens = MAX_OUTPUT_TOKENS,
                     timeoutMs = minOf(perTryMs, left),
+                    audioWav = audioWav,
                 )
                 lastGood[purpose] = model
                 cooldownUntil.remove(model)
@@ -156,6 +158,21 @@ class AiService(
             }
         }
         throw last ?: AiException.Timeout(null)
+    }
+
+    /**
+     * Writes down what he said in a recording (used when the phone's own speech recognition
+     * doesn't work). Returns "" when nothing was said.
+     */
+    suspend fun transcribe(wav: ByteArray, languageName: String): String {
+        val prompt = "Write down exactly what the speaker says in this recording. He speaks $languageName (any dialect) " +
+            "and may mix in English words. Use $languageName script, write numbers as digits, keep his words (don't answer " +
+            "or summarise). Output only his words. If nobody speaks, output nothing."
+        val text = generate(
+            AiPurpose.COMMAND, TRANSCRIBE_SYSTEM, listOf(GeminiClient.Turn.user(prompt)),
+            schema = null, temperature = 0.0, budgetMs = TRANSCRIBE_BUDGET_MS, audioWav = wav,
+        ).text
+        return cleanTranscript(text)
     }
 
     /** Why the natural voice was last not used, for the settings screen. Null = it worked. */
@@ -231,6 +248,18 @@ class AiService(
         const val ASSISTANT_BUDGET_MS = 55_000L
         /** Far more than any real answer needs; stops a model that rambles from running for minutes. */
         const val MAX_OUTPUT_TOKENS = 4096
+
+        const val TRANSCRIBE_BUDGET_MS = 40_000L
+        const val TRANSCRIBE_SYSTEM = "You are a careful transcriber of voice messages. You only write down the spoken words."
+
+        /** Removes quotes or labels a model sometimes adds around a transcript. */
+        fun cleanTranscript(text: String): String {
+            var t = text.trim()
+            t = t.removePrefix("Transcript:").removePrefix("transcript:").trim()
+            t = t.trim('"', '«', '»', '“', '”', '\'', ' ', '\n')
+            if (t.equals("(silence)", true) || t.equals("[silence]", true) || t.equals("no speech", true) || t == "...") return ""
+            return t
+        }
 
         /** About 2–3 s for a short sentence; longer answers take a little longer to prepare. */
         fun speechBudget(text: String): Long = (7_000L + text.length * 40L).coerceIn(9_000L, 18_000L)

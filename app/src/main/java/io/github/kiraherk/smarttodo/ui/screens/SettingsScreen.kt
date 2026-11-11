@@ -74,6 +74,9 @@ import io.github.kiraherk.smarttodo.ai.ModelRanking
 import io.github.kiraherk.smarttodo.data.settings.AppSettings
 import io.github.kiraherk.smarttodo.reminders.Notifications
 import io.github.kiraherk.smarttodo.ui.voiceLabel
+import io.github.kiraherk.smarttodo.data.settings.LISTEN_AUTO
+import io.github.kiraherk.smarttodo.data.settings.LISTEN_POPUP
+import io.github.kiraherk.smarttodo.data.settings.LISTEN_RECORD
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material.icons.filled.Download
 import io.github.kiraherk.smarttodo.ai.AiService
@@ -168,7 +171,8 @@ class SettingsViewModel(private val c: AppContainer) : ViewModel() {
     fun setDialect(v: String) = viewModelScope.launch { c.settings.setDialect(v) }
     fun setReadAloud(v: Boolean) = viewModelScope.launch { c.settings.setReadAloud(v); c.speaker.enabled = v }
     fun setAutoConfirm(v: Boolean) = viewModelScope.launch { c.settings.setAutoConfirm(v) }
-    fun setVoicePopup(v: Boolean) = viewModelScope.launch { c.settings.setVoicePopup(v) }
+    fun setListenMode(v: String) = viewModelScope.launch { c.settings.setListenMode(v) }
+    fun listenProblem(): String? = c.speech.lastProblem
     fun setTextScale(v: Float) = viewModelScope.launch { c.settings.setTextScale(v) }
     fun testVoice() = c.speaker.speakNow(str(R.string.voice_test_sentence))
     /** Plays the sample with a voice, without saving it. */
@@ -317,7 +321,10 @@ fun SettingsScreen(openUpdate: Boolean, onUpdateOpened: () -> Unit, onOpenSetup:
                 SwitchRow(Icons.AutoMirrored.Filled.VolumeUp, stringResource(R.string.read_aloud_setting), s.readAloud, color = gold) { vm.setReadAloud(it) }
                 SettingRow(Icons.Filled.Language, stringResource(R.string.dialect), Locale.forLanguageTag(s.dialect).getDisplayName(locale), color = gold) { dialog = "dialect" }
                 SwitchRow(Icons.Filled.Checklist, stringResource(R.string.auto_confirm), s.autoConfirm, color = gold) { vm.setAutoConfirm(it) }
-                SwitchRow(Icons.Filled.Mic, stringResource(R.string.voice_popup_setting), s.voicePopup, color = gold) { vm.setVoicePopup(it) }
+                SettingRow(Icons.Filled.Mic, stringResource(R.string.listen_mode), listenModeLabel(ctx, s.listenMode), color = gold) { dialog = "listen" }
+                vm.listenProblem()?.let {
+                    Text(stringResource(R.string.listen_problem, it), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp))
+                }
                 Text(stringResource(R.string.voice_natural_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp))
                 vm.voiceStatus()?.let {
                     Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.tertiary, modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp))
@@ -409,6 +416,13 @@ fun SettingsScreen(openUpdate: Boolean, onUpdateOpened: () -> Unit, onOpenSetup:
             onDownload = { runCatching { ctx.startActivity(vm.downloadVoicesIntent()) } },
             onDismiss = { vm.stopVoice(); dialog = null },
         )
+        "listen" -> ChoiceDialog(
+            title = stringResource(R.string.listen_mode),
+            options = listOf(LISTEN_AUTO, LISTEN_RECORD, LISTEN_POPUP).map { it to listenModeLabel(ctx, it) },
+            selected = s.listenMode,
+            onSelect = { vm.setListenMode(it) },
+            onDismiss = { dialog = null },
+        )
         "dialect" -> ChoiceDialog(
             title = stringResource(R.string.dialect),
             options = SpeechCapture.DIALECTS.map { it to Locale.forLanguageTag(it).getDisplayName(locale) },
@@ -452,6 +466,14 @@ fun SettingsScreen(openUpdate: Boolean, onUpdateOpened: () -> Unit, onOpenSetup:
         )
     }
 }
+
+private fun listenModeLabel(ctx: android.content.Context, mode: String): String = ctx.getString(
+    when (mode) {
+        LISTEN_RECORD -> R.string.listen_record
+        LISTEN_POPUP -> R.string.listen_popup
+        else -> R.string.listen_auto
+    }
+)
 
 private fun friendly(ctx: android.content.Context, time: String): String =
     Dates.parseTime(time)?.let { Dates.friendlyTime(ctx, it) } ?: time

@@ -7,6 +7,16 @@ import java.nio.ByteOrder
 class Pcm(val sampleRate: Int, val channels: Int, val data: ByteArray) {
     val durationMs: Long get() = if (sampleRate <= 0 || channels <= 0) 0 else data.size * 1000L / (sampleRate * channels * 2)
 
+    /** This audio as a standard WAV file (16-bit little-endian PCM). */
+    fun toWav(): ByteArray {
+        val header = ByteBuffer.allocate(44).order(ByteOrder.LITTLE_ENDIAN)
+        header.put("RIFF".toByteArray(Charsets.US_ASCII)).putInt(36 + data.size).put("WAVE".toByteArray(Charsets.US_ASCII))
+        header.put("fmt ".toByteArray(Charsets.US_ASCII)).putInt(16).putShort(1).putShort(channels.toShort()).putInt(sampleRate)
+            .putInt(sampleRate * channels * 2).putShort((channels * 2).toShort()).putShort(16)
+        header.put("data".toByteArray(Charsets.US_ASCII)).putInt(data.size)
+        return header.array() + data
+    }
+
     companion object {
         /**
          * Gemini's speech models answer either with a WAV file or with bare samples described by the

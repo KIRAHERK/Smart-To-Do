@@ -37,6 +37,7 @@ object TestEnv {
         c.settings.setCommandModel("")
         c.settings.setAssistantModel("")
         c.settings.setReadAloud(false)
+        c.settings.setListenMode(io.github.kiraherk.smarttodo.data.settings.LISTEN_AUTO)
         c.secrets.setApiKey(null)
         c.geminiBaseUrl = GeminiClient.DEFAULT_BASE_URL
     }

@@ -70,6 +70,14 @@
 
     <string name="listening">أنا أسمعك…</string>
     <string name="listening_hint">تكلّم بشكل طبيعي، واضغط «انتهيت» عندما تنتهي.</string>
+    <string name="recording_hint">تكلّم براحتك وتوقّف متى شئت، لن أقاطعك. اضغط «انتهيت» عندما تنتهي.</string>
+    <string name="voice_writing">أكتب ما قلته…</string>
+    <string name="voice_mic_busy">الميكروفون مشغول الآن. أنهِ أي مكالمة أو تطبيق يستخدمه ثم حاول مرة أخرى.</string>
+    <string name="listen_mode">طريقة الاستماع</string>
+    <string name="listen_auto">تلقائي: يكتب كلامك وأنت تتكلم</string>
+    <string name="listen_record">تسجيل بلا مهلة: خذ وقتك ثم اضغط «انتهيت»</string>
+    <string name="listen_popup">نافذة Google للاستماع</string>
+    <string name="listen_problem">آخر مشكلة في الاستماع داخل التطبيق: %1$s</string>
     <string name="done_speaking">انتهيت</string>
     <string name="thinking">لحظة، أرتّب كلامك…</string>
     <string name="thinking_slow">خدمة Google بطيئة الآن… انتظر قليلاً، أو اضغط إلغاء وحاول لاحقاً.</string>
@@ -186,7 +194,6 @@
     <string name="section_voice">الصوت</string>
     <string name="dialect">لغة الكلام</string>
     <string name="read_aloud_setting">قراءة الردود بصوت عالٍ</string>
-    <string name="voice_popup_setting">الاستماع عبر نافذة Google الصوتية</string>
     <string name="auto_confirm">احفظ المهام الجديدة بدون سؤال</string>
     <string name="test_voice">تجربة الصوت</string>
     <string name="test_voice_hint">اضغط لسماع جملة</string>
