@@ -1,6 +1,8 @@
 package io.github.kiraherk.smarttodo.ui.screens
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -173,7 +175,8 @@ fun TaskDetailScreen(taskId: Long, onBack: () -> Unit) {
             // Title + category
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(categoryIcon(category), contentDescription = null, tint = categoryColor(category), modifier = Modifier.size(30.dp))
-                Text("  " + t.title, style = MaterialTheme.typography.headlineSmall)
+                Spacer(Modifier.width(10.dp))
+                Text(t.title, style = MaterialTheme.typography.headlineSmall)
             }
             if (t.details.isNotBlank()) Text(t.details, style = MaterialTheme.typography.bodyLarge)
             if (t.archived) Text(stringResource(R.string.archived_note), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.titleMedium)
@@ -185,7 +188,8 @@ fun TaskDetailScreen(taskId: Long, onBack: () -> Unit) {
                     modifier = Modifier.weight(1f).heightIn(min = 60.dp),
                 ) {
                     Icon(Icons.Filled.EditNote, contentDescription = null)
-                    Text(" " + stringResource(R.string.add_voice_note), style = MaterialTheme.typography.titleMedium)
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.add_voice_note), style = MaterialTheme.typography.titleMedium)
                 }
                 Button(
                     onClick = { voice.start(VoiceViewModel.Request(VoiceViewModel.Mode.COMMAND, taskId = taskId)) },
@@ -193,7 +197,8 @@ fun TaskDetailScreen(taskId: Long, onBack: () -> Unit) {
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
                 ) {
                     Icon(Icons.Filled.Mic, contentDescription = null)
-                    Text(" " + stringResource(R.string.change_by_voice), style = MaterialTheme.typography.titleMedium)
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.change_by_voice), style = MaterialTheme.typography.titleMedium)
                 }
             }
 
@@ -233,7 +238,8 @@ fun TaskDetailScreen(taskId: Long, onBack: () -> Unit) {
                     SettingRow(Icons.Filled.Repeat, stringResource(R.string.repeat), rule?.let { recurrenceText(ctx, it) } ?: stringResource(R.string.no_repeat)) { showRepeat = true }
                     Row(Modifier.fillMaxWidth().padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Filled.NotificationsActive, contentDescription = null)
-                        Text("  " + stringResource(R.string.reminder), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                        Spacer(Modifier.width(10.dp))
+                        Text(stringResource(R.string.reminder), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
                         Switch(checked = t.reminderEnabled, onCheckedChange = { vm.setReminder(it) })
                     }
                     SettingRow(categoryIcon(category), stringResource(R.string.category), category?.let { categoryName(ctx, it) } ?: "—") { showCategory = true }

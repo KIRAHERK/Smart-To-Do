@@ -1,6 +1,8 @@
 package io.github.kiraherk.smarttodo.ui.screens
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -186,7 +188,8 @@ fun Banner(icon: ImageVector, text: String, color: Color, onClick: () -> Unit) {
     ) {
         Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(icon, contentDescription = null)
-            Text("  $text", style = MaterialTheme.typography.titleMedium)
+            Spacer(Modifier.width(10.dp))
+            Text(text, style = MaterialTheme.typography.titleMedium)
         }
     }
 }

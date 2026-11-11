@@ -55,7 +55,9 @@ import io.github.kiraherk.smarttodo.data.settings.AppSettings
 import io.github.kiraherk.smarttodo.ui.components.ChoiceDialog
 import io.github.kiraherk.smarttodo.util.LocaleHelper
 import io.github.kiraherk.smarttodo.voice.SpeechCapture
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.Locale
 
 /** First-run checklist so reminders really ring on his Samsung and the voice works. */
@@ -122,7 +124,13 @@ fun SetupScreen(onDone: () -> Unit, onOpenSettings: () -> Unit) {
             }
 
             Button(
-                onClick = { scope.launch { c.settings.setSetupDone(true); c.checkInScheduler.scheduleAll(); onDone() } },
+                onClick = {
+                    scope.launch {
+                        c.settings.setSetupDone(true)
+                        c.checkInScheduler.scheduleAll()
+                        withContext(Dispatchers.Main) { onDone() }
+                    }
+                },
                 modifier = Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(top = 10.dp),
             ) { Text(stringResource(R.string.setup_finish), style = MaterialTheme.typography.titleLarge) }
             Text("", Modifier.padding(bottom = 30.dp))
