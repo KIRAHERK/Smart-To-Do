@@ -178,7 +178,8 @@ fun AppRoot(navRequests: StateFlow<NavRequest?>, onNavHandled: () -> Unit) {
                     composable(Routes.SETUP) {
                         SetupScreen(
                             onDone = { navigateTop(nav, Routes.TODAY) },
-                            onOpenSettings = { navigateTop(nav, Routes.SETTINGS) },
+                            // Opens on top of setup, so "back" returns to the checklist.
+                            onOpenSettings = { nav.navigate(Routes.SETTINGS) },
                         )
                     }
                 }
@@ -197,10 +198,18 @@ fun AppRoot(navRequests: StateFlow<NavRequest?>, onNavHandled: () -> Unit) {
     }
 }
 
+/**
+ * Goes to a main tab and shows it from its start, never a screen that was open on top of it before.
+ * (Android's usual save/restore tab pattern brings back the old screen when going to the first tab,
+ * which kept him on the setup screen after "Finish". Simple and predictable is better here.)
+ */
 private fun navigateTop(nav: NavHostController, route: String) {
+    if (route == Routes.TODAY) {
+        if (!nav.popBackStack(Routes.TODAY, inclusive = false)) nav.navigate(Routes.TODAY) { launchSingleTop = true }
+        return
+    }
     nav.navigate(route) {
-        popUpTo(nav.graph.findStartDestination().id) { saveState = true }
+        popUpTo(nav.graph.findStartDestination().id)
         launchSingleTop = true
-        restoreState = true
     }
 }
