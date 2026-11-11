@@ -57,6 +57,14 @@ class ActionSanityTest {
     }
 
     @Test
+    fun oldBrokenNamesAreRecognisedOnlyWhenClearlyBroken() {
+        assertTrue(ActionSanity.isLeakedTitle(leaked))
+        listOf("الاتصال باحمد شماط", "Wait for the shipment", "اجتماع: الساعة 5", "Date: مع العميل").forEach {
+            assertFalse(it, ActionSanity.isLeakedTitle(it))
+        }
+    }
+
+    @Test
     fun repairFallsBackToWhatHeSaid() {
         assertEquals("ذكرني بكرة الساعة 12 الظهر اتصل باحمد شماط", ActionSanity.cleanTitle("Wait, let me think about this one", heard))
     }

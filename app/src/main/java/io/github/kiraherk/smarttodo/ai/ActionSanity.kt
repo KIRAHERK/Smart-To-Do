@@ -38,6 +38,14 @@ object ActionSanity {
             looksLikeReasoning(t, transcript)
     }
 
+    private val leakLabels = Regex("""\b(title|category|date|time|priority|reminder)\s*:""", RegexOption.IGNORE_CASE)
+
+    /**
+     * Strict test for names saved before this check existed (v0.1.2 and older): two or more English
+     * field labels like "Category:" and "Date:". A name he typed himself never looks like that.
+     */
+    fun isLeakedTitle(title: String): Boolean = leakLabels.findAll(title).count() >= 2
+
     /** Short descriptions of what is wrong; empty when everything looks fine. */
     fun problems(actions: List<AiAction>, transcript: String): List<String> = buildList {
         actions.forEachIndexed { i, a ->
