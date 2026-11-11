@@ -66,6 +66,11 @@ class AppOnDeviceTest {
         launch()
         compose.waitForText(str(R.string.setup_title))
         shot("01-setup")
+        // "Gemini key" opens Settings on top; back returns to the checklist.
+        compose.clickable(str(R.string.open)).performScrollTo().performClick()
+        compose.waitForText(str(R.string.gemini_key))
+        UiDevice.getInstance(InstrumentationRegistry.getInstrumentation()).pressBack()
+        compose.waitForText(str(R.string.setup_title))
         compose.clickable(str(R.string.setup_finish)).performScrollTo().performClick()
         compose.waitForText(str(R.string.today_title))
         compose.waitForText(str(R.string.empty_today))
@@ -82,14 +87,20 @@ class AppOnDeviceTest {
         launch()
         compose.waitForText("اتصل بالبنك")
         shot("03-today-tasks")
-        // The trip is further down the list: scroll to it like he would.
-        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("حجز تذاكر دبي"))
-        compose.waitForText("حجز تذاكر دبي")
-        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("تصليح المكيف"))
 
         // The first ✓ belongs to the late task (late tasks are listed first).
         compose.clickableDesc(str(R.string.mark_done)).performClick()
         compose.waitUntilTrue { statusOf(late) == TaskStatus.DONE }
+
+        // The trip is further down the list: scroll to it like he would.
+        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("حجز تذاكر دبي"))
+        compose.waitForText("حجز تذاكر دبي")
+
+        // Open a task, then the Today tab must show the list again (not the task).
+        compose.clickable("حجز تذاكر دبي").performClick()
+        compose.waitForText(str(R.string.add_voice_note))
+        compose.clickableDesc(str(R.string.back)).performClick()
+        compose.waitForText(str(R.string.today_title))
 
         compose.clickable(str(R.string.nav_history)).performClick()
         compose.waitForText(str(R.string.search_hint))
