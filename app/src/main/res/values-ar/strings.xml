@@ -194,6 +194,12 @@
     <string name="voice_phone">صوت الهاتف (يعمل بدون إنترنت)</string>
     <string name="voice_natural_hint">الأصوات الطبيعية تحتاج الإنترنت، وإذا لم تتوفر يقرأ صوت الهاتف بدلاً منها.</string>
     <string name="voice_pick_hint">اضغط على أي صوت لتسمعه، ثم اضغط «حفظ» لاعتماده.</string>
+    <string name="voice_section_natural">أصوات Google الطبيعية (تحتاج الإنترنت، وتتأخر بضع ثوانٍ)</string>
+    <string name="voice_section_instant">أصوات فورية على الهاتف (بدون إنترنت، بلا انتظار)</string>
+    <string name="voice_phone_n">صوت فوري %1$d</string>
+    <string name="voice_phone_unknown">صوت فوري</string>
+    <string name="voice_download">تنزيل أصوات عربية للهاتف</string>
+    <string name="voice_none_installed">لا توجد أصوات عربية محمّلة على الهاتف بعد. اضغط «تنزيل أصوات عربية للهاتف» ونزّل العربية، ثم ارجع هنا.</string>
     <string name="voice_status_daily">انتهى الحد المجاني اليومي للصوت الطبيعي، فيقرأ صوت الهاتف الآن. يعود الصوت الطبيعي غداً.</string>
     <string name="voice_status_minute">طلبت Google الانتظار قليلاً، فقرأ صوت الهاتف آخر رد. يعود الصوت الطبيعي بعد دقيقة تقريباً.</string>
     <string name="voice_status_slow">كان الصوت الطبيعي بطيئاً آخر مرة، فقرأ صوت الهاتف بدلاً منه.</string>

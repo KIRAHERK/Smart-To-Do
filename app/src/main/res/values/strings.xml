@@ -208,6 +208,12 @@
     <string name="voice_phone">Phone voice (works without internet)</string>
     <string name="voice_natural_hint">Natural voices need the internet. When they can\'t answer, the phone voice reads instead.</string>
     <string name="voice_pick_hint">Tap a voice to hear it. Press Save to keep it.</string>
+    <string name="voice_section_natural">Google natural voices (need internet, take a few seconds)</string>
+    <string name="voice_section_instant">Instant voices on the phone (no internet, no waiting)</string>
+    <string name="voice_phone_n">Instant voice %1$d</string>
+    <string name="voice_phone_unknown">Instant voice</string>
+    <string name="voice_download">Download Arabic voices to the phone</string>
+    <string name="voice_none_installed">No Arabic voices are stored on the phone yet. Press "Download Arabic voices to the phone", download Arabic, then come back here.</string>
     <string name="voice_status_daily">Today\'s free limit for the natural voice is used up, so the phone voice is reading. It comes back tomorrow.</string>
     <string name="voice_status_minute">Google asked to wait a moment, so the phone voice read the last reply. The natural voice is back in about a minute.</string>
     <string name="voice_status_slow">The natural voice was too slow last time, so the phone voice read instead.</string>

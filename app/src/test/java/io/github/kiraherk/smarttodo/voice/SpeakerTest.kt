@@ -52,4 +52,32 @@ class SpeakerTest {
         assertEquals(false, asked)
         assertEquals("مرحباً", lastPhoneText())
     }
+
+    @Test
+    fun aChosenPhoneVoiceSpeaksAtOnceWithoutTheInternet() {
+        var asked = false
+        val speaker = Speaker(app, { "ar" }, { "phone:ar-xa-x-ard-local" }, { _, _ -> asked = true; null })
+        speaker.onInit(TextToSpeech.SUCCESS)
+        speaker.speakNow("تم الحفظ")
+        ShadowLooper.idleMainLooper()
+        assertEquals(false, asked)
+        assertEquals("تم الحفظ", lastPhoneText())
+        assertEquals("phone:ar-xa-x-ard-local", speaker.lastSpokenWith)
+    }
+
+    @Test
+    fun onlyArabicVoicesStoredOnThePhoneAreOffered() {
+        val ar = java.util.Locale.forLanguageTag("ar")
+        fun voice(name: String, locale: java.util.Locale, network: Boolean = false, features: Set<String> = emptySet()) =
+            android.speech.tts.Voice(name, locale, android.speech.tts.Voice.QUALITY_HIGH, android.speech.tts.Voice.LATENCY_NORMAL, network, features)
+        val all = listOf(
+            voice("ar-xa-x-arz-local", ar),
+            voice("ar-xa-x-arc-local", ar),
+            voice("ar-xa-x-arc-network", ar, network = true),
+            voice("ar-xa-x-ard-local", ar, features = setOf("notInstalled")),
+            voice("ar-language", ar, features = setOf("legacySetLanguageVoice")),
+            voice("en-us-x-sfg-local", java.util.Locale.US),
+        )
+        assertEquals(listOf("ar-xa-x-arc-local", "ar-xa-x-arz-local"), Speaker.offlineVoices(all, ar).map { it.name })
+    }
 }
