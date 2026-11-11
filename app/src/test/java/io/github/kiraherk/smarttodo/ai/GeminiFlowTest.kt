@@ -192,6 +192,19 @@ class GeminiFlowTest {
         assertTrue(second.path!!.contains("gemini-3.1-flash-tts-preview:generateContent"))
         val body = second.body.readUtf8()
         assertTrue(body, body.contains("\"responseModalities\":[\"AUDIO\"]") && body.contains("\"voiceName\":\"Kore\"") && body.contains("سأضيف مهمة"))
+        // Only the Arabic words: any instruction sent with them is read out loud too.
+        assertTrue(body, body.contains("\"parts\":[{\"text\":\"سأضيف مهمة\"}]"))
+    }
+
+    @Test
+    fun aPerMinuteLimitRestsTheVoiceBrieflyADailyLimitForHours() {
+        val minute = """{"error":{"code":429,"details":[{"violations":[{"quotaId":"GenerateRequestsPerMinutePerProjectPerModel-FreeTier"}]},{"retryDelay":"34s"}]}}"""
+        val daily = """{"error":{"code":429,"details":[{"violations":[{"quotaId":"GenerateRequestsPerDayPerProjectPerModel-FreeTier"}]}]}}"""
+        assertEquals(34_000L, GeminiClient.retryDelayMs(minute))
+        assertEquals(34_000L, AiException.Quota(null, "x", GeminiClient.retryDelayMs(minute), daily = false).restMs)
+        assertEquals(null, GeminiClient.retryDelayMs(daily))
+        assertEquals(6 * 3_600_000L, AiException.Quota(null, "x", null, daily = true).restMs)
+        assertEquals(60_000L, AiException.Quota(null, "x").restMs)
     }
 
     @Test(expected = AiException.InvalidKey::class)

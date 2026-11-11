@@ -68,12 +68,13 @@ class Speaker(
         val locale = Locale.forLanguageTag(languageTag())
         val result = runCatching { tts.setLanguage(locale) }.getOrDefault(TextToSpeech.LANG_NOT_SUPPORTED)
         voiceAvailable = result >= TextToSpeech.LANG_AVAILABLE
-        // The default voice is often not the best one installed: pick the clearest voice that
-        // works offline (this voice is the fallback for when there is no internet).
+        // The default voice is often not the best one installed. With internet, Google's online
+        // voices sound much more natural; without it, the clearest voice stored on the phone.
         runCatching {
+            val online = isOnline()
             tts.voices
-                ?.filter { it.locale.language == locale.language && !it.isNetworkConnectionRequired && "notInstalled" !in it.features }
-                ?.maxByOrNull { it.quality }
+                ?.filter { it.locale.language == locale.language && "notInstalled" !in it.features && (online || !it.isNetworkConnectionRequired) }
+                ?.maxWithOrNull(compareBy<android.speech.tts.Voice> { if (online && it.isNetworkConnectionRequired) 1 else 0 }.thenBy { it.quality })
                 ?.let { if (tts.voice?.name != it.name) tts.voice = it }
         }
         tts.setSpeechRate(0.92f)
@@ -82,18 +83,21 @@ class Speaker(
     /** Speaks if read-aloud is on. A new text interrupts the one being spoken. */
     fun speak(text: String) {
         if (!enabled) return
-        say(text)
+        say(text, null)
     }
 
     /** Speaks even when read-aloud is switched off (for the explicit "read" buttons). */
-    fun speakNow(text: String) = say(text)
+    fun speakNow(text: String) = say(text, null)
 
-    private fun say(text: String) {
+    /** Plays [text] with a given voice ("" = phone voice) without changing the saved choice. */
+    fun preview(text: String, voice: String) = say(text, voice)
+
+    private fun say(text: String, voiceOverride: String?) {
         val clean = text.replace("*", "").trim()
         if (clean.isEmpty()) return
         stop()
         job = scope.launch {
-            val voice = runCatching { voiceName() }.getOrDefault("")
+            val voice = voiceOverride ?: runCatching { voiceName() }.getOrDefault("")
             val audio = if (voice.isNotBlank() && natural != null) {
                 try {
                     natural.invoke(clean, voice)
@@ -137,6 +141,12 @@ class Speaker(
         if (ready) runCatching { tts.stop() }
         pending = null
     }
+
+    private fun isOnline(): Boolean = runCatching {
+        val cm = appContext.getSystemService(android.net.ConnectivityManager::class.java)
+        val caps = cm.getNetworkCapabilities(cm.activeNetwork)
+        caps != null && caps.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+    }.getOrDefault(false)
 
     fun installVoiceIntent(): Intent =
         Intent(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)

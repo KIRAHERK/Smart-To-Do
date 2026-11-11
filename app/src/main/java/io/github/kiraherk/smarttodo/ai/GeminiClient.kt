@@ -30,7 +30,14 @@ import kotlin.coroutines.resumeWithException
 sealed class AiException(message: String, cause: Throwable? = null) : Exception(message, cause) {
     class NoKey : AiException("No Gemini API key")
     class InvalidKey(message: String) : AiException(message)
-    class Quota(val model: String?, message: String) : AiException(message)
+    /**
+     * The free limit was hit. [retryAfterMs] is Google's own "try again in" hint when it gives one;
+     * [daily] = the limit for the whole day is used up (otherwise it is a per-minute limit).
+     */
+    class Quota(val model: String?, message: String, val retryAfterMs: Long? = null, val daily: Boolean = false) : AiException(message) {
+        /** How long to leave this model alone. */
+        val restMs: Long get() = retryAfterMs?.coerceIn(5_000L, 30 * 60_000L) ?: if (daily) 6 * 3_600_000L else 60_000L
+    }
     class ModelUnavailable(val model: String?, message: String) : AiException(message)
     class BadRequest(val model: String?, message: String) : AiException(message)
     class Server(val code: Int, message: String) : AiException(message)
@@ -131,13 +138,14 @@ class GeminiClient(
      * Reads [text] aloud with one of Gemini's speech models ("…-tts") and a prebuilt voice such
      * as "Kore". [style] is a short spoken-style direction placed before the text.
      */
-    suspend fun speech(model: String, text: String, voice: String, style: String, timeoutMs: Long): Audio {
+    suspend fun speech(model: String, text: String, voice: String, timeoutMs: Long): Audio {
         val key = requireKey()
         val body = buildJsonObject {
             putJsonArray("contents") {
                 addJsonObject {
                     put("role", "user")
-                    putJsonArray("parts") { addJsonObject { put("text", "$style\n$text") } }
+                    // Only the words to say: any instruction placed here gets read out loud too.
+                    putJsonArray("parts") { addJsonObject { put("text", text) } }
                 }
             }
             putJsonObject("generationConfig") {
@@ -225,7 +233,7 @@ class GeminiClient(
                 json.parseToJsonElement(body).jsonObject["error"]?.jsonObject?.get("message")?.jsonPrimitive?.contentOrNull
             }.getOrNull() ?: "HTTP ${r.code}"
             throw when {
-                r.code == 429 -> AiException.Quota(model, message)
+                r.code == 429 -> AiException.Quota(model, message, retryDelayMs(body), daily = body.contains("PerDay", ignoreCase = true))
                 r.code == 404 -> AiException.ModelUnavailable(model, message)
                 r.code == 401 || r.code == 403 -> AiException.InvalidKey(message)
                 r.code == 400 && (body.contains("API_KEY_INVALID") || message.contains("API key", ignoreCase = true)) -> AiException.InvalidKey(message)
@@ -236,6 +244,10 @@ class GeminiClient(
     }
 
     companion object {
+        /** Reads Google's "retryDelay": "34s" hint from an error body. */
+        fun retryDelayMs(body: String): Long? =
+            Regex("\"retryDelay\"\\s*:\\s*\"(\\d+(?:\\.\\d+)?)s\"").find(body)?.groupValues?.get(1)?.toDoubleOrNull()?.let { (it * 1000).toLong() }
+
         const val DEFAULT_BASE_URL = "https://generativelanguage.googleapis.com/v1beta"
         const val DEFAULT_TIMEOUT_MS = 30_000L
         private const val KEY_HEADER = "x-goog-api-key"
