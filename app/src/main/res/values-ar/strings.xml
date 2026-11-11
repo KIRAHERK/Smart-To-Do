@@ -33,6 +33,7 @@
     <string name="automatic">تلقائي (أفضل نموذج مجاني)</string>
     <string name="read_aloud">اقرأ بصوت عالٍ</string>
     <string name="mark_done">تم الإنجاز</string>
+    <string name="important">مهم</string>
 
     <string name="cat_work">العمل</string>
     <string name="cat_home">البيت</string>
@@ -96,11 +97,21 @@
     <string name="err_slow">خدمة Google للذكاء الاصطناعي مزدحمة جداً الآن ولم ترد في الوقت المناسب. حاول مرة أخرى بعد دقيقة.</string>
 
     <string name="today_title">مهامي</string>
+    <string name="greeting_morning">صباح الخير</string>
+    <string name="greeting_afternoon">مساء الخير</string>
+    <string name="greeting_evening">مساء الخير</string>
+    <string name="next_up">التالي</string>
+    <string name="done_of">منجزة</string>
+    <string name="all_clear">أنجزت كل مهام اليوم</string>
+    <string name="empty_today_title">يومك خالٍ من المهام</string>
+    <string name="empty_today_hint">اضغط «تكلّم» وقل ما تريد أن تفعله.</string>
+    <string name="read_my_day_short">اقرأ يومي</string>
+    <string name="review_today_short">مراجعة اليوم</string>
+    <string name="review_week_short">الأسبوع</string>
     <string name="read_my_day">اقرأ لي يومي</string>
     <string name="review_today">مراجعة اليوم</string>
     <string name="review_week">مراجعة الأسبوع</string>
     <string name="banner_no_key">اضبط مفتاح الذكاء الاصطناعي ليفهم التطبيق صوتك</string>
-    <string name="empty_today">لا يوجد شيء. اضغط «تكلّم» لإضافة مهمة.</string>
     <string name="section_overdue">متأخرة</string>
     <string name="section_today">اليوم</string>
     <string name="section_upcoming">القادمة</string>
@@ -302,14 +313,6 @@
         <item quantity="few">%d تسجيلات بانتظار الترتيب</item>
         <item quantity="many">%d تسجيلاً بانتظار الترتيب</item>
         <item quantity="other">%d تسجيل بانتظار الترتيب</item>
-    </plurals>
-    <plurals name="done_today">
-        <item quantity="zero">✓ لم يُنجز شيء اليوم بعد</item>
-        <item quantity="one">✓ أنجزت مهمة واحدة اليوم</item>
-        <item quantity="two">✓ أنجزت مهمتين اليوم</item>
-        <item quantity="few">✓ أنجزت %d مهام اليوم</item>
-        <item quantity="many">✓ أنجزت %d مهمة اليوم</item>
-        <item quantity="other">✓ أنجزت %d مهمة اليوم</item>
     </plurals>
     <plurals name="done_count">
         <item quantity="zero">✓ لا شيء</item>

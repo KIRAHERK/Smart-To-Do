@@ -43,6 +43,26 @@ import io.github.kiraherk.smarttodo.checkins.CheckIns
 import io.github.kiraherk.smarttodo.data.db.OccurrenceWithTask
 import io.github.kiraherk.smarttodo.domain.TaskStatus
 import io.github.kiraherk.smarttodo.ui.components.BigMicButton
+import io.github.kiraherk.smarttodo.ui.components.AppCard
+import io.github.kiraherk.smarttodo.ui.components.IconTile
+import io.github.kiraherk.smarttodo.ui.components.ScreenHeader
+import io.github.kiraherk.smarttodo.ui.components.heroCircles
+import io.github.kiraherk.smarttodo.ui.components.tint
+import io.github.kiraherk.smarttodo.ui.categoryColor
+import io.github.kiraherk.smarttodo.ui.categoryIcon
+import io.github.kiraherk.smarttodo.ui.statusIcon
+import io.github.kiraherk.smarttodo.ui.theme.LocalBrand
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.NightsStay
+import androidx.compose.material.icons.filled.TaskAlt
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import io.github.kiraherk.smarttodo.ui.components.EmptyState
 import io.github.kiraherk.smarttodo.ui.components.SectionHeader
 import io.github.kiraherk.smarttodo.ui.components.StatusPill
@@ -97,12 +117,15 @@ fun ReviewScreen(weekly: Boolean, onBack: () -> Unit, onOpenTask: (Long) -> Unit
     val weekSummary = week?.let { stringResource(R.string.week_summary, it.done, it.partly, it.notDone, it.missed, it.open) }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            TopAppBar(
-                title = { Text(stringResource(if (weekly) R.string.review_week else R.string.review_today)) },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back)) } },
-                actions = { if (weekly) IconButton(onClick = { vm.speakWeek() }) { Icon(Icons.AutoMirrored.Filled.VolumeUp, contentDescription = stringResource(R.string.read_aloud)) } },
-            )
+            ScreenHeader(stringResource(if (weekly) R.string.review_week else R.string.review_today), onBack = onBack) {
+                if (weekly) {
+                    IconButton(onClick = { vm.speakWeek() }, modifier = Modifier.size(52.dp)) {
+                        Icon(Icons.AutoMirrored.Filled.VolumeUp, contentDescription = stringResource(R.string.read_aloud), tint = MaterialTheme.colorScheme.primary)
+                    }
+                }
+            }
         },
         floatingActionButton = {
             BigMicButton(
@@ -114,27 +137,31 @@ fun ReviewScreen(weekly: Boolean, onBack: () -> Unit, onOpenTask: (Long) -> Unit
     ) { padding ->
         LazyColumn(
             Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = padding.calculateTopPadding(), bottom = padding.calculateBottomPadding() + 160.dp),
+            contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = padding.calculateTopPadding(), bottom = padding.calculateBottomPadding() + 130.dp),
         ) {
-            item { Text(hint, style = BigText, modifier = Modifier.padding(vertical = 10.dp)) }
-            if (weekly && weekSummary != null) {
-                item {
-                    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer), modifier = Modifier.fillMaxWidth()) {
-                        Text(weekSummary, style = BigText, modifier = Modifier.padding(16.dp))
+            item {
+                val brand = LocalBrand.current
+                Column(
+                    Modifier.fillMaxWidth().padding(top = 4.dp).clip(RoundedCornerShape(26.dp)).background(brand.heroBrush).heroCircles().padding(18.dp),
+                ) {
+                    Icon(if (weekly) Icons.Filled.DateRange else Icons.Filled.NightsStay, contentDescription = null, tint = Color.White, modifier = Modifier.size(30.dp))
+                    Text(hint, style = BigText, color = Color.White, modifier = Modifier.padding(top = 6.dp))
+                    if (weekly && weekSummary != null) {
+                        Text(weekSummary, style = MaterialTheme.typography.bodyLarge, color = Color.White.copy(alpha = 0.9f), modifier = Modifier.padding(top = 10.dp))
                     }
                 }
             }
             if (!weekly) {
-                item { SectionHeader(titles[0]) }
-                if (todayItems.isEmpty()) item { EmptyState(nothing) }
+                item { SectionHeader(titles[0], MaterialTheme.colorScheme.primary) }
+                if (todayItems.isEmpty()) item { EmptyState(nothing, Icons.Filled.TaskAlt) }
                 items(todayItems, key = { "t-${it.occurrence.id}" }) { ReviewRow(it, onOpenTask, vm::setStatus) }
             }
             if (overdue.isNotEmpty()) {
-                item { SectionHeader(titles[1]) }
+                item { SectionHeader(titles[1], MaterialTheme.colorScheme.error) }
                 items(overdue, key = { "o-${it.occurrence.id}" }) { ReviewRow(it, onOpenTask, vm::setStatus) }
             }
             if (weekly && nextWeek.isNotEmpty()) {
-                item { SectionHeader(titles[2]) }
+                item { SectionHeader(titles[2], MaterialTheme.colorScheme.secondary) }
                 items(nextWeek, key = { "n-${it.occurrence.id}" }) { TaskCard(it, vm.today, onClick = { onOpenTask(it.task.id) }, onDone = null) }
             }
         }
@@ -146,23 +173,33 @@ fun ReviewScreen(weekly: Boolean, onBack: () -> Unit, onOpenTask: (Long) -> Unit
 private fun ReviewRow(item: OccurrenceWithTask, onOpenTask: (Long) -> Unit, setStatus: (Long, TaskStatus) -> Unit) {
     val ctx = LocalContext.current
     val status = TaskStatus.parse(item.occurrence.status) ?: TaskStatus.NOT_STARTED
-    Card(Modifier.fillMaxWidth().padding(vertical = 5.dp)) {
-        Column(Modifier.padding(12.dp)) {
+    val cat = io.github.kiraherk.smarttodo.domain.CategoryKey.parse(item.task.category)
+    AppCard(modifier = Modifier.padding(vertical = 5.dp)) {
+        Column {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { onOpenTask(item.task.id) }) {
+                IconTile(categoryIcon(cat), categoryColor(cat), size = 42.dp, iconSize = 22.dp)
+                Spacer(Modifier.width(12.dp))
                 Text(item.task.title, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-                StatusPill(status, item.occurrence.progress)
+                if (status != TaskStatus.NOT_STARTED) StatusPill(status, item.occurrence.progress)
             }
             Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf(TaskStatus.DONE, TaskStatus.PARTIALLY_DONE, TaskStatus.NOT_DONE).forEach { s ->
+                    val selected = s == status
                     OutlinedButton(
                         onClick = { setStatus(item.occurrence.id, s) },
-                        modifier = Modifier.weight(1f).heightIn(min = 52.dp),
+                        modifier = Modifier.weight(1f).heightIn(min = 54.dp),
                         contentPadding = PaddingValues(4.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        border = BorderStroke(if (selected) 2.dp else 1.dp, if (selected) statusColor(s) else MaterialTheme.colorScheme.outlineVariant),
                         colors = ButtonDefaults.outlinedButtonColors(
-                            containerColor = if (s == status) statusColor(s).copy(alpha = 0.18f) else MaterialTheme.colorScheme.surface,
+                            containerColor = if (selected) tint(statusColor(s), 0.16f, 0.30f) else MaterialTheme.colorScheme.surface,
                             contentColor = statusColor(s),
                         ),
-                    ) { Text(statusName(ctx, s), style = MaterialTheme.typography.labelLarge, maxLines = 1) }
+                    ) {
+                        Icon(statusIcon(s), contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text(statusName(ctx, s), style = MaterialTheme.typography.labelLarge, maxLines = 1)
+                    }
                 }
             }
         }

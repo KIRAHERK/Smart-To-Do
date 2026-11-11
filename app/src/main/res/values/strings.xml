@@ -35,6 +35,7 @@
     <string name="automatic">Automatic (best free model)</string>
     <string name="read_aloud">Read aloud</string>
     <string name="mark_done">Mark as done</string>
+    <string name="important">Important</string>
 
     <!-- Categories -->
     <string name="cat_work">Work</string>
@@ -104,11 +105,21 @@
 
     <!-- Today -->
     <string name="today_title">My tasks</string>
+    <string name="greeting_morning">Good morning</string>
+    <string name="greeting_afternoon">Good afternoon</string>
+    <string name="greeting_evening">Good evening</string>
+    <string name="next_up">Next</string>
+    <string name="done_of">done</string>
+    <string name="all_clear">All done for today</string>
+    <string name="empty_today_title">Your day is clear</string>
+    <string name="empty_today_hint">Press Talk and say what you need to do.</string>
+    <string name="read_my_day_short">Read my day</string>
+    <string name="review_today_short">Today</string>
+    <string name="review_week_short">The week</string>
     <string name="read_my_day">Read my day</string>
     <string name="review_today">Today\'s review</string>
     <string name="review_week">Weekly review</string>
     <string name="banner_no_key">Set up the AI key to understand your voice</string>
-    <string name="empty_today">Nothing to do. Press Talk to add something.</string>
     <string name="section_overdue">Late</string>
     <string name="section_today">Today</string>
     <string name="section_upcoming">Coming up</string>
@@ -302,10 +313,6 @@
     <plurals name="inbox_waiting">
         <item quantity="one">1 recording waiting to be organised</item>
         <item quantity="other">%d recordings waiting to be organised</item>
-    </plurals>
-    <plurals name="done_today">
-        <item quantity="one">✓ 1 done today</item>
-        <item quantity="other">✓ %d done today</item>
     </plurals>
     <plurals name="done_count">
         <item quantity="one">✓ 1 done</item>

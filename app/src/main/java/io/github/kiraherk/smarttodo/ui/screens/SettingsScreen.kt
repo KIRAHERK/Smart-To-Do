@@ -74,6 +74,15 @@ import io.github.kiraherk.smarttodo.ai.ModelRanking
 import io.github.kiraherk.smarttodo.data.settings.AppSettings
 import io.github.kiraherk.smarttodo.reminders.Notifications
 import io.github.kiraherk.smarttodo.ui.voiceLabel
+import io.github.kiraherk.smarttodo.ui.components.AppCard
+import io.github.kiraherk.smarttodo.ui.components.ScreenHeader
+import io.github.kiraherk.smarttodo.ui.components.SettingRow
+import io.github.kiraherk.smarttodo.ui.components.SwitchRow
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.height
+import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.ui.graphics.Color
 import io.github.kiraherk.smarttodo.ui.components.ChoiceDialog
 import io.github.kiraherk.smarttodo.ui.components.ConfirmDialog
 import io.github.kiraherk.smarttodo.ui.components.SectionHeader
@@ -251,78 +260,102 @@ fun SettingsScreen(openUpdate: Boolean, onUpdateOpened: () -> Unit, onOpenSetup:
     val auto = stringResource(R.string.automatic)
     val locale = LocaleHelper.locale(ctx)
 
-    Scaffold(topBar = { TopAppBar(title = { Text(stringResource(R.string.settings_title)) }) }) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(horizontal = 12.dp)) {
+    val blue = Color(0xFF2F5DA8)
+    val green = Color(0xFF2E8B57)
+    val plum = Color(0xFF8A4FA3)
+    val gold = MaterialTheme.colorScheme.secondary
+    val warm = MaterialTheme.colorScheme.tertiary
+    val grey = MaterialTheme.colorScheme.onSurfaceVariant
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
+        topBar = { ScreenHeader(stringResource(R.string.settings_title)) },
+    ) { padding ->
+        Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(horizontal = 14.dp)) {
 
-            SectionHeader(stringResource(R.string.section_ai))
-            SettingRow(Icons.Filled.Key, stringResource(R.string.gemini_key), stringResource(if (hasKey) R.string.key_saved else R.string.key_missing)) { dialog = "key" }
-            if (hasKey) {
-                SettingRow(Icons.Filled.Memory, stringResource(R.string.test_key), keyStatus ?: stringResource(R.string.test_key_hint)) { vm.testKey() }
-                if (busy) LinearProgressIndicator(Modifier.fillMaxWidth())
-                SettingRow(Icons.Filled.Memory, stringResource(R.string.model_commands), s.commandModel.ifBlank { auto }) { dialog = "cmdModel" }
-                SettingRow(Icons.Filled.Memory, stringResource(R.string.model_questions), s.assistantModel.ifBlank { auto }) { dialog = "askModel" }
-            }
-            Text(stringResource(R.string.ai_privacy_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(8.dp))
-
-            SectionHeader(stringResource(R.string.section_voice))
-            SettingRow(Icons.Filled.RecordVoiceOver, stringResource(R.string.dialect), Locale.forLanguageTag(s.dialect).getDisplayName(locale)) { dialog = "dialect" }
-            SwitchRow(Icons.AutoMirrored.Filled.VolumeUp, stringResource(R.string.read_aloud_setting), s.readAloud) { vm.setReadAloud(it) }
-            SettingRow(Icons.Filled.RecordVoiceOver, stringResource(R.string.voice_choice), voiceLabel(ctx, s.voiceName)) { dialog = "voice" }
-            SwitchRow(Icons.Filled.Checklist, stringResource(R.string.auto_confirm), s.autoConfirm) { vm.setAutoConfirm(it) }
-            SwitchRow(Icons.Filled.RecordVoiceOver, stringResource(R.string.voice_popup_setting), s.voicePopup) { vm.setVoicePopup(it) }
-            SettingRow(Icons.AutoMirrored.Filled.VolumeUp, stringResource(R.string.test_voice), stringResource(R.string.test_voice_hint)) { vm.testVoice() }
-
-            SectionHeader(stringResource(R.string.section_checkins))
-            SwitchRow(Icons.Filled.WbSunny, stringResource(R.string.morning_summary) + " · " + friendly(ctx, s.morningTime), s.morningEnabled) { vm.setMorning(it, s.morningTime) }
-            SettingRow(Icons.Filled.WbSunny, stringResource(R.string.change_time), friendly(ctx, s.morningTime)) {
-                pickTime(ctx, Dates.parseTime(s.morningTime) ?: LocalTime.of(8, 0)) { vm.setMorning(s.morningEnabled, Dates.formatTime(it)) }
-            }
-            SwitchRow(Icons.Filled.NightsStay, stringResource(R.string.evening_review) + " · " + friendly(ctx, s.eveningTime), s.eveningEnabled) { vm.setEvening(it, s.eveningTime) }
-            SettingRow(Icons.Filled.NightsStay, stringResource(R.string.change_time), friendly(ctx, s.eveningTime)) {
-                pickTime(ctx, Dates.parseTime(s.eveningTime) ?: LocalTime.of(20, 0)) { vm.setEvening(s.eveningEnabled, Dates.formatTime(it)) }
-            }
-            SwitchRow(Icons.Filled.DateRange, stringResource(R.string.weekly_review) + " · " + Dates.weekdayName(s.weeklyDay, locale) + " " + friendly(ctx, s.weeklyTime), s.weeklyEnabled) {
-                vm.setWeekly(it, s.weeklyDay, s.weeklyTime)
-            }
-            SettingRow(Icons.Filled.DateRange, stringResource(R.string.change_day), Dates.weekdayName(s.weeklyDay, locale)) { dialog = "weekday" }
-            SettingRow(Icons.Filled.DateRange, stringResource(R.string.change_time), friendly(ctx, s.weeklyTime)) {
-                pickTime(ctx, Dates.parseTime(s.weeklyTime) ?: LocalTime.of(18, 0)) { vm.setWeekly(s.weeklyEnabled, s.weeklyDay, Dates.formatTime(it)) }
-            }
-            SettingRow(Icons.Filled.NotificationsActive, stringResource(R.string.default_reminder_time), friendly(ctx, s.defaultReminderTime)) {
-                pickTime(ctx, Dates.parseTime(s.defaultReminderTime) ?: LocalTime.of(9, 0)) { vm.setDefaultReminderTime(Dates.formatTime(it)) }
+            SectionHeader(stringResource(R.string.section_ai), MaterialTheme.colorScheme.primary)
+            Group {
+                SettingRow(Icons.Filled.Key, stringResource(R.string.gemini_key), stringResource(if (hasKey) R.string.key_saved else R.string.key_missing)) { dialog = "key" }
+                if (hasKey) {
+                    SettingRow(Icons.Filled.Memory, stringResource(R.string.test_key), keyStatus ?: stringResource(R.string.test_key_hint)) { vm.testKey() }
+                    if (busy) LinearProgressIndicator(Modifier.fillMaxWidth().padding(horizontal = 12.dp))
+                    SettingRow(Icons.Filled.Memory, stringResource(R.string.model_commands), s.commandModel.ifBlank { auto }) { dialog = "cmdModel" }
+                    SettingRow(Icons.Filled.Memory, stringResource(R.string.model_questions), s.assistantModel.ifBlank { auto }) { dialog = "askModel" }
+                }
+                Text(stringResource(R.string.ai_privacy_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp))
             }
 
-            SectionHeader(stringResource(R.string.section_display))
-            SettingRow(Icons.Filled.Language, stringResource(R.string.app_language), if (LocaleHelper.isArabic(ctx)) "العربية" else "English") { dialog = "language" }
-            SettingRow(Icons.Filled.TextFields, stringResource(R.string.text_size), "${(s.textScale * 100).toInt()}%") { dialog = "textSize" }
+            SectionHeader(stringResource(R.string.section_voice), gold)
+            Group {
+                SettingRow(Icons.Filled.RecordVoiceOver, stringResource(R.string.voice_choice), voiceLabel(ctx, s.voiceName), color = gold) { dialog = "voice" }
+                SettingRow(Icons.AutoMirrored.Filled.VolumeUp, stringResource(R.string.test_voice), stringResource(R.string.test_voice_hint), color = gold) { vm.testVoice() }
+                SwitchRow(Icons.AutoMirrored.Filled.VolumeUp, stringResource(R.string.read_aloud_setting), s.readAloud, color = gold) { vm.setReadAloud(it) }
+                SettingRow(Icons.Filled.Language, stringResource(R.string.dialect), Locale.forLanguageTag(s.dialect).getDisplayName(locale), color = gold) { dialog = "dialect" }
+                SwitchRow(Icons.Filled.Checklist, stringResource(R.string.auto_confirm), s.autoConfirm, color = gold) { vm.setAutoConfirm(it) }
+                SwitchRow(Icons.Filled.Mic, stringResource(R.string.voice_popup_setting), s.voicePopup, color = gold) { vm.setVoicePopup(it) }
+                Text(stringResource(R.string.voice_natural_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp))
+            }
 
-            SectionHeader(stringResource(R.string.section_backup))
-            Text(
-                if (s.lastBackupAt > 0) stringResource(R.string.last_backup, Dates.dateTimeOf(ctx, s.lastBackupAt)) else stringResource(R.string.no_backup_yet),
-                style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(8.dp),
-            )
-            SettingRow(Icons.Filled.Backup, stringResource(R.string.backup_now), stringResource(R.string.backup_now_hint)) { vm.backupNow() }
-            SettingRow(Icons.Filled.Folder, stringResource(R.string.backup_folder), if (s.backupTreeUri.isBlank()) stringResource(R.string.backup_folder_none) else stringResource(R.string.backup_folder_set)) {
-                folderPicker.launch(null)
+            SectionHeader(stringResource(R.string.section_checkins), warm)
+            Group {
+                SwitchRow(Icons.Filled.WbSunny, stringResource(R.string.morning_summary) + " · " + friendly(ctx, s.morningTime), s.morningEnabled, color = warm) { vm.setMorning(it, s.morningTime) }
+                SettingRow(Icons.Filled.Schedule, stringResource(R.string.change_time), friendly(ctx, s.morningTime), color = warm) {
+                    pickTime(ctx, Dates.parseTime(s.morningTime) ?: LocalTime.of(8, 0)) { vm.setMorning(s.morningEnabled, Dates.formatTime(it)) }
+                }
+                SwitchRow(Icons.Filled.NightsStay, stringResource(R.string.evening_review) + " · " + friendly(ctx, s.eveningTime), s.eveningEnabled, color = blue) { vm.setEvening(it, s.eveningTime) }
+                SettingRow(Icons.Filled.Schedule, stringResource(R.string.change_time), friendly(ctx, s.eveningTime), color = blue) {
+                    pickTime(ctx, Dates.parseTime(s.eveningTime) ?: LocalTime.of(20, 0)) { vm.setEvening(s.eveningEnabled, Dates.formatTime(it)) }
+                }
+                SwitchRow(Icons.Filled.DateRange, stringResource(R.string.weekly_review) + " · " + Dates.weekdayName(s.weeklyDay, locale) + " " + friendly(ctx, s.weeklyTime), s.weeklyEnabled, color = plum) {
+                    vm.setWeekly(it, s.weeklyDay, s.weeklyTime)
+                }
+                SettingRow(Icons.Filled.DateRange, stringResource(R.string.change_day), Dates.weekdayName(s.weeklyDay, locale), color = plum) { dialog = "weekday" }
+                SettingRow(Icons.Filled.Schedule, stringResource(R.string.change_time), friendly(ctx, s.weeklyTime), color = plum) {
+                    pickTime(ctx, Dates.parseTime(s.weeklyTime) ?: LocalTime.of(18, 0)) { vm.setWeekly(s.weeklyEnabled, s.weeklyDay, Dates.formatTime(it)) }
+                }
+                SettingRow(Icons.Filled.NotificationsActive, stringResource(R.string.default_reminder_time), friendly(ctx, s.defaultReminderTime)) {
+                    pickTime(ctx, Dates.parseTime(s.defaultReminderTime) ?: LocalTime.of(9, 0)) { vm.setDefaultReminderTime(Dates.formatTime(it)) }
+                }
             }
-            SettingRow(Icons.Filled.Share, stringResource(R.string.share_backup), stringResource(R.string.share_backup_hint)) {
-                vm.shareIntent()?.let { ctx.startActivity(it) } ?: vm.backupNow()
-            }
-            SettingRow(Icons.Filled.Restore, stringResource(R.string.restore_backup), stringResource(R.string.restore_backup_hint)) {
-                restorePicker.launch(arrayOf("application/json", "text/plain", "application/octet-stream", "*/*"))
-            }
-            SettingRow(Icons.Filled.Inbox, stringResource(R.string.inbox_title), stringResource(R.string.inbox_settings_hint)) { onOpenInbox() }
 
-            SectionHeader(stringResource(R.string.section_updates))
-            SettingRow(Icons.Filled.SystemUpdate, stringResource(R.string.check_updates), stringResource(R.string.current_version, BuildConfig.VERSION_NAME)) { vm.checkUpdate() }
-            UpdateCard(update, onInstall = { vm.installUpdate(it) }, onPermission = { ctx.startActivity(vm.unknownSourcesIntent()) })
-
-            SectionHeader(stringResource(R.string.section_phone))
-            SettingRow(Icons.Filled.Checklist, stringResource(R.string.setup_title), stringResource(R.string.setup_settings_hint)) { onOpenSetup() }
-            SettingRow(Icons.Filled.Code, stringResource(R.string.open_source), "github.com/" + BuildConfig.GITHUB_REPO) {
-                ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/" + BuildConfig.GITHUB_REPO)))
+            SectionHeader(stringResource(R.string.section_display), blue)
+            Group {
+                SettingRow(Icons.Filled.Language, stringResource(R.string.app_language), if (LocaleHelper.isArabic(ctx)) "العربية" else "English", color = blue) { dialog = "language" }
+                SettingRow(Icons.Filled.TextFields, stringResource(R.string.text_size), "${(s.textScale * 100).toInt()}%", color = blue) { dialog = "textSize" }
             }
-            Text("", Modifier.padding(bottom = 40.dp))
+
+            SectionHeader(stringResource(R.string.section_backup), green)
+            Group {
+                Text(
+                    if (s.lastBackupAt > 0) stringResource(R.string.last_backup, Dates.dateTimeOf(ctx, s.lastBackupAt)) else stringResource(R.string.no_backup_yet),
+                    style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                )
+                SettingRow(Icons.Filled.Backup, stringResource(R.string.backup_now), stringResource(R.string.backup_now_hint), color = green) { vm.backupNow() }
+                SettingRow(Icons.Filled.Folder, stringResource(R.string.backup_folder), if (s.backupTreeUri.isBlank()) stringResource(R.string.backup_folder_none) else stringResource(R.string.backup_folder_set), color = green) {
+                    folderPicker.launch(null)
+                }
+                SettingRow(Icons.Filled.Share, stringResource(R.string.share_backup), stringResource(R.string.share_backup_hint), color = green) {
+                    vm.shareIntent()?.let { ctx.startActivity(it) } ?: vm.backupNow()
+                }
+                SettingRow(Icons.Filled.Restore, stringResource(R.string.restore_backup), stringResource(R.string.restore_backup_hint), color = green) {
+                    restorePicker.launch(arrayOf("application/json", "text/plain", "application/octet-stream", "*/*"))
+                }
+                SettingRow(Icons.Filled.Inbox, stringResource(R.string.inbox_title), stringResource(R.string.inbox_settings_hint), color = green) { onOpenInbox() }
+            }
+
+            SectionHeader(stringResource(R.string.section_updates), MaterialTheme.colorScheme.primary)
+            Group {
+                SettingRow(Icons.Filled.SystemUpdate, stringResource(R.string.check_updates), stringResource(R.string.current_version, BuildConfig.VERSION_NAME)) { vm.checkUpdate() }
+                UpdateCard(update, onInstall = { vm.installUpdate(it) }, onPermission = { ctx.startActivity(vm.unknownSourcesIntent()) })
+            }
+
+            SectionHeader(stringResource(R.string.section_phone), grey)
+            Group {
+                SettingRow(Icons.Filled.Checklist, stringResource(R.string.setup_title), stringResource(R.string.setup_settings_hint), color = grey) { onOpenSetup() }
+                SettingRow(Icons.Filled.Code, stringResource(R.string.open_source), "github.com/" + BuildConfig.GITHUB_REPO, color = grey) {
+                    ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/" + BuildConfig.GITHUB_REPO)))
+                }
+            }
+            Spacer(Modifier.height(40.dp))
         }
     }
 
@@ -393,14 +426,10 @@ fun SettingsScreen(openUpdate: Boolean, onUpdateOpened: () -> Unit, onOpenSetup:
 private fun friendly(ctx: android.content.Context, time: String): String =
     Dates.parseTime(time)?.let { Dates.friendlyTime(ctx, it) } ?: time
 
+/** A white rounded group of settings rows. */
 @Composable
-private fun SwitchRow(icon: ImageVector, title: String, checked: Boolean, onChange: (Boolean) -> Unit) {
-    Row(Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-        Icon(icon, contentDescription = null)
-        Spacer(Modifier.width(10.dp))
-        Text(title, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-        Switch(checked = checked, onCheckedChange = onChange)
-    }
+private fun Group(content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit) {
+    AppCard(padding = PaddingValues(6.dp), content = content)
 }
 
 @Composable
@@ -415,7 +444,7 @@ private fun UpdateCard(state: UpdateState, onInstall: (UpdateInfo) -> Unit, onPe
         is UpdateState.NeedsPermission -> stringResource(R.string.update_needs_permission)
         is UpdateState.Error -> state.message
     }
-    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer), modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
+    androidx.compose.material3.Surface(color = MaterialTheme.colorScheme.secondaryContainer, shape = androidx.compose.foundation.shape.RoundedCornerShape(18.dp), modifier = Modifier.fillMaxWidth().padding(6.dp)) {
         Column(Modifier.padding(14.dp)) {
             Text(text, style = MaterialTheme.typography.bodyLarge)
             if (state is UpdateState.Downloading) LinearProgressIndicator(progress = { state.progress }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp))

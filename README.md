@@ -90,3 +90,6 @@ products, so don't dictate passwords or bank details.
 ## License
 
 [Apache License 2.0](LICENSE).
+
+The app bundles the IBM Plex Sans Arabic font, licensed under the SIL Open Font License 1.1
+([third_party/fonts](third_party/fonts/IBM-Plex-Sans-Arabic-OFL.txt)).

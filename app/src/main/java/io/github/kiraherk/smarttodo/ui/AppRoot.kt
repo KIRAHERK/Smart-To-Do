@@ -10,14 +10,20 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Today
+import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -146,13 +152,21 @@ fun AppRoot(navRequests: StateFlow<NavRequest?>, onNavHandled: () -> Unit) {
             val backStack by nav.currentBackStackEntryAsState()
             val route = backStack?.destination?.route
             val topLevel = route in listOf(Routes.TODAY, Routes.HISTORY, Routes.ASSISTANT, Routes.SETTINGS)
+            val outline = MaterialTheme.colorScheme.outlineVariant
 
             Scaffold(
+                containerColor = MaterialTheme.colorScheme.background,
                 bottomBar = {
                     if (topLevel) {
-                        NavigationBar {
+                        NavigationBar(
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            tonalElevation = 0.dp,
+                            modifier = Modifier.drawBehind {
+                                drawLine(outline, Offset(0f, 0f), Offset(size.width, 0f), strokeWidth = 1.dp.toPx())
+                            },
+                        ) {
                             listOf(
-                                Triple(Routes.TODAY, Icons.Filled.Today, R.string.nav_today),
+                                Triple(Routes.TODAY, Icons.Filled.WbSunny, R.string.nav_today),
                                 Triple(Routes.HISTORY, Icons.Filled.History, R.string.nav_history),
                                 Triple(Routes.ASSISTANT, Icons.AutoMirrored.Filled.Chat, R.string.nav_assistant),
                                 Triple(Routes.SETTINGS, Icons.Filled.Settings, R.string.nav_settings),
@@ -160,8 +174,15 @@ fun AppRoot(navRequests: StateFlow<NavRequest?>, onNavHandled: () -> Unit) {
                                 NavigationBarItem(
                                     selected = route == dest,
                                     onClick = { navigateTop(nav, dest) },
-                                    icon = { Icon(icon, contentDescription = null) },
-                                    label = { Text(stringResource(label)) },
+                                    icon = { Icon(icon, contentDescription = null, modifier = Modifier.size(26.dp)) },
+                                    label = { Text(stringResource(label), style = MaterialTheme.typography.labelMedium) },
+                                    colors = NavigationBarItemDefaults.colors(
+                                        selectedIconColor = MaterialTheme.colorScheme.primary,
+                                        selectedTextColor = MaterialTheme.colorScheme.primary,
+                                        indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                                        unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    ),
                                 )
                             }
                         }

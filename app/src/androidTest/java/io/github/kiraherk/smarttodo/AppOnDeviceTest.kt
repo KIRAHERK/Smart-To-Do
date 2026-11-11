@@ -75,7 +75,7 @@ class AppOnDeviceTest {
         compose.waitForText(str(R.string.setup_title))
         compose.clickable(str(R.string.setup_finish)).performScrollTo().performClick()
         compose.waitForText(str(R.string.today_title))
-        compose.waitForText(str(R.string.empty_today))
+        compose.waitForText(str(R.string.empty_today_title))
         shot("02-today-empty")
         assertTrue(runBlocking { c.settings.current().setupDone })
     }

@@ -51,6 +51,19 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.kiraherk.smarttodo.R
+import io.github.kiraherk.smarttodo.ui.components.AppCard
+import io.github.kiraherk.smarttodo.ui.components.IconTile
+import io.github.kiraherk.smarttodo.ui.components.ScreenHeader
+import io.github.kiraherk.smarttodo.ui.components.heroCircles
+import io.github.kiraherk.smarttodo.ui.theme.LocalBrand
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Checklist
+import androidx.compose.material.icons.filled.PriorityHigh
+import androidx.compose.ui.draw.clip
 import io.github.kiraherk.smarttodo.data.settings.AppSettings
 import io.github.kiraherk.smarttodo.ui.components.ChoiceDialog
 import io.github.kiraherk.smarttodo.util.LocaleHelper
@@ -90,12 +103,26 @@ fun SetupScreen(onDone: () -> Unit, onOpenSettings: () -> Unit) {
     val keyOk = c.secrets.hasApiKey()
     val locale = LocaleHelper.locale(ctx)
 
-    Scaffold(topBar = { TopAppBar(title = { Text(stringResource(R.string.setup_title)) }) }) { padding ->
+    val doneCount = listOf(micOk, notifOk, alarmsOk, batteryOk, speechOk, voiceOk, keyOk, settings.backupTreeUri.isNotBlank()).count { it }
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
+        topBar = { ScreenHeader(stringResource(R.string.setup_title)) },
+    ) { padding ->
         Column(
-            Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(14.dp),
+            Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(horizontal = 14.dp, vertical = 6.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            Text(stringResource(R.string.setup_intro), style = MaterialTheme.typography.bodyLarge)
+            val brand = LocalBrand.current
+            Row(
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(26.dp)).background(brand.heroBrush).heroCircles().padding(18.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(Icons.Filled.Checklist, contentDescription = null, tint = Color.White, modifier = Modifier.size(34.dp))
+                Spacer(Modifier.width(12.dp))
+                Text(stringResource(R.string.setup_intro), style = MaterialTheme.typography.bodyLarge, color = Color.White, modifier = Modifier.weight(1f))
+                Spacer(Modifier.width(8.dp))
+                Text("$doneCount/8", style = MaterialTheme.typography.titleLarge, color = Color.White)
+            }
 
             Step(micOk, stringResource(R.string.setup_mic), stringResource(R.string.setup_mic_hint), stringResource(R.string.allow)) {
                 permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
@@ -131,7 +158,8 @@ fun SetupScreen(onDone: () -> Unit, onOpenSettings: () -> Unit) {
                         withContext(Dispatchers.Main) { onDone() }
                     }
                 },
-                modifier = Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(top = 10.dp),
+                modifier = Modifier.fillMaxWidth().padding(top = 10.dp).heightIn(min = 64.dp),
+                shape = RoundedCornerShape(20.dp),
             ) { Text(stringResource(R.string.setup_finish), style = MaterialTheme.typography.titleLarge) }
             Text("", Modifier.padding(bottom = 30.dp))
         }
@@ -150,20 +178,20 @@ fun SetupScreen(onDone: () -> Unit, onOpenSettings: () -> Unit) {
 
 @Composable
 private fun Step(ok: Boolean, title: String, hint: String, button: String?, onClick: () -> Unit) {
-    Card(Modifier.fillMaxWidth()) {
-        Row(Modifier.padding(12.dp), verticalAlignment = Alignment.Top) {
-            Icon(
-                if (ok) Icons.Filled.CheckCircle else Icons.Filled.RadioButtonUnchecked,
-                contentDescription = null,
-                tint = if (ok) Color(0xFF2E7D32) else MaterialTheme.colorScheme.error,
-                modifier = Modifier.size(34.dp),
+    val brand = LocalBrand.current
+    AppCard {
+        Row(verticalAlignment = Alignment.Top) {
+            IconTile(
+                if (ok) Icons.Filled.Check else Icons.Filled.PriorityHigh,
+                if (ok) brand.success else MaterialTheme.colorScheme.tertiary,
+                size = 42.dp, iconSize = 24.dp, filled = ok,
             )
-            Column(Modifier.weight(1f).padding(start = 10.dp)) {
+            Column(Modifier.weight(1f).padding(start = 12.dp)) {
                 Text(title, style = MaterialTheme.typography.titleMedium)
                 Text(hint, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 val showButton = button != null && (!ok || title == stringResource(R.string.dialect))
                 if (showButton) {
-                    OutlinedButton(onClick = onClick, modifier = Modifier.padding(top = 8.dp).heightIn(min = 48.dp)) { Text(button!!) }
+                    Button(onClick = onClick, modifier = Modifier.padding(top = 8.dp).heightIn(min = 50.dp), shape = RoundedCornerShape(16.dp)) { Text(button!!, style = MaterialTheme.typography.titleSmall) }
                 }
             }
         }

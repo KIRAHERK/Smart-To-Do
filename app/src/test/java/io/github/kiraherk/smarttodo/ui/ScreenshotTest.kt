@@ -81,8 +81,24 @@ class ScreenshotTest {
                 }
             }
         }
-        compose.waitUntil(10_000) { compose.onAllNodesWithText("حجز تذاكر دبي").fetchSemanticsNodes().isNotEmpty() }
+        compose.waitUntil(10_000) { compose.onAllNodesWithText("تصليح المكيف").fetchSemanticsNodes().isNotEmpty() }
         save("today")
+    }
+
+    /** The whole Today list on one tall image, for checking the design. */
+    @Test
+    @Config(qualifiers = "+h1700dp")
+    fun todayScreenFull() {
+        seed()
+        compose.setContent {
+            SmartTodoTheme(1.15f) {
+                CompositionLocalProvider(LocalVoice provides voice) {
+                    TodayScreen(onOpenTask = {}, onNavigate = {}, speakSummaryNow = false, onSummarySpoken = {})
+                }
+            }
+        }
+        compose.waitUntil(10_000) { compose.onAllNodesWithText("حجز تذاكر دبي").fetchSemanticsNodes().isNotEmpty() }
+        save("today_full")
     }
 
     @Test
@@ -140,5 +156,74 @@ class ScreenshotTest {
         save("thinking-slow")
         compose.onNodeWithText("إلغاء").performClick()
         assertTrue(cancelled)
+    }
+
+    @Test
+    @Config(qualifiers = "+h1900dp")
+    fun taskDetailFull() {
+        val id = seed()
+        compose.setContent {
+            SmartTodoTheme(1.15f) {
+                CompositionLocalProvider(LocalVoice provides voice) { TaskDetailScreen(taskId = id, onBack = {}) }
+            }
+        }
+        compose.waitUntil(10_000) { compose.onAllNodesWithText("كلمته، بقي تأكيد موعد الوصول", substring = true).fetchSemanticsNodes().isNotEmpty() }
+        save("task_detail_full")
+    }
+
+    @Test
+    @Config(qualifiers = "+h1300dp")
+    fun historyScreen() {
+        seed()
+        compose.setContent {
+            SmartTodoTheme(1.15f) {
+                CompositionLocalProvider(LocalVoice provides voice) { io.github.kiraherk.smarttodo.ui.screens.HistoryScreen(onOpenTask = {}) }
+            }
+        }
+        compose.waitUntil(10_000) { compose.onAllNodesWithText("حجز تذاكر دبي").fetchSemanticsNodes().isNotEmpty() }
+        save("history")
+    }
+
+    @Test
+    fun assistantScreen() {
+        runBlocking {
+            val chat = app().container.db.chat()
+            chat.insert(io.github.kiraherk.smarttodo.data.db.ChatMessageEntity(role = "USER", text = "ايش عندي اليوم؟", at = 1))
+            chat.insert(io.github.kiraherk.smarttodo.data.db.ChatMessageEntity(role = "ASSISTANT", text = "عندك اليوم مهمتان: الاتصال بأحمد بخصوص الشحنة الساعة 10 صباحاً، وشراء دواء الضغط الساعة 5:30 مساءً.", at = 2))
+        }
+        compose.setContent {
+            SmartTodoTheme(1.15f) {
+                CompositionLocalProvider(LocalVoice provides voice) { io.github.kiraherk.smarttodo.ui.screens.AssistantScreen() }
+            }
+        }
+        compose.waitUntil(10_000) { compose.onAllNodesWithText("عندك اليوم مهمتان", substring = true).fetchSemanticsNodes().isNotEmpty() }
+        save("assistant")
+    }
+
+    @Test
+    @Config(qualifiers = "+h2600dp")
+    fun settingsScreen() {
+        compose.setContent {
+            SmartTodoTheme(1.15f) {
+                CompositionLocalProvider(LocalVoice provides voice) {
+                    io.github.kiraherk.smarttodo.ui.screens.SettingsScreen(openUpdate = false, onUpdateOpened = {}, onOpenSetup = {}, onOpenInbox = {})
+                }
+            }
+        }
+        compose.waitUntil(10_000) { compose.onAllNodesWithText("صوت القراءة").fetchSemanticsNodes().isNotEmpty() }
+        save("settings")
+    }
+
+    @Test
+    fun answerOverlay() {
+        compose.setContent {
+            SmartTodoTheme(1.15f) {
+                VoiceOverlayContent(
+                    state = VoiceViewModel.UiState.Answer("ايش عندي بكرة؟", "بكرة عندك مهمة واحدة: الاتصال بأحمد شماط الساعة 12 ظهراً، مع تذكير."),
+                    onFinish = {}, onConfirm = {}, onReject = {}, onRetry = {}, onSpeakAgain = {}, onDismiss = {},
+                )
+            }
+        }
+        save("answer")
     }
 }
