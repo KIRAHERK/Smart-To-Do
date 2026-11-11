@@ -17,8 +17,12 @@ import kotlinx.coroutines.flow.asStateFlow
 /**
  * Speech to text that keeps listening while he pauses to think: Android's recognizer stops after a
  * short silence, so we restart it and join the pieces until he taps "Done" (or stays silent twice
- * in a row after saying something). Prefers Google's recognizer, which handles Arabic dialects
- * better than Samsung's own engine. Must be used from the main thread.
+ * in a row after saying something).
+ *
+ * Phones differ a lot in which speech services work for other apps, so we try, in order: the
+ * phone's default recognizer, Google's "Speech Services", the Google app, then any other one.
+ * If none of them can even start, the caller falls back to Google's standard listening popup
+ * (see [VoiceViewModel]). Must be used from the main thread.
  */
 class SpeechCapture(private val context: Context) {
 
@@ -43,7 +47,14 @@ class SpeechCapture(private val context: Context) {
     private var silentRounds = 0
     private var session = 0
 
-    fun isAvailable(): Boolean = SpeechRecognizer.isRecognitionAvailable(context)
+    /** null = the phone's default recognizer. */
+    private var candidates: List<ComponentName?> = emptyList()
+    private var candidateIndex = 0
+    private var busyRetries = 0
+    /** The current recognizer has shown it works (it got ready or heard something). */
+    private var working = false
+
+    fun isAvailable(): Boolean = SpeechRecognizer.isRecognitionAvailable(context) || recognitionServices().isNotEmpty()
 
     /** [onFinished] receives the full text (may be blank) and an error code if listening failed. */
     fun start(language: String, onFinished: (text: String, errorCode: Int?) -> Unit) {
@@ -52,9 +63,12 @@ class SpeechCapture(private val context: Context) {
         this.onFinished = onFinished
         finishing = false
         silentRounds = 0
-        session++
+        busyRetries = 0
+        working = false
+        candidates = buildCandidates()
+        candidateIndex = 0
         _state.value = State(listening = true)
-        recognizer = createRecognizer().also { it.setRecognitionListener(Listener(session)) }
+        recognizer = create(candidates.first())
         listen()
     }
 
@@ -75,17 +89,42 @@ class SpeechCapture(private val context: Context) {
         _state.value = State()
     }
 
-    private fun createRecognizer(): SpeechRecognizer {
-        val services = runCatching {
-            context.packageManager.queryIntentServices(Intent(RecognitionService.SERVICE_INTERFACE), 0)
-        }.getOrDefault(emptyList())
-        val google = services.firstOrNull { it.serviceInfo.packageName == GOOGLE_APP }
-            ?: services.firstOrNull { it.serviceInfo.packageName.startsWith("com.google.android") }
-        return if (google != null) {
-            SpeechRecognizer.createSpeechRecognizer(context, ComponentName(google.serviceInfo.packageName, google.serviceInfo.name))
-        } else {
+    private fun recognitionServices(): List<ComponentName> = runCatching {
+        context.packageManager.queryIntentServices(Intent(RecognitionService.SERVICE_INTERFACE), 0)
+            .map { ComponentName(it.serviceInfo.packageName, it.serviceInfo.name) }
+    }.getOrDefault(emptyList())
+
+    private fun buildCandidates(): List<ComponentName?> {
+        val services = recognitionServices()
+        val preferred = listOf(GOOGLE_SPEECH_SERVICES, GOOGLE_APP)
+        val google = preferred.flatMap { pkg -> services.filter { it.packageName == pkg } }
+        val others = services.filter { it.packageName !in preferred }
+        val list = mutableListOf<ComponentName?>()
+        if (SpeechRecognizer.isRecognitionAvailable(context)) list += null
+        list += google
+        list += others
+        return list.distinct().ifEmpty { listOf(null) }
+    }
+
+    private fun create(component: ComponentName?): SpeechRecognizer {
+        val r = if (component == null) {
             SpeechRecognizer.createSpeechRecognizer(context)
+        } else {
+            SpeechRecognizer.createSpeechRecognizer(context, component)
         }
+        r.setRecognitionListener(Listener(session))
+        return r
+    }
+
+    /** Tries the next speech service when the current one can't work on this phone. */
+    private fun switchToNext(): Boolean {
+        if (working || candidateIndex + 1 >= candidates.size) return false
+        candidateIndex++
+        busyRetries = 0
+        destroyRecognizer()
+        recognizer = runCatching { create(candidates[candidateIndex]) }.getOrNull() ?: return switchToNext()
+        restart(300)
+        return true
     }
 
     private fun listen() {
@@ -99,7 +138,8 @@ class SpeechCapture(private val context: Context) {
             putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 2500L)
             putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 2000L)
         }
-        runCatching { recognizer?.startListening(intent) }.onFailure { deliver(SpeechRecognizer.ERROR_CLIENT) }
+        val started = runCatching { recognizer?.startListening(intent) }.isSuccess
+        if (!started && !switchToNext()) deliver(SpeechRecognizer.ERROR_CLIENT)
     }
 
     private fun restart(delayMs: Long = 200) {
@@ -127,8 +167,14 @@ class SpeechCapture(private val context: Context) {
     private inner class Listener(private val mySession: Int) : RecognitionListener {
         private fun active() = mySession == session
 
-        override fun onReadyForSpeech(params: Bundle?) {}
-        override fun onBeginningOfSpeech() {}
+        override fun onReadyForSpeech(params: Bundle?) {
+            if (active()) working = true
+        }
+
+        override fun onBeginningOfSpeech() {
+            if (active()) working = true
+        }
+
         override fun onBufferReceived(buffer: ByteArray?) {}
         override fun onEndOfSpeech() {}
         override fun onEvent(eventType: Int, params: Bundle?) {}
@@ -140,11 +186,13 @@ class SpeechCapture(private val context: Context) {
         override fun onPartialResults(partialResults: Bundle?) {
             if (!active()) return
             val partial = partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull().orEmpty()
+            if (partial.isNotBlank()) working = true
             _state.value = _state.value.copy(partial = partial)
         }
 
         override fun onResults(results: Bundle?) {
             if (!active()) return
+            working = true
             val text = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull().orEmpty()
             val joined = listOf(_state.value.text, text.ifBlank { _state.value.partial }).filter { it.isNotBlank() }.joinToString(" ")
             _state.value = _state.value.copy(text = joined, partial = "")
@@ -160,22 +208,33 @@ class SpeechCapture(private val context: Context) {
             }
             when (error) {
                 SpeechRecognizer.ERROR_NO_MATCH, SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> {
+                    // A service that fails this way before it was ever ready simply doesn't work here.
+                    if (!working && switchToNext()) return
                     silentRounds++
                     val hasText = _state.value.display.isNotBlank()
                     if ((hasText && silentRounds >= 2) || (!hasText && silentRounds >= 3)) deliver(null) else restart()
                 }
-                SpeechRecognizer.ERROR_RECOGNIZER_BUSY, SpeechRecognizer.ERROR_CLIENT -> {
-                    destroyRecognizer()
-                    recognizer = createRecognizer().also { it.setRecognitionListener(Listener(session)) }
-                    restart(400)
+                SpeechRecognizer.ERROR_RECOGNIZER_BUSY -> {
+                    if (busyRetries++ < 3) {
+                        destroyRecognizer()
+                        recognizer = create(candidates[candidateIndex])
+                        restart(500)
+                    } else if (!switchToNext()) {
+                        deliver(error)
+                    }
                 }
-                else -> deliver(error)
+                SpeechRecognizer.ERROR_NETWORK, SpeechRecognizer.ERROR_NETWORK_TIMEOUT -> deliver(error)
+                else -> if (!switchToNext()) deliver(error)
             }
         }
     }
 
     companion object {
         private const val GOOGLE_APP = "com.google.android.googlequicksearchbox"
+        private const val GOOGLE_SPEECH_SERVICES = "com.google.android.tts"
+
+        /** Errors that mean "no internet", not "this speech service can't work on this phone". */
+        val NETWORK_ERRORS = setOf(SpeechRecognizer.ERROR_NETWORK, SpeechRecognizer.ERROR_NETWORK_TIMEOUT)
 
         /** Dialects offered in Settings (speech recognition locale tags). */
         val DIALECTS = listOf("ar-SA", "ar-AE", "ar-KW", "ar-QA", "ar-BH", "ar-OM", "ar-EG", "ar-JO", "ar-LB", "ar-PS", "ar-IQ", "ar-MA", "ar-DZ", "ar-TN", "ar-LY", "ar-SD", "ar-YE", "en-US")

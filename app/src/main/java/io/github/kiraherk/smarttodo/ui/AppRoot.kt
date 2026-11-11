@@ -1,7 +1,10 @@
 package io.github.kiraherk.smarttodo.ui
 
 import android.Manifest
+import android.content.ActivityNotFoundException
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.speech.RecognizerIntent
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -77,6 +80,26 @@ fun AppRoot(navRequests: StateFlow<NavRequest?>, onNavHandled: () -> Unit) {
             val request = pendingVoice
             pendingVoice = null
             if (granted && request != null) voiceVm.start(request) else if (!granted) Toast.makeText(ctx, micDenied, Toast.LENGTH_LONG).show()
+        }
+        val speechPopup = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            val text = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()
+            voiceVm.onPopupResult(text)
+        }
+        val popupPrompt = stringResource(R.string.listening_hint)
+        LaunchedEffect(voiceVm) {
+            voiceVm.popupRequests.collect { language ->
+                val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+                    .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                    .putExtra(RecognizerIntent.EXTRA_LANGUAGE, language)
+                    .putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, language)
+                    .putExtra(RecognizerIntent.EXTRA_PROMPT, popupPrompt)
+                    .putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
+                try {
+                    speechPopup.launch(intent)
+                } catch (e: ActivityNotFoundException) {
+                    voiceVm.onPopupUnavailable()
+                }
+            }
         }
         val voiceActions = remember(voiceVm) {
             VoiceActions(

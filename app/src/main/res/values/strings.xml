@@ -89,8 +89,6 @@
     <string name="voice_nothing_heard">I didn\'t hear anything. Please try again.</string>
     <string name="voice_not_available">Voice recognition is not available on this phone. Please install or update the Google app.</string>
     <string name="voice_error_network">Voice recognition needs the internet. Please check Wi-Fi.</string>
-    <string name="voice_error_permission">The app needs permission to use the microphone.</string>
-    <string name="voice_error_generic">Something went wrong with listening. Please try again.</string>
     <string name="mic_denied">Without the microphone the app can\'t hear you. You can allow it in Settings.</string>
     <string name="saved_inbox_no_key">I saved what you said in the Inbox. It will be organised once the AI key is set up in Settings.</string>
     <string name="saved_inbox_later">What you said is saved in the Inbox, nothing is lost.</string>
@@ -187,6 +185,7 @@
     <string name="section_voice">Voice</string>
     <string name="dialect">Speech language</string>
     <string name="read_aloud_setting">Read answers aloud</string>
+    <string name="voice_popup_setting">Listen with Google\'s voice window</string>
     <string name="auto_confirm">Save new tasks without asking</string>
     <string name="test_voice">Test the voice</string>
     <string name="test_voice_hint">Tap to hear a sentence</string>
