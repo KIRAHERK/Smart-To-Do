@@ -1,6 +1,5 @@
 package io.github.kiraherk.smarttodo.ui.voice
 
-import android.speech.SpeechRecognizer
 import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -18,7 +17,11 @@ import io.github.kiraherk.smarttodo.ui.categoryName
 import io.github.kiraherk.smarttodo.ui.recurrenceText
 import io.github.kiraherk.smarttodo.ui.statusName
 import io.github.kiraherk.smarttodo.util.Dates
+import io.github.kiraherk.smarttodo.voice.SpeechCapture
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -60,6 +63,12 @@ class VoiceViewModel(private val c: AppContainer) : ViewModel() {
     private var pendingInboxId: Long? = null
     private var lastRequest = Request()
     private var listenJob: Job? = null
+    private var popupRequest: Request? = null
+
+    // A channel, not a SharedFlow: the request must not be lost if the screen isn't collecting yet.
+    private val _popupRequests = Channel<String>(Channel.CONFLATED)
+    /** Language tags for which AppRoot should open Google's listening popup. */
+    val popupRequests: Flow<String> = _popupRequests.receiveAsFlow()
 
     /** Starts listening. The caller must already hold the microphone permission. */
     fun start(request: Request) {
@@ -69,8 +78,9 @@ class VoiceViewModel(private val c: AppContainer) : ViewModel() {
         viewModelScope.launch {
             val s = c.settings.current()
             c.speaker.enabled = s.readAloud
-            if (!c.speech.isAvailable()) {
-                _state.value = UiState.Message(str(R.string.voice_not_available), error = true)
+            // Phones where the in-app listener can't work use Google's standard listening popup.
+            if (s.voicePopup || !c.speech.isAvailable()) {
+                openPopup(request, s.dialect)
                 return@launch
             }
             listenJob?.cancel()
@@ -79,9 +89,35 @@ class VoiceViewModel(private val c: AppContainer) : ViewModel() {
             }
             c.speech.start(s.dialect) { text, error ->
                 listenJob?.cancel()
-                onTranscript(request, text, error)
+                onTranscript(request, text, error, s.dialect)
             }
         }
+    }
+
+    private fun openPopup(request: Request, language: String) {
+        popupRequest = request
+        _state.value = UiState.Idle
+        _popupRequests.trySend(language)
+    }
+
+    /** Text from Google's listening popup (null/blank if he said nothing or closed it). */
+    fun onPopupResult(text: String?) {
+        val request = popupRequest ?: return
+        popupRequest = null
+        viewModelScope.launch {
+            if (text.isNullOrBlank()) {
+                _state.value = UiState.Message(str(R.string.voice_nothing_heard), error = true, canRetry = true)
+            } else {
+                handle(text, request)
+            }
+        }
+    }
+
+    /** The phone has no speech popup at all (no Google app). */
+    fun onPopupUnavailable() {
+        popupRequest = null
+        viewModelScope.launch { c.settings.setVoicePopup(false) }
+        _state.value = UiState.Message(str(R.string.voice_not_available), error = true)
     }
 
     fun finishListening() = c.speech.finish()
@@ -141,16 +177,20 @@ class VoiceViewModel(private val c: AppContainer) : ViewModel() {
         }
     }
 
-    private fun onTranscript(request: Request, text: String, error: Int?) {
+    private fun onTranscript(request: Request, text: String, error: Int?, language: String) {
         viewModelScope.launch {
             if (text.isBlank()) {
-                val res = when (error) {
-                    null -> R.string.voice_nothing_heard
-                    SpeechRecognizer.ERROR_NETWORK, SpeechRecognizer.ERROR_NETWORK_TIMEOUT, SpeechRecognizer.ERROR_SERVER -> R.string.voice_error_network
-                    SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> R.string.voice_error_permission
-                    else -> R.string.voice_error_generic
+                when {
+                    error == null -> _state.value = UiState.Message(str(R.string.voice_nothing_heard), error = true, canRetry = true)
+                    error in SpeechCapture.NETWORK_ERRORS ->
+                        _state.value = UiState.Message(str(R.string.voice_error_network), error = true, canRetry = true)
+                    else -> {
+                        // None of the phone's speech services work from inside the app: switch to
+                        // Google's listening popup now and from now on (can be changed in Settings).
+                        c.settings.setVoicePopup(true)
+                        openPopup(request, language)
+                    }
                 }
-                _state.value = UiState.Message(str(res), error = true, canRetry = true)
                 return@launch
             }
             handle(text, request)

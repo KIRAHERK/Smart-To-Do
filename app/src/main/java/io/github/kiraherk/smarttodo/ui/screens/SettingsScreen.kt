@@ -150,6 +150,7 @@ class SettingsViewModel(private val c: AppContainer) : ViewModel() {
     fun setDialect(v: String) = viewModelScope.launch { c.settings.setDialect(v) }
     fun setReadAloud(v: Boolean) = viewModelScope.launch { c.settings.setReadAloud(v); c.speaker.enabled = v }
     fun setAutoConfirm(v: Boolean) = viewModelScope.launch { c.settings.setAutoConfirm(v) }
+    fun setVoicePopup(v: Boolean) = viewModelScope.launch { c.settings.setVoicePopup(v) }
     fun setTextScale(v: Float) = viewModelScope.launch { c.settings.setTextScale(v) }
     fun testVoice() = c.speaker.speakNow(str(R.string.voice_test_sentence))
 
@@ -261,6 +262,7 @@ fun SettingsScreen(openUpdate: Boolean, onUpdateOpened: () -> Unit, onOpenSetup:
             SettingRow(Icons.Filled.RecordVoiceOver, stringResource(R.string.dialect), Locale.forLanguageTag(s.dialect).getDisplayName(locale)) { dialog = "dialect" }
             SwitchRow(Icons.AutoMirrored.Filled.VolumeUp, stringResource(R.string.read_aloud_setting), s.readAloud) { vm.setReadAloud(it) }
             SwitchRow(Icons.Filled.Checklist, stringResource(R.string.auto_confirm), s.autoConfirm) { vm.setAutoConfirm(it) }
+            SwitchRow(Icons.Filled.RecordVoiceOver, stringResource(R.string.voice_popup_setting), s.voicePopup) { vm.setVoicePopup(it) }
             SettingRow(Icons.AutoMirrored.Filled.VolumeUp, stringResource(R.string.test_voice), stringResource(R.string.test_voice_hint)) { vm.testVoice() }
 
             SectionHeader(stringResource(R.string.section_checkins))

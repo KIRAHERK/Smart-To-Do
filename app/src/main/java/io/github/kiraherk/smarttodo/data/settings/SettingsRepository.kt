@@ -36,6 +36,8 @@ data class AppSettings(
     val defaultReminderTime: String = "09:00",
     val readAloud: Boolean = true,
     val autoConfirm: Boolean = false,
+    /** Use Google's listening popup instead of listening inside the app (set automatically if needed). */
+    val voicePopup: Boolean = false,
     val textScale: Float = 1.15f,
     val backupTreeUri: String = "",
     val lastBackupAt: Long = 0,
@@ -60,6 +62,7 @@ class SettingsRepository(private val context: Context) {
         val defaultReminderTime = stringPreferencesKey("default_reminder_time")
         val readAloud = booleanPreferencesKey("read_aloud")
         val autoConfirm = booleanPreferencesKey("auto_confirm")
+        val voicePopup = booleanPreferencesKey("voice_popup")
         val textScale = floatPreferencesKey("text_scale")
         val backupTreeUri = stringPreferencesKey("backup_tree_uri")
         val lastBackupAt = longPreferencesKey("last_backup_at")
@@ -84,6 +87,7 @@ class SettingsRepository(private val context: Context) {
             defaultReminderTime = p[Keys.defaultReminderTime] ?: d.defaultReminderTime,
             readAloud = p[Keys.readAloud] ?: d.readAloud,
             autoConfirm = p[Keys.autoConfirm] ?: d.autoConfirm,
+            voicePopup = p[Keys.voicePopup] ?: d.voicePopup,
             textScale = p[Keys.textScale] ?: d.textScale,
             backupTreeUri = p[Keys.backupTreeUri] ?: d.backupTreeUri,
             lastBackupAt = p[Keys.lastBackupAt] ?: d.lastBackupAt,
@@ -104,6 +108,7 @@ class SettingsRepository(private val context: Context) {
     suspend fun setDefaultReminderTime(v: String) = put(Keys.defaultReminderTime, v)
     suspend fun setReadAloud(v: Boolean) = put(Keys.readAloud, v)
     suspend fun setAutoConfirm(v: Boolean) = put(Keys.autoConfirm, v)
+    suspend fun setVoicePopup(v: Boolean) = put(Keys.voicePopup, v)
     suspend fun setTextScale(v: Float) = put(Keys.textScale, v)
     suspend fun setBackupTreeUri(v: String) = put(Keys.backupTreeUri, v)
     suspend fun setLastBackupAt(v: Long) = put(Keys.lastBackupAt, v)
