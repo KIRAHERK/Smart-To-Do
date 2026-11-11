@@ -268,6 +268,7 @@
     <string name="update_available_title">New version %1$s</string>
     <string name="update_available_text">Tap to update. Your tasks and history are kept.</string>
     <string name="update_now">Update now</string>
+    <string name="update_in_browser">Download the update in the browser</string>
     <string name="update_downloading">Downloading… %1$d%%</string>
     <string name="update_installing">Installing… confirm on the screen if asked.</string>
     <string name="update_needs_permission">Allow Smart To-Do to install updates (once), then tap Update now.</string>

@@ -142,20 +142,61 @@ class UpdateInstaller(
         file
     }
 
-    /** True if [apk] is this app, newer, and signed by the same key. */
+    /**
+     * True if [apk] is this app and newer. Its signing key must be the one of the installed app;
+     * if this phone can't tell who signed the file (Android 9 and 10 often can't), Android itself
+     * still refuses any update signed with a different key, so the install can go ahead.
+     */
     fun verify(apk: File): Boolean {
         if (BuildConfig.DEBUG) throw Problem.DebugBuild()
         val pm = context.packageManager
-        val flags = if (Build.VERSION.SDK_INT >= 28) PackageManager.GET_SIGNING_CERTIFICATES else @Suppress("DEPRECATION") PackageManager.GET_SIGNATURES
-        val archive = pm.getPackageArchiveInfo(apk.absolutePath, flags) ?: return false
+        val archive = pm.getPackageArchiveInfo(apk.absolutePath, 0) ?: return false
         if (archive.packageName != context.packageName) return false
-        val installed = pm.getPackageInfo(context.packageName, flags)
+        val installed = pm.getPackageInfo(context.packageName, 0)
         if (versionCodeOf(archive) <= versionCodeOf(installed)) throw Problem.NotNewer()
-        val a = signerDigests(archive)
-        val b = signerDigests(installed)
-        if (a.isEmpty() || b.isEmpty() || a.intersect(b).isEmpty()) throw Problem.WrongSignature()
+        val a = archiveSigners(apk)
+        val b = installedSigners()
+        if (a.isNotEmpty() && b.isNotEmpty() && a.intersect(b).isEmpty()) throw Problem.WrongSignature()
         return true
     }
+
+    /** SHA-256 of the key(s) that signed an APK file; empty if this phone can't read them. */
+    fun archiveSigners(apk: File): Set<String> {
+        val pm = context.packageManager
+        if (Build.VERSION.SDK_INT >= 28) {
+            val info = pm.getPackageArchiveInfo(apk.absolutePath, PackageManager.GET_SIGNING_CERTIFICATES)
+            fromSigningInfo(info).takeIf { it.isNotEmpty() }?.let { return it }
+        }
+        // Android 9 and 10 often leave the newer field empty for files; the older one works there.
+        @Suppress("DEPRECATION")
+        val info = pm.getPackageArchiveInfo(apk.absolutePath, PackageManager.GET_SIGNATURES)
+        @Suppress("DEPRECATION")
+        return digests(info?.signatures)
+    }
+
+    /** SHA-256 of the key(s) that signed the installed app. */
+    fun installedSigners(): Set<String> {
+        val pm = context.packageManager
+        if (Build.VERSION.SDK_INT >= 28) {
+            val info = pm.getPackageInfo(context.packageName, PackageManager.GET_SIGNING_CERTIFICATES)
+            fromSigningInfo(info).takeIf { it.isNotEmpty() }?.let { return it }
+        }
+        @Suppress("DEPRECATION")
+        val info = pm.getPackageInfo(context.packageName, PackageManager.GET_SIGNATURES)
+        @Suppress("DEPRECATION")
+        return digests(info?.signatures)
+    }
+
+    private fun fromSigningInfo(info: PackageInfo?): Set<String> {
+        if (Build.VERSION.SDK_INT < 28) return emptySet()
+        val s = info?.signingInfo ?: return emptySet()
+        return digests(if (s.hasMultipleSigners()) s.apkContentsSigners else s.signingCertificateHistory)
+    }
+
+    private fun digests(signatures: Array<android.content.pm.Signature>?): Set<String> =
+        signatures.orEmpty().map { sig ->
+            MessageDigest.getInstance("SHA-256").digest(sig.toByteArray()).joinToString("") { "%02x".format(it) }
+        }.toSet()
 
     suspend fun install(apk: File) {
         backup.backupNow("before-update")
@@ -189,16 +230,6 @@ class UpdateInstaller(
     private fun versionCodeOf(info: PackageInfo): Long =
         if (Build.VERSION.SDK_INT >= 28) info.longVersionCode else info.versionCode.toLong()
 
-    private fun signerDigests(info: PackageInfo): Set<String> {
-        val signatures = if (Build.VERSION.SDK_INT >= 28) {
-            val s = info.signingInfo ?: return emptySet()
-            if (s.hasMultipleSigners()) s.apkContentsSigners else s.signingCertificateHistory
-        } else {
-            @Suppress("DEPRECATION") info.signatures
-        }
-        val md = MessageDigest.getInstance("SHA-256")
-        return signatures.orEmpty().map { sig -> md.digest(sig.toByteArray()).joinToString("") { "%02x".format(it) } }.toSet()
-    }
 }
 
 /**

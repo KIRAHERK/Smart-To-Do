@@ -145,6 +145,22 @@ class AppOnDeviceTest {
         shot("05-task-detail")
     }
 
+    /**
+     * The in-app update checks who signed the downloaded file. Android 9 and 10 often don't report
+     * it for files, which blocked updates on his phone: this must work on every Android we support.
+     */
+    @Test
+    fun updateCanReadTheSignatureOfADownloadedApk() {
+        val copy = java.io.File(TestEnv.app.cacheDir, "self-copy.apk")
+        java.io.File(TestEnv.app.applicationInfo.sourceDir).copyTo(copy, overwrite = true)
+        val fromFile = c.updateInstaller.archiveSigners(copy)
+        val installed = c.updateInstaller.installedSigners()
+        assertTrue("could not read the signature of the file", fromFile.isNotEmpty())
+        assertTrue("could not read the signature of the app", installed.isNotEmpty())
+        assertEquals(installed, fromFile)
+        copy.delete()
+    }
+
     @Test
     fun recordingWithNoTimeLimitIsWrittenDownAndUnderstood() {
         reset()
