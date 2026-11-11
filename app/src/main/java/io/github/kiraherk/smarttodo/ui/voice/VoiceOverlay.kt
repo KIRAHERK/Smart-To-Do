@@ -10,6 +10,10 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -213,16 +217,10 @@ private fun Confirm(state: VoiceViewModel.UiState.Confirm, onConfirm: () -> Unit
     }
     Quote(state.transcript, small = true)
     BigButton(stringResource(R.string.yes_save), Icons.Filled.Check, onConfirm)
-    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        OutlinedButton(onClick = onReject, modifier = Modifier.heightIn(min = 56.dp), shape = RoundedCornerShape(18.dp)) {
-            Icon(Icons.Filled.Close, contentDescription = null)
-            Spacer(Modifier.width(8.dp))
-            Text(stringResource(R.string.no_cancel), style = MaterialTheme.typography.titleMedium)
-        }
-        OutlinedButton(onClick = onSpeakAgain, modifier = Modifier.heightIn(min = 56.dp), shape = RoundedCornerShape(18.dp)) {
-            Icon(Icons.AutoMirrored.Filled.VolumeUp, contentDescription = stringResource(R.string.read_aloud))
-        }
-    }
+    ButtonPair(
+        Icons.Filled.Close, stringResource(R.string.no_cancel), onReject,
+        Icons.AutoMirrored.Filled.VolumeUp, stringResource(R.string.read_aloud), onSpeakAgain,
+    )
 }
 
 @Composable
@@ -234,18 +232,10 @@ private fun Answer(state: VoiceViewModel.UiState.Answer, onAskAgain: () -> Unit,
     Quote(state.question, small = true)
     Text(state.answer, style = BigText, color = MaterialTheme.colorScheme.onSurface)
     BigButton(stringResource(R.string.ok), Icons.Filled.Check, onClose)
-    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        OutlinedButton(onClick = onSpeakAgain, modifier = Modifier.heightIn(min = 56.dp), shape = RoundedCornerShape(18.dp)) {
-            Icon(Icons.AutoMirrored.Filled.VolumeUp, contentDescription = null)
-            Spacer(Modifier.width(8.dp))
-            Text(stringResource(R.string.read_aloud))
-        }
-        OutlinedButton(onClick = onAskAgain, modifier = Modifier.heightIn(min = 56.dp), shape = RoundedCornerShape(18.dp)) {
-            Icon(Icons.Filled.Mic, contentDescription = null)
-            Spacer(Modifier.width(8.dp))
-            Text(stringResource(R.string.speak_again))
-        }
-    }
+    ButtonPair(
+        Icons.AutoMirrored.Filled.VolumeUp, stringResource(R.string.read_aloud), onSpeakAgain,
+        Icons.Filled.Mic, stringResource(R.string.speak_again), onAskAgain,
+    )
 }
 
 @Composable
@@ -261,17 +251,39 @@ private fun Message(state: VoiceViewModel.UiState.Message, onRetry: () -> Unit, 
     }
     Text(state.text, style = BigText, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurface)
     BigButton(stringResource(R.string.ok), Icons.Filled.Check, onClose)
-    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        if (state.canRetry) {
-            OutlinedButton(onClick = onRetry, modifier = Modifier.heightIn(min = 56.dp), shape = RoundedCornerShape(18.dp)) {
-                Icon(Icons.Filled.Refresh, contentDescription = null)
-                Spacer(Modifier.width(8.dp))
-                Text(stringResource(R.string.speak_again))
-            }
-        }
-        OutlinedButton(onClick = onSpeakAgain, modifier = Modifier.heightIn(min = 56.dp), shape = RoundedCornerShape(18.dp)) {
-            Icon(Icons.AutoMirrored.Filled.VolumeUp, contentDescription = stringResource(R.string.read_aloud))
-        }
+    if (state.canRetry) {
+        ButtonPair(
+            Icons.Filled.Refresh, stringResource(R.string.speak_again), onRetry,
+            Icons.AutoMirrored.Filled.VolumeUp, stringResource(R.string.read_aloud), onSpeakAgain,
+        )
+    } else {
+        SideButton(Icons.AutoMirrored.Filled.VolumeUp, stringResource(R.string.read_aloud), onSpeakAgain, Modifier.fillMaxWidth())
+    }
+}
+
+/** Two secondary buttons side by side, always the same width and the same height. */
+@Composable
+private fun ButtonPair(
+    firstIcon: ImageVector, firstLabel: String, onFirst: () -> Unit,
+    secondIcon: ImageVector, secondLabel: String, onSecond: () -> Unit,
+) {
+    Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        SideButton(firstIcon, firstLabel, onFirst, Modifier.weight(1f).fillMaxHeight())
+        SideButton(secondIcon, secondLabel, onSecond, Modifier.weight(1f).fillMaxHeight())
+    }
+}
+
+@Composable
+private fun SideButton(icon: ImageVector, label: String, onClick: () -> Unit, modifier: Modifier) {
+    OutlinedButton(
+        onClick = onClick,
+        modifier = modifier.heightIn(min = 58.dp),
+        shape = RoundedCornerShape(18.dp),
+        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 8.dp),
+    ) {
+        Icon(icon, contentDescription = null, modifier = Modifier.size(22.dp))
+        Spacer(Modifier.width(6.dp))
+        Text(label, style = MaterialTheme.typography.titleSmall, textAlign = TextAlign.Center)
     }
 }
 

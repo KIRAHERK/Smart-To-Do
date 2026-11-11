@@ -11,6 +11,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.IntentCompat
 import io.github.kiraherk.smarttodo.BuildConfig
 import io.github.kiraherk.smarttodo.R
@@ -160,11 +161,18 @@ class UpdateInstaller(
         backup.backupNow("before-update")
         withContext(Dispatchers.IO) {
             val installer = context.packageManager.packageInstaller
+            // An earlier attempt may still be waiting (for example after Play Protect's scan):
+            // close it so it can't get in the way of this one.
+            installer.mySessions.forEach { runCatching { installer.abandonSession(it.sessionId) } }
+            PendingInstall.clear(context)
             val params = PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL).apply {
                 setAppPackageName(context.packageName)
+                setInstallReason(PackageManager.INSTALL_REASON_USER)
                 if (Build.VERSION.SDK_INT >= 31) setRequireUserAction(PackageInstaller.SessionParams.USER_ACTION_NOT_REQUIRED)
+                if (Build.VERSION.SDK_INT >= 33) setPackageSource(PackageInstaller.PACKAGE_SOURCE_DOWNLOADED_FILE)
             }
             val sessionId = installer.createSession(params)
+            PendingInstall.sessionId = sessionId
             installer.openSession(sessionId).use { session ->
                 session.openWrite("base.apk", 0, apk.length()).use { out ->
                     apk.inputStream().use { it.copyTo(out) }
@@ -193,22 +201,77 @@ class UpdateInstaller(
     }
 }
 
+/**
+ * The "Install?" confirmation Android needs him to accept. Android does not let an app open it
+ * while another screen is on top (for example Play Protect's "scan app" dialog), so it is kept
+ * here and opened as soon as the app is back in front, and offered as a notification as well.
+ */
+object PendingInstall {
+    @Volatile var sessionId: Int = -1
+    @Volatile private var confirm: Intent? = null
+
+    /** True while the app's screen is in front (set by MainActivity). */
+    @Volatile var appInFront: Boolean = false
+
+    fun hold(context: Context, intent: Intent) {
+        confirm = intent
+        val c = LocaleHelper.wrap(context)
+        val flags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        val tap = PendingIntent.getActivity(context, 7, Intent(intent).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), flags)
+        Notifications.post(
+            c, Notifications.ID_INSTALL,
+            Notifications.builder(c, Notifications.CH_UPDATES, c.getString(R.string.update_confirm_title), c.getString(R.string.update_confirm_text))
+                .setContentIntent(tap)
+                .setAutoCancel(true),
+        )
+    }
+
+    /** Called when the app comes to the front: shows a waiting confirmation, if any. */
+    fun showIfWaiting(activity: android.app.Activity) {
+        val intent = confirm ?: return
+        confirm = null
+        NotificationManagerCompat.from(activity).cancel(Notifications.ID_INSTALL)
+        runCatching { activity.startActivity(intent) }
+    }
+
+    fun clear(context: Context) {
+        confirm = null
+        NotificationManagerCompat.from(context).cancel(Notifications.ID_INSTALL)
+    }
+}
+
 /** Android tells us here whether it needs him to confirm the install, or whether it failed. */
 class InstallResultReceiver : BroadcastReceiver() {
     @SuppressLint("UnsafeIntentLaunch")
     override fun onReceive(context: Context, intent: Intent) {
-        when (intent.getIntExtra(PackageInstaller.EXTRA_STATUS, PackageInstaller.STATUS_FAILURE)) {
+        val session = intent.getIntExtra(PackageInstaller.EXTRA_SESSION_ID, -1)
+        // Results for an earlier, abandoned attempt don't matter any more.
+        if (PendingInstall.sessionId != -1 && session != -1 && session != PendingInstall.sessionId) return
+        when (val status = intent.getIntExtra(PackageInstaller.EXTRA_STATUS, PackageInstaller.STATUS_FAILURE)) {
             PackageInstaller.STATUS_PENDING_USER_ACTION -> {
                 val confirm = IntentCompat.getParcelableExtra(intent, Intent.EXTRA_INTENT, Intent::class.java) ?: return
-                context.startActivity(confirm.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                if (PendingInstall.appInFront) {
+                    val opened = runCatching { context.startActivity(Intent(confirm).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }.isSuccess
+                    if (!opened) PendingInstall.hold(context, confirm)
+                } else {
+                    PendingInstall.hold(context, confirm)
+                }
             }
-            PackageInstaller.STATUS_SUCCESS -> Unit
+            PackageInstaller.STATUS_SUCCESS -> PendingInstall.clear(context)
             else -> {
+                PendingInstall.clear(context)
                 val c = LocaleHelper.wrap(context)
-                val message = intent.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE).orEmpty()
+                val text = c.getString(
+                    when (status) {
+                        PackageInstaller.STATUS_FAILURE_ABORTED -> R.string.update_stopped
+                        PackageInstaller.STATUS_FAILURE_STORAGE -> R.string.update_no_space
+                        PackageInstaller.STATUS_FAILURE_BLOCKED -> R.string.update_blocked
+                        else -> R.string.update_try_again
+                    }
+                )
                 Notifications.post(
                     c, Notifications.ID_INSTALL,
-                    Notifications.builder(c, Notifications.CH_UPDATES, c.getString(R.string.update_failed), message),
+                    Notifications.builder(c, Notifications.CH_UPDATES, c.getString(R.string.update_failed), text),
                 )
             }
         }

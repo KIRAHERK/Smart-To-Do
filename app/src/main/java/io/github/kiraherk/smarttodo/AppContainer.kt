@@ -22,11 +22,13 @@ import io.github.kiraherk.smarttodo.update.UpdateInstaller
 import io.github.kiraherk.smarttodo.util.LocaleHelper
 import io.github.kiraherk.smarttodo.voice.Pcm
 import io.github.kiraherk.smarttodo.voice.Speaker
+import io.github.kiraherk.smarttodo.voice.SpeechCache
 import io.github.kiraherk.smarttodo.voice.SpeechCapture
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import okhttp3.OkHttpClient
 import java.time.Clock
+import java.io.File
 import java.util.concurrent.TimeUnit
 
 /** Creates and holds the app's single instances (simple manual dependency injection). */
@@ -81,18 +83,15 @@ class AppContainer(val app: Application) {
         )
     }
 
-    /** Recently spoken sentences, so "read again" doesn't use up the free daily limit. */
-    private val speechCache = object : LinkedHashMap<String, Pcm>(16, 0.75f, true) {
-        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Pcm>?) = size > 12
-    }
+    /** Natural-voice audio already made, so hearing it again doesn't use up the free daily limit. */
+    val speechCache = SpeechCache(File(app.cacheDir, "speech"))
 
     private suspend fun naturalSpeech(text: String, voice: String): Pcm? {
+        speechCache.get(voice, text)?.let { return it }
         if (!secrets.hasApiKey()) return null
-        val key = "$voice|$text"
-        synchronized(speechCache) { speechCache[key] }?.let { return it }
         val audio = ai.speech(text, voice)
         val pcm = Pcm.decode(audio.bytes, audio.mimeType)
-        synchronized(speechCache) { speechCache[key] = pcm }
+        speechCache.put(voice, text, pcm)
         return pcm
     }
 

@@ -7,6 +7,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import io.github.kiraherk.smarttodo.ui.AppRoot
+import io.github.kiraherk.smarttodo.update.PendingInstall
 import io.github.kiraherk.smarttodo.util.LocaleHelper
 import kotlinx.coroutines.flow.MutableStateFlow
 
@@ -27,6 +28,18 @@ class MainActivity : ComponentActivity() {
         setContent {
             AppRoot(navRequests = navRequests, onNavHandled = { navRequests.value = null })
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        PendingInstall.appInFront = true
+        // An update that was waiting for his "Install" (e.g. after Play Protect's scan) continues now.
+        PendingInstall.showIfWaiting(this)
+    }
+
+    override fun onPause() {
+        PendingInstall.appInFront = false
+        super.onPause()
     }
 
     override fun onNewIntent(intent: Intent) {

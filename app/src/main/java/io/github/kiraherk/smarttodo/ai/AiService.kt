@@ -140,7 +140,7 @@ class AiService(
                 cooldownUntil.remove(model)
                 return Generated(text, model)
             } catch (e: AiException.Quota) {
-                rest(model, 15 * MINUTE, e).also { last = it }
+                rest(model, e.restMs, e).also { last = it }
             } catch (e: AiException.ModelUnavailable) {
                 rest(model, 24 * 60 * MINUTE, e).also { last = it }
             } catch (e: AiException.Timeout) {
@@ -158,11 +158,19 @@ class AiService(
         throw last ?: AiException.Timeout(null)
     }
 
+    /** Why the natural voice was last not used, for the settings screen. Null = it worked. */
+    enum class SpeechIssue { DAILY_LIMIT, MINUTE_LIMIT, SLOW, NO_INTERNET, OTHER }
+
+    @Volatile var speechIssue: SpeechIssue? = null
+        private set
+    @Volatile var speechIssueAt: Long = 0
+        private set
+
     /**
-     * Turns [text] into speech with Gemini's natural voices. Fast or nothing: if it can't answer
-     * within a few seconds the caller uses the phone's own voice instead.
+     * Turns [text] into speech with Gemini's natural voices. If it can't answer in time (longer
+     * sentences get a little longer), the caller uses the phone's own voice instead.
      */
-    suspend fun speech(text: String, voice: String, budgetMs: Long = SPEECH_BUDGET_MS): GeminiClient.Audio {
+    suspend fun speech(text: String, voice: String, budgetMs: Long = speechBudget(text)): GeminiClient.Audio {
         val models = ModelRanking.rankTts(knownModels()).ifEmpty { ModelRanking.TTS_FALLBACK }.take(3)
         val start = now()
         val usable = models.filter { (cooldownUntil[it] ?: 0L) < start }
@@ -171,24 +179,41 @@ class AiService(
             val left = budgetMs - (now() - start)
             if (left < 1_500) break
             try {
-                return gemini.speech(model, text, voice, SPEECH_STYLE, timeoutMs = left)
+                val audio = gemini.speech(model, text, voice, timeoutMs = left)
+                speechIssue = null
+                return audio
             } catch (e: AiException.Quota) {
-                rest(model, 60 * MINUTE, e).also { last = it }
+                rest(model, e.restMs, e).also { last = it }
             } catch (e: AiException.ModelUnavailable) {
                 rest(model, 24 * 60 * MINUTE, e).also { last = it }
             } catch (e: AiException.Timeout) {
-                rest(model, 5 * MINUTE, e).also { last = it }
+                rest(model, MINUTE, e).also { last = it }
             } catch (e: AiException.Server) {
-                rest(model, 5 * MINUTE, e).also { last = it }
+                rest(model, 2 * MINUTE, e).also { last = it }
             } catch (e: AiException.BadRequest) {
                 rest(model, 60 * MINUTE, e).also { last = it }
             } catch (e: AiException.Blocked) {
                 last = e
             } catch (e: AiException.BadResponse) {
                 last = e
+            } catch (e: AiException.Network) {
+                noteSpeechIssue(e)
+                throw e
             }
         }
-        throw last ?: AiException.Quota(null, "no speech model available")
+        val failure = last ?: AiException.Quota(null, "every speech model is resting")
+        noteSpeechIssue(failure)
+        throw failure
+    }
+
+    private fun noteSpeechIssue(e: AiException) {
+        speechIssue = when (e) {
+            is AiException.Quota -> if (e.daily) SpeechIssue.DAILY_LIMIT else SpeechIssue.MINUTE_LIMIT
+            is AiException.Timeout, is AiException.Server -> SpeechIssue.SLOW
+            is AiException.Network -> SpeechIssue.NO_INTERNET
+            else -> SpeechIssue.OTHER
+        }
+        speechIssueAt = now()
     }
 
     private fun rest(model: String, ms: Long, e: AiException): AiException {
@@ -206,8 +231,8 @@ class AiService(
         const val ASSISTANT_BUDGET_MS = 55_000L
         /** Far more than any real answer needs; stops a model that rambles from running for minutes. */
         const val MAX_OUTPUT_TOKENS = 4096
-        const val SPEECH_BUDGET_MS = 9_000L
-        /** Spoken-style direction for the natural voice; the text to read follows on the next line. */
-        const val SPEECH_STYLE = "Read the following aloud in a warm, calm and friendly voice, at a relaxed pace:"
+
+        /** About 2–3 s for a short sentence; longer answers take a little longer to prepare. */
+        fun speechBudget(text: String): Long = (7_000L + text.length * 40L).coerceIn(9_000L, 18_000L)
     }
 }

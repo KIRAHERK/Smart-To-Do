@@ -74,6 +74,11 @@ import io.github.kiraherk.smarttodo.ai.ModelRanking
 import io.github.kiraherk.smarttodo.data.settings.AppSettings
 import io.github.kiraherk.smarttodo.reminders.Notifications
 import io.github.kiraherk.smarttodo.ui.voiceLabel
+import io.github.kiraherk.smarttodo.ai.AiService
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.draw.clip
 import io.github.kiraherk.smarttodo.ui.components.AppCard
 import io.github.kiraherk.smarttodo.ui.components.ScreenHeader
 import io.github.kiraherk.smarttodo.ui.components.SettingRow
@@ -164,9 +169,26 @@ class SettingsViewModel(private val c: AppContainer) : ViewModel() {
     fun setVoicePopup(v: Boolean) = viewModelScope.launch { c.settings.setVoicePopup(v) }
     fun setTextScale(v: Float) = viewModelScope.launch { c.settings.setTextScale(v) }
     fun testVoice() = c.speaker.speakNow(str(R.string.voice_test_sentence))
-    fun setVoice(v: String) = viewModelScope.launch {
-        c.settings.setVoiceName(v)
-        c.speaker.speakNow(str(R.string.voice_test_sentence))
+    /** Plays the sample with a voice, without saving it. */
+    fun previewVoice(v: String) = c.speaker.preview(str(R.string.voice_test_sentence), v)
+    fun saveVoice(v: String) = viewModelScope.launch { c.settings.setVoiceName(v) }
+    fun stopVoice() = c.speaker.stop()
+
+    /** A short explanation when the phone voice had to read instead of the natural one. */
+    fun voiceStatus(): String? {
+        val issue = c.ai.speechIssue ?: return null
+        val age = System.currentTimeMillis() - c.ai.speechIssueAt
+        val fresh = if (issue == AiService.SpeechIssue.DAILY_LIMIT) age < 12 * 3_600_000L else age < 10 * 60_000L
+        if (!fresh) return null
+        return str(
+            when (issue) {
+                AiService.SpeechIssue.DAILY_LIMIT -> R.string.voice_status_daily
+                AiService.SpeechIssue.MINUTE_LIMIT -> R.string.voice_status_minute
+                AiService.SpeechIssue.SLOW -> R.string.voice_status_slow
+                AiService.SpeechIssue.NO_INTERNET -> R.string.voice_status_offline
+                AiService.SpeechIssue.OTHER -> R.string.voice_status_other
+            }
+        )
     }
 
     fun setMorning(enabled: Boolean, time: String) = viewModelScope.launch { c.settings.setMorning(enabled, time); c.checkInScheduler.scheduleAll() }
@@ -293,6 +315,9 @@ fun SettingsScreen(openUpdate: Boolean, onUpdateOpened: () -> Unit, onOpenSetup:
                 SwitchRow(Icons.Filled.Checklist, stringResource(R.string.auto_confirm), s.autoConfirm, color = gold) { vm.setAutoConfirm(it) }
                 SwitchRow(Icons.Filled.Mic, stringResource(R.string.voice_popup_setting), s.voicePopup, color = gold) { vm.setVoicePopup(it) }
                 Text(stringResource(R.string.voice_natural_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp))
+                vm.voiceStatus()?.let {
+                    Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.tertiary, modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp))
+                }
             }
 
             SectionHeader(stringResource(R.string.section_checkins), warm)
@@ -372,12 +397,11 @@ fun SettingsScreen(openUpdate: Boolean, onUpdateOpened: () -> Unit, onOpenSetup:
                 onDismiss = { dialog = null },
             )
         }
-        "voice" -> ChoiceDialog(
-            title = stringResource(R.string.voice_choice),
-            options = (Speaker.NATURAL_VOICES + "").map { it to voiceLabel(ctx, it) },
-            selected = s.voiceName,
-            onSelect = { vm.setVoice(it) },
-            onDismiss = { dialog = null },
+        "voice" -> VoicePickerDialog(
+            current = s.voiceName,
+            onPreview = { vm.previewVoice(it) },
+            onSave = { vm.saveVoice(it) },
+            onDismiss = { vm.stopVoice(); dialog = null },
         )
         "dialect" -> ChoiceDialog(
             title = stringResource(R.string.dialect),
@@ -425,6 +449,53 @@ fun SettingsScreen(openUpdate: Boolean, onUpdateOpened: () -> Unit, onOpenSetup:
 
 private fun friendly(ctx: android.content.Context, time: String): String =
     Dates.parseTime(time)?.let { Dates.friendlyTime(ctx, it) } ?: time
+
+/**
+ * Choosing the reading voice: tapping a voice plays a sample and marks it, nothing is saved until
+ * he presses Save (so he can listen to several first).
+ */
+@Composable
+private fun VoicePickerDialog(current: String, onPreview: (String) -> Unit, onSave: (String) -> Unit, onDismiss: () -> Unit) {
+    val ctx = LocalContext.current
+    var selected by remember { mutableStateOf(current) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(28.dp),
+        containerColor = MaterialTheme.colorScheme.surface,
+        title = { Text(stringResource(R.string.voice_choice), style = MaterialTheme.typography.titleLarge) },
+        text = {
+            Column {
+                Text(stringResource(R.string.voice_pick_hint), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Spacer(Modifier.height(10.dp))
+                androidx.compose.foundation.lazy.LazyColumn(Modifier.heightIn(max = 420.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    items((Speaker.NATURAL_VOICES + "").size) { i ->
+                        val name = (Speaker.NATURAL_VOICES + "")[i]
+                        val isSelected = name == selected
+                        Row(
+                            Modifier
+                                .fillMaxWidth()
+                                .clip(androidx.compose.foundation.shape.RoundedCornerShape(16.dp))
+                                .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerLow)
+                                .clickable { selected = name; onPreview(name) }
+                                .padding(vertical = 4.dp, horizontal = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            androidx.compose.material3.RadioButton(selected = isSelected, onClick = { selected = name; onPreview(name) })
+                            Text(voiceLabel(ctx, name), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+                            Icon(Icons.AutoMirrored.Filled.VolumeUp, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(end = 10.dp))
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            androidx.compose.material3.Button(onClick = { onSave(selected); onDismiss() }, shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)) {
+                Text(stringResource(R.string.save), style = MaterialTheme.typography.titleSmall)
+            }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
+    )
+}
 
 /** A white rounded group of settings rows. */
 @Composable
