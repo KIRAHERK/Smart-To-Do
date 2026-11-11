@@ -216,12 +216,12 @@ private fun HeroCard(
             .background(brand.heroBrush)
             .heroCircles(),
     ) {
-        Column(Modifier.padding(start = 20.dp, end = 20.dp, top = 18.dp, bottom = 16.dp)) {
+        Column(Modifier.padding(start = 18.dp, end = 18.dp, top = 14.dp, bottom = 14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(stringResource(R.string.today_title), style = MaterialTheme.typography.labelLarge, color = Color.White.copy(alpha = 0.75f))
                     Text(greeting, style = MaterialTheme.typography.headlineMedium, color = Color.White)
-                    Text(Dates.fullDate(ctx, today), style = MaterialTheme.typography.bodyLarge, color = Color.White.copy(alpha = 0.92f))
+                    Text(Dates.fullDate(ctx, today), style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.92f))
                     Dates.hijriDate(ctx, today)?.let {
                         Text(it, style = MaterialTheme.typography.bodyMedium, color = if (brand.dark) brand.gold else Color(0xFFF3D99B))
                     }
@@ -230,23 +230,22 @@ private fun HeroCard(
                 ProgressRing(done, total)
             }
             if (next != null) {
-                Spacer(Modifier.size(14.dp))
+                Spacer(Modifier.size(10.dp))
                 Row(
-                    Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(Color.White.copy(alpha = 0.14f)).padding(horizontal = 14.dp, vertical = 10.dp),
+                    Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(Color.White.copy(alpha = 0.14f)).padding(horizontal = 12.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Icon(Icons.Filled.Schedule, contentDescription = null, tint = Color.White, modifier = Modifier.size(22.dp))
-                    Spacer(Modifier.width(10.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text(stringResource(R.string.next_up), style = MaterialTheme.typography.labelMedium, color = Color.White.copy(alpha = 0.75f))
-                        Text(next.task.title, style = MaterialTheme.typography.titleSmall, color = Color.White, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                    }
+                    Icon(Icons.Filled.Schedule, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.next_up) + ":", style = MaterialTheme.typography.labelLarge, color = Color.White.copy(alpha = 0.8f))
+                    Spacer(Modifier.width(6.dp))
+                    Text(next.task.title, style = MaterialTheme.typography.titleSmall, color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
                     Dates.parseTime(next.occurrence.time)?.let {
                         Text(Dates.friendlyTime(ctx, it), style = MaterialTheme.typography.titleSmall, color = Color.White)
                     }
                 }
             }
-            Spacer(Modifier.size(12.dp))
+            Spacer(Modifier.size(10.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 QuickAction(Icons.AutoMirrored.Filled.VolumeUp, stringResource(R.string.read_my_day_short), stringResource(R.string.read_my_day), onRead)
                 QuickAction(Icons.Filled.TaskAlt, stringResource(R.string.review_today_short), stringResource(R.string.review_today), onReviewDay)
@@ -265,13 +264,13 @@ private fun androidx.compose.foundation.layout.RowScope.QuickAction(icon: ImageV
             .background(Color.White.copy(alpha = 0.14f))
             .semantics(mergeDescendants = true) { contentDescription = description }
             .clickable(role = Role.Button, onClick = onClick)
-            .heightIn(min = 64.dp)
-            .padding(horizontal = 6.dp, vertical = 8.dp),
+            .heightIn(min = 56.dp)
+            .padding(horizontal = 6.dp, vertical = 6.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Icon(icon, contentDescription = null, tint = Color.White, modifier = Modifier.size(24.dp))
-        Text(label, style = MaterialTheme.typography.labelMedium, color = Color.White, textAlign = TextAlign.Center, maxLines = 2)
+        Icon(icon, contentDescription = null, tint = Color.White, modifier = Modifier.size(22.dp))
+        Text(label, style = MaterialTheme.typography.labelMedium, color = Color.White, textAlign = TextAlign.Center, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 
@@ -281,9 +280,9 @@ private fun ProgressRing(done: Int, total: Int) {
     val brand = LocalBrand.current
     val fraction = if (total == 0) 0f else done.toFloat() / total
     val gold = Color(0xFFF3D99B)
-    Box(Modifier.size(92.dp), contentAlignment = Alignment.Center) {
+    Box(Modifier.size(82.dp), contentAlignment = Alignment.Center) {
         Canvas(Modifier.fillMaxSize()) {
-            val stroke = 9.dp.toPx()
+            val stroke = 8.dp.toPx()
             drawArc(Color.White.copy(alpha = 0.18f), 0f, 360f, false, style = Stroke(stroke))
             if (fraction > 0f) drawArc(if (brand.dark) brand.gold else gold, -90f, 360f * fraction, false, style = Stroke(stroke, cap = StrokeCap.Round))
         }

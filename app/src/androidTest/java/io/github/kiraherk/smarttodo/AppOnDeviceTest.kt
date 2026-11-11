@@ -1,6 +1,10 @@
 package io.github.kiraherk.smarttodo
 
 import androidx.compose.ui.test.hasScrollToNodeAction
+import androidx.compose.ui.test.performSemanticsAction
+import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.performScrollToNode
@@ -90,8 +94,11 @@ class AppOnDeviceTest {
         compose.waitForText("اتصل بالبنك")
         shot("03-today-tasks")
 
-        // The first ✓ belongs to the late task (late tasks are listed first).
-        compose.clickableDesc(str(R.string.mark_done)).performClick()
+        // The first ✓ belongs to the late task (late tasks are listed first). On a small screen the
+        // list starts below the header, so scroll to it first; press it directly so the floating
+        // talk button can never be in the way.
+        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasContentDescription(str(R.string.mark_done)) and hasClickAction())
+        compose.clickableDesc(str(R.string.mark_done)).performSemanticsAction(SemanticsActions.OnClick)
         compose.waitUntilTrue { statusOf(late) == TaskStatus.DONE }
 
         // The trip is further down the list: scroll to it like he would.
@@ -119,7 +126,8 @@ class AppOnDeviceTest {
         val id = create(TaskRepository.NewTask("تقرير المبيعات", category = CategoryKey.WORK, date = today()))
         launch()
         compose.waitForText("تقرير المبيعات")
-        compose.clickable("تقرير المبيعات").performClick()
+        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("تقرير المبيعات") and hasClickAction())
+        compose.clickable("تقرير المبيعات").performSemanticsAction(SemanticsActions.OnClick)
         compose.waitForText(str(R.string.add_voice_note))
         compose.clickable(str(R.string.status_partly)).performClick()
         compose.waitForText(str(R.string.how_much_done))
