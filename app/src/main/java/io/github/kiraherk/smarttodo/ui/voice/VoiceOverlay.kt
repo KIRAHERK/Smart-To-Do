@@ -2,6 +2,8 @@ package io.github.kiraherk.smarttodo.ui.voice
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -145,7 +147,8 @@ private fun Confirm(state: VoiceViewModel.UiState.Confirm, onConfirm: () -> Unit
     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         OutlinedButton(onClick = onReject, modifier = Modifier.heightIn(min = 56.dp)) {
             Icon(Icons.Filled.Close, contentDescription = null)
-            Text(" " + stringResource(R.string.no_cancel), style = MaterialTheme.typography.titleMedium)
+            Spacer(Modifier.width(8.dp))
+            Text(stringResource(R.string.no_cancel), style = MaterialTheme.typography.titleMedium)
         }
         OutlinedButton(onClick = onSpeakAgain, modifier = Modifier.heightIn(min = 56.dp)) {
             Icon(Icons.AutoMirrored.Filled.VolumeUp, contentDescription = stringResource(R.string.read_aloud))
@@ -161,11 +164,13 @@ private fun Answer(state: VoiceViewModel.UiState.Answer, onAskAgain: () -> Unit,
     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         OutlinedButton(onClick = onSpeakAgain, modifier = Modifier.heightIn(min = 56.dp)) {
             Icon(Icons.AutoMirrored.Filled.VolumeUp, contentDescription = null)
-            Text(" " + stringResource(R.string.read_aloud))
+            Spacer(Modifier.width(8.dp))
+            Text(stringResource(R.string.read_aloud))
         }
         OutlinedButton(onClick = onAskAgain, modifier = Modifier.heightIn(min = 56.dp)) {
             Icon(Icons.Filled.Mic, contentDescription = null)
-            Text(" " + stringResource(R.string.speak_again))
+            Spacer(Modifier.width(8.dp))
+            Text(stringResource(R.string.speak_again))
         }
     }
 }
@@ -183,7 +188,8 @@ private fun Message(state: VoiceViewModel.UiState.Message, onRetry: () -> Unit, 
         if (state.canRetry) {
             OutlinedButton(onClick = onRetry, modifier = Modifier.heightIn(min = 56.dp)) {
                 Icon(Icons.Filled.Refresh, contentDescription = null)
-                Text(" " + stringResource(R.string.speak_again))
+                Spacer(Modifier.width(8.dp))
+                Text(stringResource(R.string.speak_again))
             }
         }
         OutlinedButton(onClick = onSpeakAgain, modifier = Modifier.heightIn(min = 56.dp)) {
@@ -201,6 +207,7 @@ private fun BigButton(text: String, icon: androidx.compose.ui.graphics.vector.Im
         shape = RoundedCornerShape(16.dp),
     ) {
         Icon(icon, contentDescription = null, modifier = Modifier.size(28.dp))
-        Text("  $text", style = MaterialTheme.typography.titleLarge)
+        Spacer(Modifier.width(10.dp))
+        Text(text, style = MaterialTheme.typography.titleLarge)
     }
 }

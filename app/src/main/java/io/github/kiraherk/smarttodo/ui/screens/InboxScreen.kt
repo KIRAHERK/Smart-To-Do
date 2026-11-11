@@ -1,5 +1,7 @@
 package io.github.kiraherk.smarttodo.ui.screens
 
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -88,7 +90,8 @@ fun InboxScreen(onBack: () -> Unit) {
                                 modifier = Modifier.weight(1f).heightIn(min = 56.dp),
                             ) {
                                 Icon(Icons.Filled.AutoAwesome, contentDescription = null)
-                                Text(" " + stringResource(R.string.understand_now))
+                                Spacer(Modifier.width(8.dp))
+                                Text(stringResource(R.string.understand_now))
                             }
                             OutlinedButton(onClick = { toDelete = item.id }, modifier = Modifier.heightIn(min = 56.dp)) {
                                 Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.delete))

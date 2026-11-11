@@ -1,6 +1,9 @@
 package io.github.kiraherk.smarttodo
 
+import androidx.compose.ui.test.hasScrollToNodeAction
 import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
@@ -78,8 +81,11 @@ class AppOnDeviceTest {
         create(TaskRepository.NewTask("حجز تذاكر دبي", category = CategoryKey.TRAVEL, date = today().plusDays(4)))
         launch()
         compose.waitForText("اتصل بالبنك")
-        compose.waitForText("حجز تذاكر دبي")
         shot("03-today-tasks")
+        // The trip is further down the list: scroll to it like he would.
+        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("حجز تذاكر دبي"))
+        compose.waitForText("حجز تذاكر دبي")
+        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("تصليح المكيف"))
 
         // The first ✓ belongs to the late task (late tasks are listed first).
         compose.clickableDesc(str(R.string.mark_done)).performClick()
