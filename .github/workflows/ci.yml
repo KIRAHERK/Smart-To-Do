@@ -2,7 +2,13 @@ name: CI
 
 on:
   push:
+    paths-ignore: ['docs/**', '**.md']
   pull_request:
+
+# A newer push to the same branch replaces a run that is still going.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
