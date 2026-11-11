@@ -6,7 +6,9 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.kiraherk.smarttodo.SmartTodoApp
 import io.github.kiraherk.smarttodo.data.repo.TaskRepository
@@ -25,6 +27,7 @@ import androidx.compose.ui.test.onAllNodesWithText
 import io.github.kiraherk.smarttodo.ui.voice.VoiceViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.runBlocking
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -121,5 +124,21 @@ class ScreenshotTest {
             }
         }
         save("listening")
+    }
+
+    @Test
+    fun slowThinkingOverlayHasCancel() {
+        var cancelled = false
+        compose.setContent {
+            SmartTodoTheme(1.15f) {
+                VoiceOverlayContent(
+                    state = VoiceViewModel.UiState.Thinking("شو عندي اليوم", slow = true),
+                    onFinish = {}, onConfirm = {}, onReject = {}, onRetry = {}, onSpeakAgain = {}, onDismiss = { cancelled = true },
+                )
+            }
+        }
+        save("thinking-slow")
+        compose.onNodeWithText("إلغاء").performClick()
+        assertTrue(cancelled)
     }
 }

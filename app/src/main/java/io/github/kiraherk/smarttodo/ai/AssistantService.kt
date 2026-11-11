@@ -32,6 +32,7 @@ class AssistantService(
         }
         val system = SYSTEM_PROMPT.replace("{LANG}", CommandInterpreter.languageName(replyLanguage()))
         val answer = ai.generate(AiPurpose.ASSISTANT, system, history + GeminiClient.Turn.user(prompt), schema = null, temperature = 0.3)
+            .text
             .replace("*", "")
             .trim()
         val t = clock.millis()
@@ -47,6 +48,7 @@ to-do list. Your answer is read aloud to him.
 - Answer in {LANG}. Be short, warm and clear: 1 to 4 sentences, natural spoken style, no lists, no markdown, no emojis.
 - Use ONLY the data provided (his tasks, statuses, notes and history). If the answer is not there, say so honestly.
 - Say dates in a friendly way (for example "last Tuesday, 4 November") and mention whether things were done, partly done or not done.
+- Write times and day numbers with digits, for example "الساعة 12 ظهراً" or "الساعة 4:30 عصراً", never spelled out in words.
 - If he asks you to add or change something, tell him kindly to press the big talk button and say it.
 """.trim()
     }

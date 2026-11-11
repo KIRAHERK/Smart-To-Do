@@ -323,7 +323,7 @@ fun SettingsScreen(openUpdate: Boolean, onUpdateOpened: () -> Unit, onOpenSetup:
         "key" -> KeyDialog(hasKey, onSave = { vm.saveKey(it) }, onRemove = { vm.removeKey() }, onDismiss = { dialog = null })
         "cmdModel", "askModel" -> {
             val isCmd = dialog == "cmdModel"
-            val ranked = ModelRanking.rank(models, preferLite = isCmd)
+            val ranked = ModelRanking.rank(models)
             ChoiceDialog(
                 title = stringResource(if (isCmd) R.string.model_commands else R.string.model_questions),
                 options = listOf("" to auto) + ranked.map { it to it },
