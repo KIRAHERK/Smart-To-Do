@@ -3,6 +3,7 @@ package io.github.kiraherk.smarttodo
 import android.app.Application
 import android.content.Context
 import io.github.kiraherk.smarttodo.ai.ActionExecutor
+import io.github.kiraherk.smarttodo.ai.ActionSanity
 import io.github.kiraherk.smarttodo.ai.AiService
 import io.github.kiraherk.smarttodo.ai.AssistantService
 import io.github.kiraherk.smarttodo.ai.CommandInterpreter
@@ -89,6 +90,15 @@ class AppContainer(val app: Application) {
                 runCatching { reminders.rescheduleAll() }
                 runCatching { checkInScheduler.scheduleAll() }
                 runCatching { backup.autoBackupIfDue() }
+                runCatching { repairLeakedTitles() }
+            }
+        }
+
+        /** Older versions could save the AI's thinking as a task name; give those tasks their real name. */
+        private suspend fun repairLeakedTitles() {
+            db.tasks().all().filter { ActionSanity.isLeakedTitle(it.title) }.forEach { t ->
+                val transcript = t.sourceTranscript.orEmpty()
+                repo.updateTask(t.id, title = ActionSanity.cleanTitle(t.title, transcript))
             }
         }
     }
