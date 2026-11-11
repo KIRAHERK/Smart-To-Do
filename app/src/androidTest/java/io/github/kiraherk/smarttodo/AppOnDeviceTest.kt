@@ -111,7 +111,9 @@ class AppOnDeviceTest {
         compose.clickable("حجز تذاكر دبي").performClick()
         compose.waitForText(str(R.string.add_voice_note))
         compose.clickableDesc(str(R.string.back)).performClick()
-        compose.waitForText(str(R.string.today_title))
+        // Back on the list, where it was left (the header with the title may be scrolled away).
+        compose.waitUntilTrue { compose.onAllNodes(hasText(str(R.string.add_voice_note))).fetchSemanticsNodes().isEmpty() }
+        compose.waitForText("حجز تذاكر دبي")
 
         compose.clickable(str(R.string.nav_history)).performClick()
         compose.waitForText(str(R.string.search_hint))
