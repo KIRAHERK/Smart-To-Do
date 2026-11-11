@@ -1,6 +1,7 @@
 package io.github.kiraherk.smarttodo.ai
 
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -14,11 +15,17 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
+import okhttp3.Call
+import okhttp3.Callback
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.Response
 import java.io.IOException
+import java.io.InterruptedIOException
+import java.util.concurrent.TimeUnit
+import kotlin.coroutines.resumeWithException
 
 sealed class AiException(message: String, cause: Throwable? = null) : Exception(message, cause) {
     class NoKey : AiException("No Gemini API key")
@@ -28,6 +35,8 @@ sealed class AiException(message: String, cause: Throwable? = null) : Exception(
     class BadRequest(val model: String?, message: String) : AiException(message)
     class Server(val code: Int, message: String) : AiException(message)
     class Network(cause: Throwable) : AiException(cause.message ?: "network error", cause)
+    /** The model took too long (Google's servers are often slow when they are busy). */
+    class Timeout(val model: String?) : AiException("timed out")
     class Blocked(reason: String) : AiException(reason)
     class BadResponse(message: String) : AiException(message)
 }
@@ -71,13 +80,22 @@ class GeminiClient(
         ids
     }
 
+    /**
+     * One generateContent request. It can be cancelled (the HTTP call is aborted too) and gives up
+     * after [timeoutMs] with [AiException.Timeout].
+     *
+     * [temperature] null = the model's own default. Gemini 3 models are meant to run at their
+     * default; low values can make them loop or ramble.
+     */
     suspend fun generate(
         model: String,
         system: String,
         turns: List<Turn>,
         responseSchema: JsonObject? = null,
-        temperature: Double = 0.2,
-    ): String = withContext(Dispatchers.IO) {
+        temperature: Double? = null,
+        maxOutputTokens: Int? = null,
+        timeoutMs: Long = DEFAULT_TIMEOUT_MS,
+    ): String {
         val key = requireKey()
         val body = buildJsonObject {
             putJsonObject("systemInstruction") { putJsonArray("parts") { addJsonObject { put("text", system) } } }
@@ -90,7 +108,8 @@ class GeminiClient(
                 }
             }
             putJsonObject("generationConfig") {
-                put("temperature", temperature)
+                if (temperature != null) put("temperature", temperature)
+                if (maxOutputTokens != null) put("maxOutputTokens", maxOutputTokens)
                 if (responseSchema != null) {
                     put("responseMimeType", "application/json")
                     put("responseSchema", responseSchema)
@@ -102,8 +121,31 @@ class GeminiClient(
             .header(KEY_HEADER, key)
             .post(body.toString().toRequestBody(JSON_MEDIA))
             .build()
-        extractText(execute(request, model))
+        return extractText(await(request, model, timeoutMs))
     }
+
+    /** Runs the call on OkHttp's own threads so that cancelling the coroutine aborts the request. */
+    private suspend fun await(request: Request, model: String?, timeoutMs: Long): String =
+        suspendCancellableCoroutine { cont ->
+            val call = http.newCall(request)
+            call.timeout().timeout(timeoutMs, TimeUnit.MILLISECONDS)
+            cont.invokeOnCancellation { call.cancel() }
+            call.enqueue(object : Callback {
+                override fun onFailure(call: Call, e: IOException) {
+                    if (cont.isActive) cont.resumeWithException(mapFailure(e, model))
+                }
+
+                override fun onResponse(call: Call, response: Response) {
+                    val result = runCatching { handle(response, model) }
+                    if (cont.isActive) cont.resumeWith(result.recoverCatching { e ->
+                        throw if (e is IOException) mapFailure(e, model) else e
+                    })
+                }
+            })
+        }
+
+    private fun mapFailure(e: IOException, model: String?): AiException =
+        if (e is InterruptedIOException) AiException.Timeout(model) else AiException.Network(e)
 
     private fun requireKey(): String = apiKey()?.takeIf { it.isNotBlank() } ?: throw AiException.NoKey()
 
@@ -125,11 +167,17 @@ class GeminiClient(
     }
 
     private fun execute(request: Request, model: String?): String {
+        val call = http.newCall(request)
+        call.timeout().timeout(DEFAULT_TIMEOUT_MS, TimeUnit.MILLISECONDS)
         val response = try {
-            http.newCall(request).execute()
+            call.execute()
         } catch (e: IOException) {
-            throw AiException.Network(e)
+            throw mapFailure(e, model)
         }
+        return handle(response, model)
+    }
+
+    private fun handle(response: Response, model: String?): String {
         response.use { r ->
             val body = r.body.string()
             if (r.isSuccessful) return body
@@ -149,6 +197,7 @@ class GeminiClient(
 
     companion object {
         const val DEFAULT_BASE_URL = "https://generativelanguage.googleapis.com/v1beta"
+        const val DEFAULT_TIMEOUT_MS = 30_000L
         private const val KEY_HEADER = "x-goog-api-key"
         private val JSON_MEDIA = "application/json; charset=utf-8".toMediaType()
     }

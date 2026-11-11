@@ -18,7 +18,9 @@ import io.github.kiraherk.smarttodo.ui.recurrenceText
 import io.github.kiraherk.smarttodo.ui.statusName
 import io.github.kiraherk.smarttodo.util.Dates
 import io.github.kiraherk.smarttodo.voice.SpeechCapture
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -46,7 +48,8 @@ class VoiceViewModel(private val c: AppContainer) : ViewModel() {
     sealed interface UiState {
         data object Idle : UiState
         data class Listening(val text: String, val level: Float) : UiState
-        data class Thinking(val transcript: String) : UiState
+        /** [slow] = it is taking long (Google busy), so the screen says so and offers Cancel. */
+        data class Thinking(val transcript: String, val slow: Boolean = false) : UiState
         data class Confirm(val transcript: String, val previews: List<Preview>) : UiState
         data class Answer(val question: String, val answer: String) : UiState
         data class Message(val text: String, val error: Boolean = false, val canRetry: Boolean = false) : UiState
@@ -63,6 +66,8 @@ class VoiceViewModel(private val c: AppContainer) : ViewModel() {
     private var pendingInboxId: Long? = null
     private var lastRequest = Request()
     private var listenJob: Job? = null
+    /** The current "understand / answer" work, so Cancel can stop it. */
+    private var workJob: Job? = null
     private var popupRequest: Request? = null
 
     // A channel, not a SharedFlow: the request must not be lost if the screen isn't collecting yet.
@@ -104,7 +109,7 @@ class VoiceViewModel(private val c: AppContainer) : ViewModel() {
     fun onPopupResult(text: String?) {
         val request = popupRequest ?: return
         popupRequest = null
-        viewModelScope.launch {
+        launchWork {
             if (text.isNullOrBlank()) {
                 _state.value = UiState.Message(str(R.string.voice_nothing_heard), error = true, canRetry = true)
             } else {
@@ -124,7 +129,10 @@ class VoiceViewModel(private val c: AppContainer) : ViewModel() {
 
     fun retry() = start(lastRequest)
 
+    /** Closes the voice window. Also stops a request that is still waiting for Google. */
     fun dismiss() {
+        workJob?.cancel()
+        workJob = null
         c.speech.cancel()
         c.speaker.stop()
         listenJob?.cancel()
@@ -135,7 +143,7 @@ class VoiceViewModel(private val c: AppContainer) : ViewModel() {
     /** For text that didn't come from the microphone: inbox items, suggestion chips, typed text. */
     fun processText(text: String, request: Request = Request()) {
         lastRequest = request
-        viewModelScope.launch {
+        launchWork {
             c.speaker.enabled = c.settings.current().readAloud
             handle(text, request)
         }
@@ -143,7 +151,7 @@ class VoiceViewModel(private val c: AppContainer) : ViewModel() {
 
     /** A question straight to the assistant (one AI request instead of two). */
     fun ask(question: String) {
-        viewModelScope.launch {
+        launchWork {
             c.speaker.enabled = c.settings.current().readAloud
             answer(question, null)
         }
@@ -178,7 +186,7 @@ class VoiceViewModel(private val c: AppContainer) : ViewModel() {
     }
 
     private fun onTranscript(request: Request, text: String, error: Int?, language: String) {
-        viewModelScope.launch {
+        launchWork {
             if (text.isBlank()) {
                 when {
                     error == null -> _state.value = UiState.Message(str(R.string.voice_nothing_heard), error = true, canRetry = true)
@@ -191,7 +199,7 @@ class VoiceViewModel(private val c: AppContainer) : ViewModel() {
                         openPopup(request, language)
                     }
                 }
-                return@launch
+                return@launchWork
             }
             handle(text, request)
         }
@@ -212,8 +220,23 @@ class VoiceViewModel(private val c: AppContainer) : ViewModel() {
         }
     }
 
+    private fun launchWork(block: suspend () -> Unit) {
+        workJob?.cancel()
+        workJob = viewModelScope.launch { block() }
+    }
+
+    /** Shows "Thinking", and after a while tells him Google is slow (he can press Cancel). */
+    private fun thinking(text: String) {
+        val shown = UiState.Thinking(text)
+        _state.value = shown
+        viewModelScope.launch {
+            delay(SLOW_AFTER_MS)
+            if (_state.value === shown) _state.value = shown.copy(slow = true)
+        }
+    }
+
     private suspend fun interpret(text: String, request: Request) {
-        _state.value = UiState.Thinking(text)
+        thinking(text)
         if (!c.secrets.hasApiKey()) {
             saveToInbox(text, request, "no key")
             say(UiState.Message(str(R.string.saved_inbox_no_key), error = true))
@@ -236,6 +259,8 @@ class VoiceViewModel(private val c: AppContainer) : ViewModel() {
                 question != null -> answer(question.question?.takeIf { it.isNotBlank() } ?: text, request.inboxId)
                 else -> say(UiState.Message(actions.firstOrNull()?.spokenSummary?.takeIf { it.isNotBlank() } ?: str(R.string.voice_unclear), canRetry = true))
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             saveToInbox(text, request, e.message)
             say(UiState.Message(errorMessage(e) + "\n\n" + str(R.string.saved_inbox_later), error = true))
@@ -243,7 +268,7 @@ class VoiceViewModel(private val c: AppContainer) : ViewModel() {
     }
 
     private suspend fun answer(question: String, inboxId: Long?) {
-        _state.value = UiState.Thinking(question)
+        thinking(question)
         if (!c.secrets.hasApiKey()) {
             say(UiState.Message(str(R.string.err_no_key), error = true))
             return
@@ -253,6 +278,8 @@ class VoiceViewModel(private val c: AppContainer) : ViewModel() {
             inboxId?.let { c.db.inbox().delete(it) }
             _state.value = UiState.Answer(question, a)
             speak(a)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             say(UiState.Message(errorMessage(e), error = true, canRetry = true))
         }
@@ -273,6 +300,7 @@ class VoiceViewModel(private val c: AppContainer) : ViewModel() {
             is AiException.InvalidKey -> R.string.err_invalid_key
             is AiException.Quota -> R.string.err_quota
             is AiException.Network -> R.string.err_network
+            is AiException.Timeout, is AiException.Server -> R.string.err_slow
             else -> R.string.err_ai_generic
         }
     )
@@ -301,4 +329,8 @@ class VoiceViewModel(private val c: AppContainer) : ViewModel() {
     private fun speak(text: String) = c.speaker.speak(text)
 
     private fun str(@StringRes id: Int, vararg args: Any): String = c.localized().getString(id, *args)
+
+    companion object {
+        const val SLOW_AFTER_MS = 12_000L
+    }
 }

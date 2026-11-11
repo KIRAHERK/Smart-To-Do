@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Archive
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Mic
@@ -73,6 +74,7 @@ import io.github.kiraherk.smarttodo.ui.components.ChoiceDialog
 import io.github.kiraherk.smarttodo.ui.components.ConfirmDialog
 import io.github.kiraherk.smarttodo.ui.components.SectionHeader
 import io.github.kiraherk.smarttodo.ui.components.StatusPill
+import io.github.kiraherk.smarttodo.ui.components.TextInputDialog
 import io.github.kiraherk.smarttodo.ui.components.pickDate
 import io.github.kiraherk.smarttodo.ui.components.pickTime
 import io.github.kiraherk.smarttodo.ui.recurrenceText
@@ -99,6 +101,10 @@ class TaskDetailViewModel(private val c: AppContainer, val taskId: Long) : ViewM
 
     fun setCategory(key: CategoryKey) = viewModelScope.launch {
         c.repo.updateTask(taskId, category = key, logText = categoryName(c.localized(), key))
+    }
+
+    fun rename(title: String) = viewModelScope.launch {
+        if (title.isNotBlank() && title != task.value?.title) c.repo.updateTask(taskId, title = title, logText = title)
     }
 
     fun setDate(date: LocalDate) = viewModelScope.launch { c.repo.reschedule(taskId, date, null) }
@@ -150,6 +156,7 @@ fun TaskDetailScreen(taskId: Long, onBack: () -> Unit) {
     var showRepeat by remember { mutableStateOf(false) }
     var showPartly by remember { mutableStateOf<Long?>(null) }
     var confirmArchive by remember { mutableStateOf(false) }
+    var editTitle by remember { mutableStateOf(false) }
 
     val t = task
     val current = currentOccurrence(occurrences)
@@ -176,7 +183,10 @@ fun TaskDetailScreen(taskId: Long, onBack: () -> Unit) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(categoryIcon(category), contentDescription = null, tint = categoryColor(category), modifier = Modifier.size(30.dp))
                 Spacer(Modifier.width(10.dp))
-                Text(t.title, style = MaterialTheme.typography.headlineSmall)
+                Text(t.title, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.weight(1f))
+                IconButton(onClick = { editTitle = true }) {
+                    Icon(Icons.Filled.Edit, contentDescription = stringResource(R.string.edit_title), tint = MaterialTheme.colorScheme.primary)
+                }
             }
             if (t.details.isNotBlank()) Text(t.details, style = MaterialTheme.typography.bodyLarge)
             if (t.archived) Text(stringResource(R.string.archived_note), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.titleMedium)
@@ -329,6 +339,14 @@ fun TaskDetailScreen(taskId: Long, onBack: () -> Unit) {
             selected = null,
             onSelect = { vm.setStatus(occurrenceId, TaskStatus.PARTIALLY_DONE, it) },
             onDismiss = { showPartly = null },
+        )
+    }
+    if (editTitle && t != null) {
+        TextInputDialog(
+            title = stringResource(R.string.edit_title),
+            initial = t.title,
+            onSave = { vm.rename(it) },
+            onDismiss = { editTitle = false },
         )
     }
     if (confirmArchive) {

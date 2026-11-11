@@ -17,6 +17,7 @@
     <string name="close">إغلاق</string>
     <string name="back">رجوع</string>
     <string name="save">حفظ</string>
+    <string name="edit_title">تغيير الاسم</string>
     <string name="delete">حذف</string>
     <string name="open">فتح</string>
     <string name="allow">سماح</string>
@@ -69,6 +70,7 @@
     <string name="listening_hint">تكلّم بشكل طبيعي، واضغط «انتهيت» عندما تنتهي.</string>
     <string name="done_speaking">انتهيت</string>
     <string name="thinking">لحظة، أرتّب كلامك…</string>
+    <string name="thinking_slow">خدمة Google بطيئة الآن… انتظر قليلاً، أو اضغط إلغاء وحاول لاحقاً.</string>
     <string name="confirm_title">هل هذا صحيح؟</string>
     <string name="confirm_spoken">هل أحفظ ذلك؟</string>
     <string name="yes_save">نعم، احفظ</string>
@@ -90,6 +92,7 @@
     <string name="err_quota">انتهى الحدّ المجاني للذكاء الاصطناعي حالياً. حاول بعد قليل.</string>
     <string name="err_network">لا يوجد اتصال بالإنترنت. تأكد من الواي فاي.</string>
     <string name="err_ai_generic">لم يستطع الذكاء الاصطناعي الرد الآن.</string>
+    <string name="err_slow">خدمة Google للذكاء الاصطناعي مزدحمة جداً الآن ولم ترد في الوقت المناسب. حاول مرة أخرى بعد دقيقة.</string>
 
     <string name="today_title">مهامي</string>
     <string name="read_my_day">اقرأ لي يومي</string>

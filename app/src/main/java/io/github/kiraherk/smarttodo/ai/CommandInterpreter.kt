@@ -31,12 +31,33 @@ class CommandInterpreter(
             appendLine("HE SAID:")
             appendLine(transcript.trim())
         }
-        val text = ai.generate(AiPurpose.COMMAND, SYSTEM_PROMPT, listOf(GeminiClient.Turn.user(user)), ActionJson.schema, temperature = 0.1)
-        return ActionJson.parse(text)
+        val first = ai.generate(AiPurpose.COMMAND, SYSTEM_PROMPT, listOf(GeminiClient.Turn.user(user)), ActionJson.schema, temperature = 0.1)
+        val parsed = runCatching { ActionJson.parse(first.text) }
+        val actions = parsed.getOrNull()
+        if (actions != null && ActionSanity.problems(actions, transcript).isEmpty()) return actions
+
+        // The answer was broken or had the model's thinking in it: ask once more, on another model if possible.
+        val again = try {
+            val retry = ai.generate(
+                AiPurpose.COMMAND, SYSTEM_PROMPT, listOf(GeminiClient.Turn.user(user + "\n" + RETRY_NOTE)), ActionJson.schema,
+                temperature = 0.1, avoid = setOf(first.model), budgetMs = RETRY_BUDGET_MS,
+            )
+            runCatching { ActionJson.parse(retry.text) }.getOrNull()
+        } catch (e: AiException) {
+            null
+        }
+        if (again != null && ActionSanity.problems(again, transcript).isEmpty()) return again
+        val best = again ?: actions ?: throw (parsed.exceptionOrNull() ?: AiException.BadResponse("no actions"))
+        return ActionSanity.repair(best, transcript)
     }
 
     companion object {
         fun languageName(code: String) = if (code == "en") "English" else "Arabic"
+
+        private const val RETRY_BUDGET_MS = 25_000L
+
+        const val RETRY_NOTE = "IMPORTANT: a previous answer to this was rejected because a field contained reasoning or " +
+            "explanations. Every field must hold only its final value. title = only the short task name (2 to 8 words)."
 
         val SYSTEM_PROMPT = """
 You are the brain of "Smart To-Do", a voice-first to-do app used by an older businessman.
@@ -44,7 +65,7 @@ He speaks Arabic (any dialect), sometimes mixed with English or French words. Sp
 can contain mistakes, so infer what he most likely meant.
 
 Turn what he said into a JSON list of actions. Action types:
-- create_task: a new thing to do. Give a short clear title in his language without date/time words, optional details, the best category, and date/time/recurrence/reminder if he mentioned them.
+- create_task: a new thing to do. Give a short clear title in his language (2 to 8 words, the thing itself, e.g. "الاتصال بأحمد شماط") without date/time words, optional details, the best category, and date/time/recurrence/reminder if he mentioned them.
 - update_task: change the title, details, category or priority of an existing task (date/time changes go in date/time with scope).
 - set_status: he reports what happened with an existing task. status is one of NOT_STARTED, IN_PROGRESS, PARTIALLY_DONE, DONE, NOT_DONE, POSTPONED, CANCELLED. Put his explanation in note. For PARTIALLY_DONE or IN_PROGRESS give progress 0-100 if he implied one ("half" = 50).
 - add_note: add a note to an existing task; keep his words (cleaned up, not shortened).
@@ -65,6 +86,7 @@ Rules:
 - priority HIGH only when he says it is urgent or important.
 - spokenSummary: ONE short friendly sentence in the reply language that says exactly what will be done, read aloud for him to confirm. Example: "سأضيف مهمة: الاتصال بأحمد في العمل، كل أسبوعين يوم الاثنين الساعة العاشرة صباحاً، مع تذكير."
 - Output actions only. Do not chat.
+- Every field holds only its final value. Never write your reasoning, notes to yourself, English explanations or field names (like "Wait", "Category:" or "Date:") inside any field. If you are unsure about the category, just pick the closest one.
 """.trim()
     }
 }

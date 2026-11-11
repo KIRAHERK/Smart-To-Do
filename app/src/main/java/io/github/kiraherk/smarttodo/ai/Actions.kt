@@ -102,8 +102,8 @@ object ActionJson {
                     putJsonObject("properties") {
                         string("type", nullable = false, enum = ActionType.ALL)
                         integer("taskId")
-                        string("title")
-                        string("details")
+                        string("title", description = "Only the task's short name in his language, 2 to 8 words, e.g. الاتصال بأحمد شماط. Never reasoning, field names or dates.")
+                        string("details", description = "Extra facts he said about the task, in his language. Never your reasoning.")
                         string("category", enum = CategoryKey.entries.map { it.name })
                         string("priority", enum = Priority.entries.map { it.name })
                         string("date")
@@ -127,25 +127,37 @@ object ActionJson {
                                 string("endDate")
                             }
                             putJsonArray("required") { add("frequency"); add("interval") }
+                            order("frequency", "interval", "weekdays", "dayOfMonth", "endDate")
                         }
                         boolean("removeRecurrence")
                         string("scope", enum = listOf("THIS", "ALL_FUTURE"))
                         string("question")
-                        string("spokenSummary", nullable = false)
+                        string("spokenSummary", nullable = false, description = "One short sentence in the reply language saying what will be done.")
                     }
                     putJsonArray("required") { add("type"); add("spokenSummary") }
+                    // Without this Gemini writes the fields in alphabetical order (category first,
+                    // title near the end). The name should be decided right after the action type.
+                    order(
+                        "type", "taskId", "title", "category", "priority", "date", "time", "reminder", "reminderMinutesBefore",
+                        "recurrence", "removeRecurrence", "scope", "status", "progress", "note", "details", "question", "spokenSummary",
+                    )
                 }
             }
         }
         putJsonArray("required") { add("actions") }
     }
 
-    private fun JsonObjectBuilder.string(name: String, nullable: Boolean = true, enum: List<String>? = null) {
+    private fun JsonObjectBuilder.string(name: String, nullable: Boolean = true, enum: List<String>? = null, description: String? = null) {
         putJsonObject(name) {
             put("type", "STRING")
             if (nullable) put("nullable", true)
             if (enum != null) putJsonArray("enum") { enum.forEach { add(it) } }
+            if (description != null) put("description", description)
         }
+    }
+
+    private fun JsonObjectBuilder.order(vararg names: String) {
+        putJsonArray("propertyOrdering") { names.forEach { add(it) } }
     }
 
     private fun JsonObjectBuilder.integer(name: String) {

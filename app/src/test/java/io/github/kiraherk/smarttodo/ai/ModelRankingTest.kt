@@ -28,8 +28,22 @@ class ModelRankingTest {
 
     @Test
     fun excludesNonTextAndNonFlashModels() {
-        val ranked = ModelRanking.rank(ids, preferLite = false)
-        listOf("gemini-3.6-flash-preview-tts", "gemini-2.5-pro", "gemma-3-27b-it", "gemini-3.8-flash-image", "text-embedding-004")
-            .forEach { assertFalse(it, it in ranked) }
+        val ranked = ModelRanking.rank(ids + listOf("gemini-omni-1.2-flash", "gemini-omni-flash-preview"), preferLite = false)
+        listOf(
+            "gemini-3.6-flash-preview-tts", "gemini-2.5-pro", "gemma-3-27b-it", "gemini-3.8-flash-image", "text-embedding-004",
+            "gemini-omni-1.2-flash", "gemini-omni-flash-preview",
+        ).forEach { assertFalse(it, it in ranked) }
+    }
+
+    @Test
+    fun liteIsTheDefaultForEverything() {
+        assertEquals(ModelRanking.rank(ids, preferLite = true), ModelRanking.rank(ids))
+    }
+
+    @Test
+    fun gemini3RunsAtItsDefaultTemperature() {
+        assertEquals(null, ModelRanking.temperatureFor("gemini-3.5-flash-lite", 0.1))
+        assertEquals(null, ModelRanking.temperatureFor("gemini-flash-lite-latest", 0.1))
+        assertEquals(0.1, ModelRanking.temperatureFor("gemini-2.5-flash-lite", 0.1)!!, 0.0)
     }
 }

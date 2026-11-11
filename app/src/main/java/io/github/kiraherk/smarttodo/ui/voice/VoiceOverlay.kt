@@ -59,7 +59,8 @@ fun VoiceOverlay(
 ) {
     if (state is VoiceViewModel.UiState.Idle) return
     Dialog(
-        onDismissRequest = { if (state !is VoiceViewModel.UiState.Thinking) onDismiss() },
+        // Back also works while it is thinking: it stops the request.
+        onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false, dismissOnClickOutside = false),
     ) {
         VoiceOverlayContent(state, onFinish, onConfirm, onReject, onRetry, onSpeakAgain, onDismiss)
@@ -89,7 +90,7 @@ fun VoiceOverlayContent(
         ) {
             when (state) {
                 is VoiceViewModel.UiState.Listening -> Listening(state, onFinish, onDismiss)
-                is VoiceViewModel.UiState.Thinking -> Thinking(state)
+                is VoiceViewModel.UiState.Thinking -> Thinking(state, onDismiss)
                 is VoiceViewModel.UiState.Confirm -> Confirm(state, onConfirm, onReject, onSpeakAgain)
                 is VoiceViewModel.UiState.Answer -> Answer(state, onRetry, onSpeakAgain, onDismiss)
                 is VoiceViewModel.UiState.Message -> Message(state, onRetry, onSpeakAgain, onDismiss)
@@ -120,10 +121,18 @@ private fun Listening(state: VoiceViewModel.UiState.Listening, onFinish: () -> U
 }
 
 @Composable
-private fun Thinking(state: VoiceViewModel.UiState.Thinking) {
+private fun Thinking(state: VoiceViewModel.UiState.Thinking, onCancel: () -> Unit) {
     CircularProgressIndicator(Modifier.size(64.dp), strokeWidth = 6.dp)
     Text(stringResource(R.string.thinking), style = MaterialTheme.typography.titleLarge)
     Text("«${state.transcript}»", style = MaterialTheme.typography.bodyLarge, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    if (state.slow) {
+        Text(stringResource(R.string.thinking_slow), style = MaterialTheme.typography.bodyLarge, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.tertiary)
+    }
+    OutlinedButton(onClick = onCancel, modifier = Modifier.heightIn(min = 56.dp)) {
+        Icon(Icons.Filled.Close, contentDescription = null)
+        Spacer(Modifier.width(8.dp))
+        Text(stringResource(R.string.cancel), style = MaterialTheme.typography.titleMedium)
+    }
 }
 
 @Composable
