@@ -151,19 +151,21 @@ fun SetupScreen(onDone: () -> Unit, onOpenSettings: () -> Unit) {
 @Composable
 private fun Step(ok: Boolean, title: String, hint: String, button: String?, onClick: () -> Unit) {
     Card(Modifier.fillMaxWidth()) {
-        Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.padding(12.dp), verticalAlignment = Alignment.Top) {
             Icon(
                 if (ok) Icons.Filled.CheckCircle else Icons.Filled.RadioButtonUnchecked,
                 contentDescription = null,
                 tint = if (ok) Color(0xFF2E7D32) else MaterialTheme.colorScheme.error,
                 modifier = Modifier.size(34.dp),
             )
-            Column(Modifier.weight(1f).padding(horizontal = 10.dp)) {
+            Column(Modifier.weight(1f).padding(start = 10.dp)) {
                 Text(title, style = MaterialTheme.typography.titleMedium)
                 Text(hint, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                val showButton = button != null && (!ok || title == stringResource(R.string.dialect))
+                if (showButton) {
+                    OutlinedButton(onClick = onClick, modifier = Modifier.padding(top = 8.dp).heightIn(min = 48.dp)) { Text(button!!) }
+                }
             }
-            if (button != null && !ok) OutlinedButton(onClick = onClick) { Text(button) }
-            if (button != null && ok && title == stringResource(R.string.dialect)) OutlinedButton(onClick = onClick) { Text(button) }
         }
     }
 }

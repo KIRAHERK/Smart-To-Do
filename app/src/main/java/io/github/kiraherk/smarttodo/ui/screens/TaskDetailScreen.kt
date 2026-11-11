@@ -181,25 +181,23 @@ fun TaskDetailScreen(taskId: Long, onBack: () -> Unit) {
             if (t.details.isNotBlank()) Text(t.details, style = MaterialTheme.typography.bodyLarge)
             if (t.archived) Text(stringResource(R.string.archived_note), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.titleMedium)
 
-            // Voice buttons
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Button(
-                    onClick = { voice.start(VoiceViewModel.Request(VoiceViewModel.Mode.NOTE, taskId = taskId)) },
-                    modifier = Modifier.weight(1f).heightIn(min = 60.dp),
-                ) {
-                    Icon(Icons.Filled.EditNote, contentDescription = null)
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.add_voice_note), style = MaterialTheme.typography.titleMedium)
-                }
-                Button(
-                    onClick = { voice.start(VoiceViewModel.Request(VoiceViewModel.Mode.COMMAND, taskId = taskId)) },
-                    modifier = Modifier.weight(1f).heightIn(min = 60.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
-                ) {
-                    Icon(Icons.Filled.Mic, contentDescription = null)
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.change_by_voice), style = MaterialTheme.typography.titleMedium)
-                }
+            // Voice buttons: full width, one above the other, so the labels stay on one line.
+            Button(
+                onClick = { voice.start(VoiceViewModel.Request(VoiceViewModel.Mode.NOTE, taskId = taskId)) },
+                modifier = Modifier.fillMaxWidth().heightIn(min = 60.dp),
+            ) {
+                Icon(Icons.Filled.EditNote, contentDescription = null)
+                Spacer(Modifier.width(8.dp))
+                Text(stringResource(R.string.add_voice_note), style = MaterialTheme.typography.titleMedium)
+            }
+            Button(
+                onClick = { voice.start(VoiceViewModel.Request(VoiceViewModel.Mode.COMMAND, taskId = taskId)) },
+                modifier = Modifier.fillMaxWidth().heightIn(min = 60.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
+            ) {
+                Icon(Icons.Filled.Mic, contentDescription = null)
+                Spacer(Modifier.width(8.dp))
+                Text(stringResource(R.string.change_by_voice), style = MaterialTheme.typography.titleMedium)
             }
 
             // Status of the current round

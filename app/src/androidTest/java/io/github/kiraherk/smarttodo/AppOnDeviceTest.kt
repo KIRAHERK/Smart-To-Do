@@ -8,6 +8,8 @@ import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeUp
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -95,6 +97,8 @@ class AppOnDeviceTest {
         // The trip is further down the list: scroll to it like he would.
         compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("حجز تذاكر دبي"))
         compose.waitForText("حجز تذاكر دبي")
+        // Scroll to the end so the card sits above the big talk button (tapping it there would start the mic).
+        repeat(2) { compose.onNode(hasScrollToNodeAction()).performTouchInput { swipeUp() } }
 
         // Open a task, then the Today tab must show the list again (not the task).
         compose.clickable("حجز تذاكر دبي").performClick()
