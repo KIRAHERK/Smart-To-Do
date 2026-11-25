@@ -131,3 +131,26 @@ dependencies {
     androidTestImplementation(libs.uiautomator)
     androidTestImplementation(libs.okhttp.mockwebserver)
 }
+
+// Robolectric's Android system jars (Android 8, 10 and 15, the versions the tests run on) come
+// through Gradle like any other dependency, so they are cached and the tests never download
+// anything while running (Maven Central sometimes refuses those downloads on CI).
+// One configuration per version: in a single one Gradle would keep only the newest.
+val robolectricAndroidJars = listOf("8.0.0_r4-robolectric-r1-i7", "10-robolectric-5803371-i7", "15-robolectric-13954326-i7")
+    .mapIndexed { i, version ->
+        configurations.create("robolectricAndroid$i") { isTransitive = false }.also {
+            dependencies.add(it.name, "org.robolectric:android-all-instrumented:$version")
+        }
+    }
+
+val robolectricJarsDir = layout.buildDirectory.dir("robolectric-jars")
+val copyRobolectricJars by tasks.registering(Copy::class) {
+    from(robolectricAndroidJars)
+    into(robolectricJarsDir)
+}
+
+tasks.withType<Test>().configureEach {
+    dependsOn(copyRobolectricJars)
+    systemProperty("robolectric.offline", "true")
+    systemProperty("robolectric.dependency.dir", robolectricJarsDir.get().asFile.absolutePath)
+}
