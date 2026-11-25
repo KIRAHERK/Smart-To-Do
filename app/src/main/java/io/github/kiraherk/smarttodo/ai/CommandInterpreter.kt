@@ -9,10 +9,14 @@ class CommandInterpreter(
     private val ai: AiService,
     private val context: ContextBuilder,
     private val clock: Clock,
+    /** His categories as (key, name), so the AI can also file tasks under ones he made. */
+    private val categories: suspend () -> List<Pair<String, String>> = { DEFAULT_CATEGORIES },
     private val replyLanguage: () -> String,
 ) {
     suspend fun interpret(transcript: String, focusTaskId: Long? = null, review: Boolean = false): List<AiAction> {
         val now = ZonedDateTime.now(clock)
+        val cats = runCatching { categories() }.getOrNull().orEmpty().ifEmpty { DEFAULT_CATEGORIES }
+        val schema = ActionJson.schema(cats.map { it.first })
         val user = buildString {
             appendLine("NOW: ${now.toLocalDate()} (${now.dayOfWeek}), ${now.format(DateTimeFormatter.ofPattern("HH:mm"))}, timezone ${now.zone}")
             appendLine("REPLY LANGUAGE for spokenSummary: ${languageName(replyLanguage())}")
@@ -23,6 +27,11 @@ class CommandInterpreter(
                         "Use set_status on the matching tasks (DONE, PARTIALLY_DONE with progress, IN_PROGRESS, NOT_DONE, POSTPONED) " +
                         "and put his explanation in note. Tasks marked (TODAY) are today's."
                 )
+            }
+            appendLine()
+            appendLine("CATEGORIES (use the key in \"category\"):")
+            cats.forEach { (key, name) ->
+                appendLine("- $key = $name" + (BUILT_IN_HINTS[key]?.let { " ($it)" } ?: ""))
             }
             appendLine()
             appendLine("EXISTING TASKS (#id | title | category | date | status | repeat | reminder):")
@@ -36,7 +45,7 @@ class CommandInterpreter(
             appendLine("HE SAID:")
             appendLine(transcript.trim())
         }
-        val first = ai.generate(AiPurpose.COMMAND, SYSTEM_PROMPT, listOf(GeminiClient.Turn.user(user)), ActionJson.schema, temperature = 0.1)
+        val first = ai.generate(AiPurpose.COMMAND, SYSTEM_PROMPT, listOf(GeminiClient.Turn.user(user)), schema, temperature = 0.1)
         val parsed = runCatching { ActionJson.parse(first.text) }
         val actions = parsed.getOrNull()
         if (actions != null && ActionSanity.problems(actions, transcript).isEmpty()) return actions
@@ -44,7 +53,7 @@ class CommandInterpreter(
         // The answer was broken or had the model's thinking in it: ask once more, on another model if possible.
         val again = try {
             val retry = ai.generate(
-                AiPurpose.COMMAND, SYSTEM_PROMPT, listOf(GeminiClient.Turn.user(user + "\n" + RETRY_NOTE)), ActionJson.schema,
+                AiPurpose.COMMAND, SYSTEM_PROMPT, listOf(GeminiClient.Turn.user(user + "\n" + RETRY_NOTE)), schema,
                 temperature = 0.1, avoid = setOf(first.model), budgetMs = RETRY_BUDGET_MS,
             )
             runCatching { ActionJson.parse(retry.text) }.getOrNull()
@@ -58,6 +67,16 @@ class CommandInterpreter(
 
     companion object {
         fun languageName(code: String) = if (code == "en") "English" else "Arabic"
+
+        val DEFAULT_CATEGORIES = listOf("WORK" to "Work", "HOME" to "Home", "PERSONAL" to "Personal", "TRAVEL" to "Travel")
+
+        /** What the built-in categories are for. */
+        val BUILT_IN_HINTS = mapOf(
+            "WORK" to "business, clients, meetings, office, employees, suppliers, company money",
+            "HOME" to "house, family needs, repairs, groceries, home bills",
+            "PERSONAL" to "health, doctor, medicine, personal errands, friends, social visits, religion, hobbies, personal money",
+            "TRAVEL" to "trips, flights, hotels, visas, passports, packing, airport",
+        )
 
         private const val RETRY_BUDGET_MS = 25_000L
 
@@ -85,7 +104,7 @@ Turn what he said into a JSON list of actions. Action types:
 Rules:
 - One sentence can contain several actions; return all of them in the order he said them.
 - When he refers to an existing task (by name, person, place, or "it/this"), use its taskId from EXISTING TASKS. Never invent ids. If nothing matches, create a new task instead.
-- Categories: WORK = business, clients, meetings, office, employees, suppliers, company money. HOME = house, family needs, repairs, groceries, home bills. PERSONAL = health, doctor, medicine, personal errands, friends, social visits, religion, hobbies, personal money. TRAVEL = trips, flights, hotels, visas, passports, packing, airport.
+- Categories: put each task in the one category from CATEGORIES that fits it best, judging by the category names (he may have made his own, e.g. "الصحة" or "المزرعة"; prefer a specific one of his over a general one). Use only keys from that list.
 - Dates are ISO yyyy-MM-dd computed from NOW; times are 24-hour HH:mm. بكرة/غدا = tomorrow, بعد بكرة = the day after, الأسبوع الجاي = next week, a weekday name = the next such day. Without an exact time: الصبح ≈ 09:00, الظهر ≈ 13:00, العصر ≈ 16:00, المغرب ≈ 18:00, المسا/بالليل ≈ 20:00.
 - Recurrence: frequency DAILY/WEEKLY/MONTHLY/YEARLY plus interval ("every two weeks" = WEEKLY interval 2, "every other day" = DAILY interval 2), weekdays as ISO numbers (1=Monday, 2=Tuesday, 3=Wednesday, 4=Thursday, 5=Friday, 6=Saturday, 7=Sunday), dayOfMonth for monthly, endDate if he says until when. A repeating task without a start date starts from today.
 - "ذكرني / نبهني / remind me" means reminder true. Use the time he gives; if he gives none, leave time empty.

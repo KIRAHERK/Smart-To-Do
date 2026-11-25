@@ -33,8 +33,6 @@ import io.github.kiraherk.smarttodo.AppContainer
 import io.github.kiraherk.smarttodo.R
 import io.github.kiraherk.smarttodo.SmartTodoApp
 import io.github.kiraherk.smarttodo.domain.CategoryKey
-import io.github.kiraherk.smarttodo.ui.categoryColor
-import io.github.kiraherk.smarttodo.ui.categoryIcon
 import io.github.kiraherk.smarttodo.ui.categoryName
 import io.github.kiraherk.smarttodo.ui.voice.VoiceViewModel
 import kotlinx.coroutines.flow.SharedFlow
@@ -61,6 +59,7 @@ object Routes {
     const val REVIEW = "review/{weekly}"
     const val INBOX = "inbox"
     const val SETUP = "setup"
+    const val CATEGORIES = "categories"
 
     fun task(id: Long) = "task/$id"
     fun review(weekly: Boolean) = "review/$weekly"
@@ -68,15 +67,16 @@ object Routes {
 
 /** Row of big category filters: All · Work · Home · Personal · Travel. */
 @Composable
-fun CategoryFilter(selected: CategoryKey?, onSelect: (CategoryKey?) -> Unit) {
+fun CategoryFilter(selected: String?, onSelect: (String?) -> Unit) {
     val ctx = LocalContext.current
     Row(
         Modifier.horizontalScroll(rememberScrollState()).padding(top = 14.dp, bottom = 2.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         FilterPill(stringResource(R.string.all), Icons.Filled.Apps, MaterialTheme.colorScheme.primary, selected == null) { onSelect(null) }
-        CategoryKey.entries.forEach { key ->
-            FilterPill(categoryName(ctx, key), categoryIcon(key), categoryColor(key), selected == key) { onSelect(if (selected == key) null else key) }
+        io.github.kiraherk.smarttodo.ui.currentCategories().forEach { cat ->
+            val key = cat.key
+            FilterPill(cat.name, cat.icon, cat.color, selected == key) { onSelect(if (selected == key) null else key) }
         }
     }
 }

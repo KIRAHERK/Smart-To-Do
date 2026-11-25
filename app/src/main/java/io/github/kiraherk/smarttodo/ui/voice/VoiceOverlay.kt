@@ -81,6 +81,7 @@ fun VoiceOverlay(
     onRetry: () -> Unit,
     onSpeakAgain: () -> Unit,
     onDismiss: () -> Unit,
+    onEdit: (Int, io.github.kiraherk.smarttodo.ai.AiAction) -> Unit = { _, _ -> },
 ) {
     if (state is VoiceViewModel.UiState.Idle) return
     Dialog(
@@ -88,7 +89,7 @@ fun VoiceOverlay(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false, dismissOnClickOutside = false),
     ) {
-        VoiceOverlayContent(state, onFinish, onConfirm, onReject, onRetry, onSpeakAgain, onDismiss)
+        VoiceOverlayContent(state, onFinish, onConfirm, onReject, onRetry, onSpeakAgain, onDismiss, onEdit)
     }
 }
 
@@ -102,6 +103,7 @@ fun VoiceOverlayContent(
     onRetry: () -> Unit,
     onSpeakAgain: () -> Unit,
     onDismiss: () -> Unit,
+    onEdit: (Int, io.github.kiraherk.smarttodo.ai.AiAction) -> Unit = { _, _ -> },
 ) {
     Surface(
         shape = RoundedCornerShape(32.dp),
@@ -117,7 +119,7 @@ fun VoiceOverlayContent(
             when (state) {
                 is VoiceViewModel.UiState.Listening -> Listening(state, onFinish, onDismiss)
                 is VoiceViewModel.UiState.Thinking -> Thinking(state, onDismiss)
-                is VoiceViewModel.UiState.Confirm -> Confirm(state, onConfirm, onReject, onSpeakAgain)
+                is VoiceViewModel.UiState.Confirm -> Confirm(state, onConfirm, onReject, onSpeakAgain, onEdit)
                 is VoiceViewModel.UiState.Answer -> Answer(state, onRetry, onSpeakAgain, onDismiss)
                 is VoiceViewModel.UiState.Message -> Message(state, onRetry, onSpeakAgain, onDismiss)
                 VoiceViewModel.UiState.Idle -> Unit
@@ -196,9 +198,16 @@ private fun Thinking(state: VoiceViewModel.UiState.Thinking, onCancel: () -> Uni
 }
 
 @Composable
-private fun Confirm(state: VoiceViewModel.UiState.Confirm, onConfirm: () -> Unit, onReject: () -> Unit, onSpeakAgain: () -> Unit) {
+private fun Confirm(
+    state: VoiceViewModel.UiState.Confirm,
+    onConfirm: () -> Unit,
+    onReject: () -> Unit,
+    onSpeakAgain: () -> Unit,
+    onEdit: (Int, io.github.kiraherk.smarttodo.ai.AiAction) -> Unit,
+) {
     Text(stringResource(R.string.confirm_title), style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
-    state.previews.forEach { p ->
+    state.previews.forEachIndexed { index, p ->
+        val action = state.actions.getOrNull(index)
         val color = if (p.type == ActionType.DELETE) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
         Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)).background(tint(color, 0.07f, 0.16f)).padding(16.dp)) {
             Row(verticalAlignment = Alignment.Top) {
@@ -207,7 +216,12 @@ private fun Confirm(state: VoiceViewModel.UiState.Confirm, onConfirm: () -> Unit
                 Text(p.summary, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
             }
             val parts = p.detail.split(" · ").filter { it.isNotBlank() }
-            if (parts.isNotEmpty()) {
+            if (action != null && action.type == ActionType.CREATE) {
+                Spacer(Modifier.size(10.dp))
+                Text(stringResource(R.string.confirm_edit_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Spacer(Modifier.size(6.dp))
+                NewTaskEditor(action) { onEdit(index, it) }
+            } else if (parts.isNotEmpty()) {
                 Spacer(Modifier.size(10.dp))
                 ChipFlow {
                     parts.forEach { part ->

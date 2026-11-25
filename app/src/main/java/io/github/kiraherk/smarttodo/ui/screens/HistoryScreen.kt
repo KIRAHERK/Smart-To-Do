@@ -46,12 +46,10 @@ import io.github.kiraherk.smarttodo.domain.ActivityType
 import io.github.kiraherk.smarttodo.domain.CategoryKey
 import io.github.kiraherk.smarttodo.domain.TaskStatus
 import io.github.kiraherk.smarttodo.ui.activityName
-import io.github.kiraherk.smarttodo.ui.categoryColor
 import io.github.kiraherk.smarttodo.ui.components.AppCard
 import io.github.kiraherk.smarttodo.ui.components.IconTile
 import io.github.kiraherk.smarttodo.ui.components.Pill
 import io.github.kiraherk.smarttodo.ui.components.ScreenHeader
-import io.github.kiraherk.smarttodo.ui.categoryIcon
 import io.github.kiraherk.smarttodo.ui.theme.LocalBrand
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
@@ -84,12 +82,12 @@ import java.time.ZoneId
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 class HistoryViewModel(private val c: AppContainer) : ViewModel() {
     val days = MutableStateFlow(30)
-    val filter = MutableStateFlow<CategoryKey?>(null)
+    val filter = MutableStateFlow<String?>(null)
     val query = MutableStateFlow("")
     val today: LocalDate = c.repo.today()
 
     val history = combine(days.flatMapLatest { d -> c.repo.observeHistory(System.currentTimeMillis() - d * 86_400_000L) }, filter) { list, f ->
-        if (f == null) list else list.filter { it.task.category == f.name }
+        if (f == null) list else list.filter { it.task.category == f }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     val results = query.debounce(250).mapLatest { q -> if (q.isBlank()) emptyList() else c.repo.search(q) }
@@ -155,10 +153,10 @@ fun HistoryScreen(onOpenTask: (Long) -> Unit) {
             if (query.isNotBlank()) {
                 if (results.isEmpty()) item { EmptyState(noResults, Icons.Filled.Search) }
                 items(results, key = { "r-${it.task.id}" }) { hit ->
-                    val cat = CategoryKey.parse(hit.task.category)
+                    val cat = io.github.kiraherk.smarttodo.ui.categoryOf(hit.task.category)
                     AppCard(modifier = Modifier.padding(vertical = 5.dp), onClick = { onOpenTask(hit.task.id) }) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            IconTile(categoryIcon(cat), categoryColor(cat))
+                            IconTile(cat.icon, cat.color)
                             Spacer(Modifier.width(12.dp))
                             Column(Modifier.weight(1f)) {
                                 Text(hit.task.title, style = MaterialTheme.typography.titleMedium)
@@ -198,22 +196,31 @@ fun HistoryScreen(onOpenTask: (Long) -> Unit) {
     }
 }
 
+/** The extra line under a history entry, or null when it would only repeat the task's name. */
+fun historyText(a: io.github.kiraherk.smarttodo.data.db.ActivityEntity, title: String): String? {
+    val text = a.text?.trim().orEmpty()
+    if (text.isEmpty() || text == title.trim()) return null
+    // Added / deleted / restored already say what happened; older versions stored the read-back sentence there.
+    if (a.type in setOf(ActivityType.CREATED.name, ActivityType.ARCHIVED.name, ActivityType.RESTORED.name)) return null
+    return text
+}
+
 @Composable
 private fun HistoryRow(entry: ActivityWithTask, last: Boolean, onClick: () -> Unit) {
     val ctx = LocalContext.current
     val a = entry.activity
     val type = ActivityType.entries.firstOrNull { it.name == a.type }
     val to = TaskStatus.parse(a.toStatus)
-    val cat = CategoryKey.parse(entry.task.category)
+    val cat = io.github.kiraherk.smarttodo.ui.categoryOf(entry.task.category)
     val time = Instant.ofEpochMilli(a.at).atZone(ZoneId.systemDefault()).toLocalTime()
     Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).clickable(onClick = onClick)) {
-        TimelineRow(to?.let { statusColor(it) } ?: categoryColor(cat), last) {
+        TimelineRow(to?.let { statusColor(it) } ?: cat.color, last) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(entry.task.title, style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
                 Text(Dates.friendlyTime(ctx, time), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 2.dp)) {
-                Icon(categoryIcon(cat), contentDescription = null, tint = categoryColor(cat), modifier = Modifier.size(16.dp))
+                Icon(cat.icon, contentDescription = null, tint = cat.color, modifier = Modifier.size(16.dp))
                 Spacer(Modifier.width(6.dp))
                 Text(
                     if (to != null) statusName(ctx, to) else activityName(ctx, type),
@@ -222,7 +229,9 @@ private fun HistoryRow(entry: ActivityWithTask, last: Boolean, onClick: () -> Un
                     color = to?.let { statusColor(it) } ?: MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            a.text?.takeIf { it.isNotBlank() }?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 4) }
+            historyText(a, entry.task.title)?.let {
+                Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 4)
+            }
         }
     }
 }

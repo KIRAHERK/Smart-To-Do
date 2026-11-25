@@ -19,6 +19,7 @@ import io.github.kiraherk.smarttodo.backup.BackupManager
 import io.github.kiraherk.smarttodo.reminders.Notifications
 import io.github.kiraherk.smarttodo.util.LocaleHelper
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -198,8 +199,10 @@ class UpdateInstaller(
             MessageDigest.getInstance("SHA-256").digest(sig.toByteArray()).joinToString("") { "%02x".format(it) }
         }.toSet()
 
-    suspend fun install(apk: File) {
-        backup.backupNow("before-update")
+    /** [again] = automatic second try after Android stopped the first one (no new backup needed). */
+    suspend fun install(apk: File, again: Boolean = false) {
+        if (!again) backup.backupNow("before-update")
+        PendingInstall.remember(context, apk, again)
         withContext(Dispatchers.IO) {
             val installer = context.packageManager.packageInstaller
             // An earlier attempt may still be waiting (for example after Play Protect's scan):
@@ -269,6 +272,27 @@ object PendingInstall {
         confirm = null
         NotificationManagerCompat.from(context).cancel(Notifications.ID_INSTALL)
     }
+
+    private fun prefs(context: Context) = context.getSharedPreferences("update_install", Context.MODE_PRIVATE)
+
+    /** Which file is being installed, and whether this is already the automatic second try. */
+    fun remember(context: Context, apk: File, again: Boolean) {
+        prefs(context).edit().putString("apk", apk.absolutePath).putBoolean("again", again).putLong("at", System.currentTimeMillis()).apply()
+    }
+
+    /**
+     * On the first try Android often stops the install by itself (for example while Play Protect
+     * scans the file) and the next try works. Returns the file to try once more, or null.
+     */
+    fun fileToRetry(context: Context): File? {
+        val p = prefs(context)
+        if (p.getBoolean("again", true)) return null
+        if (System.currentTimeMillis() - p.getLong("at", 0) > RETRY_WINDOW_MS) return null
+        p.edit().putBoolean("again", true).apply()
+        return p.getString("apk", null)?.let(::File)?.takeIf { it.isFile }
+    }
+
+    private const val RETRY_WINDOW_MS = 15 * 60_000L
 }
 
 /** Android tells us here whether it needs him to confirm the install, or whether it failed. */
@@ -289,22 +313,42 @@ class InstallResultReceiver : BroadcastReceiver() {
                 }
             }
             PackageInstaller.STATUS_SUCCESS -> PendingInstall.clear(context)
-            else -> {
-                PendingInstall.clear(context)
-                val c = LocaleHelper.wrap(context)
-                val text = c.getString(
-                    when (status) {
-                        PackageInstaller.STATUS_FAILURE_ABORTED -> R.string.update_stopped
-                        PackageInstaller.STATUS_FAILURE_STORAGE -> R.string.update_no_space
-                        PackageInstaller.STATUS_FAILURE_BLOCKED -> R.string.update_blocked
-                        else -> R.string.update_try_again
+            PackageInstaller.STATUS_FAILURE_ABORTED -> {
+                val apk = PendingInstall.fileToRetry(context)
+                if (apk == null) {
+                    failed(context, status)
+                    return
+                }
+                val app = context.applicationContext as io.github.kiraherk.smarttodo.SmartTodoApp
+                val result = goAsync()
+                kotlinx.coroutines.CoroutineScope(Dispatchers.IO).launch {
+                    try {
+                        app.container.updateInstaller.install(apk, again = true)
+                    } catch (e: Exception) {
+                        failed(context, status)
+                    } finally {
+                        result.finish()
                     }
-                )
-                Notifications.post(
-                    c, Notifications.ID_INSTALL,
-                    Notifications.builder(c, Notifications.CH_UPDATES, c.getString(R.string.update_failed), text),
-                )
+                }
             }
+            else -> failed(context, status)
         }
+    }
+
+    private fun failed(context: Context, status: Int) {
+        PendingInstall.clear(context)
+        val c = LocaleHelper.wrap(context)
+        val text = c.getString(
+            when (status) {
+                PackageInstaller.STATUS_FAILURE_ABORTED -> R.string.update_stopped
+                PackageInstaller.STATUS_FAILURE_STORAGE -> R.string.update_no_space
+                PackageInstaller.STATUS_FAILURE_BLOCKED -> R.string.update_blocked
+                else -> R.string.update_try_again
+            }
+        )
+        Notifications.post(
+            c, Notifications.ID_INSTALL,
+            Notifications.builder(c, Notifications.CH_UPDATES, c.getString(R.string.update_failed), text),
+        )
     }
 }

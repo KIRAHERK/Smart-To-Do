@@ -42,6 +42,16 @@
     <string name="cat_home">Home</string>
     <string name="cat_personal">Personal</string>
     <string name="cat_travel">Travel</string>
+    <string name="categories_title">Categories</string>
+    <string name="categories_settings_hint">Add, rename or remove categories</string>
+    <string name="categories_hint">Categories keep your tasks in order, and the AI files each new task under the one that fits. Add your own, such as "Health" or "Children".</string>
+    <string name="category_add">Add a category</string>
+    <string name="category_edit">Edit category</string>
+    <string name="category_delete">Remove category</string>
+    <string name="category_delete_explain">Its tasks are not lost: they move to "%1$s".</string>
+    <string name="category_name">Name</string>
+    <string name="category_color">Colour</string>
+    <string name="category_icon">Icon</string>
 
     <!-- Statuses -->
     <string name="status_not_started">Not started</string>
@@ -144,6 +154,10 @@
     <string name="time">Time</string>
     <string name="no_date">No date</string>
     <string name="no_time">No time</string>
+    <string name="reminder_on">Reminder on</string>
+    <string name="reminder_off">No reminder</string>
+    <string name="confirm_add_summary">I will add: %1$s</string>
+    <string name="confirm_edit_hint">Tap anything below to change it before saving.</string>
     <string name="repeat">Repeat</string>
     <string name="no_repeat">Does not repeat</string>
     <string name="reminder">Reminder</string>

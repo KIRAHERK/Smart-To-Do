@@ -83,8 +83,6 @@ import io.github.kiraherk.smarttodo.domain.CategoryKey
 import io.github.kiraherk.smarttodo.domain.Priority
 import io.github.kiraherk.smarttodo.domain.RecurrenceRule
 import io.github.kiraherk.smarttodo.domain.TaskStatus
-import io.github.kiraherk.smarttodo.ui.categoryColor
-import io.github.kiraherk.smarttodo.ui.categoryIcon
 import io.github.kiraherk.smarttodo.ui.categoryName
 import io.github.kiraherk.smarttodo.ui.recurrenceText
 import io.github.kiraherk.smarttodo.ui.statusColor
@@ -205,9 +203,10 @@ fun StatusPill(status: TaskStatus, progress: Int = 0) {
 }
 
 @Composable
-fun CategoryPill(key: CategoryKey?) {
+fun CategoryPill(key: String?) {
     val ctx = LocalContext.current
-    Pill(key?.let { categoryName(ctx, it) } ?: "—", categoryColor(key), icon = categoryIcon(key))
+    val c = io.github.kiraherk.smarttodo.ui.categoryOf(key)
+    Pill(c.name, c.color, icon = c.icon)
 }
 
 /** Section title with an optional count bubble. */
@@ -232,7 +231,7 @@ fun SectionHeader(text: String, color: Color = MaterialTheme.colorScheme.onBackg
 fun TaskCard(item: OccurrenceWithTask, today: LocalDate, onClick: () -> Unit, onDone: (() -> Unit)?) {
     val ctx = LocalContext.current
     val brand = LocalBrand.current
-    val category = CategoryKey.parse(item.task.category)
+    val category = io.github.kiraherk.smarttodo.ui.categoryOf(item.task.category)
     val status = TaskStatus.parse(item.occurrence.status) ?: TaskStatus.NOT_STARTED
     val date = Dates.parseDate(item.occurrence.date)
     val time = Dates.parseTime(item.occurrence.time)
@@ -245,7 +244,7 @@ fun TaskCard(item: OccurrenceWithTask, today: LocalDate, onClick: () -> Unit, on
         padding = PaddingValues(start = 14.dp, end = 12.dp, top = 14.dp, bottom = 14.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            IconTile(categoryIcon(category), categoryColor(category), size = 50.dp, iconSize = 28.dp)
+            IconTile(category.icon, category.color, size = 50.dp, iconSize = 28.dp)
             Spacer(Modifier.width(14.dp))
             Column(Modifier.weight(1f)) {
                 Text(

@@ -74,6 +74,7 @@ import io.github.kiraherk.smarttodo.ai.ModelRanking
 import io.github.kiraherk.smarttodo.data.settings.AppSettings
 import io.github.kiraherk.smarttodo.reminders.Notifications
 import io.github.kiraherk.smarttodo.ui.voiceLabel
+import androidx.compose.material.icons.filled.Category
 import io.github.kiraherk.smarttodo.data.settings.LISTEN_AUTO
 import io.github.kiraherk.smarttodo.data.settings.LISTEN_POPUP
 import io.github.kiraherk.smarttodo.data.settings.LISTEN_RECORD
@@ -266,7 +267,7 @@ class SettingsViewModel(private val c: AppContainer) : ViewModel() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(openUpdate: Boolean, onUpdateOpened: () -> Unit, onOpenSetup: () -> Unit, onOpenInbox: () -> Unit) {
+fun SettingsScreen(openUpdate: Boolean, onUpdateOpened: () -> Unit, onOpenSetup: () -> Unit, onOpenInbox: () -> Unit, onOpenCategories: () -> Unit = {}) {
     val c = appContainer()
     val vm: SettingsViewModel = viewModel { SettingsViewModel(c) }
     val ctx = LocalContext.current
@@ -356,6 +357,7 @@ fun SettingsScreen(openUpdate: Boolean, onUpdateOpened: () -> Unit, onOpenSetup:
 
             SectionHeader(stringResource(R.string.section_display), blue)
             Group {
+                SettingRow(Icons.Filled.Category, stringResource(R.string.categories_title), stringResource(R.string.categories_settings_hint), color = blue) { onOpenCategories() }
                 SettingRow(Icons.Filled.Language, stringResource(R.string.app_language), if (LocaleHelper.isArabic(ctx)) "العربية" else "English", color = blue) { dialog = "language" }
                 SettingRow(Icons.Filled.TextFields, stringResource(R.string.text_size), "${(s.textScale * 100).toInt()}%", color = blue) { dialog = "textSize" }
             }

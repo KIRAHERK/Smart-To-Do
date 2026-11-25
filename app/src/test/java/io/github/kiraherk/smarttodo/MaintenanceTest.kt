@@ -19,10 +19,10 @@ class MaintenanceTest {
         val broken = c.repo.createTask(
             TaskRepository.NewTask(
                 "...نضعها WORK. Wait, let's look at the title: الاتصال باحمد شماط. Category: WORK. Date: 2026-11-12. Time: 12:00. Reminder: true. Priority: NORMAL",
-                category = CategoryKey.WORK,
+                category = CategoryKey.WORK.name,
             ),
         )
-        val fine = c.repo.createTask(TaskRepository.NewTask("Wait for the shipment", category = CategoryKey.WORK))
+        val fine = c.repo.createTask(TaskRepository.NewTask("Wait for the shipment", category = CategoryKey.WORK.name))
 
         c.maintenance.run()
 

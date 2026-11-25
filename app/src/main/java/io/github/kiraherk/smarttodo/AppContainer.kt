@@ -20,6 +20,8 @@ import io.github.kiraherk.smarttodo.reminders.ReminderScheduler
 import io.github.kiraherk.smarttodo.update.UpdateChecker
 import io.github.kiraherk.smarttodo.update.UpdateInstaller
 import io.github.kiraherk.smarttodo.util.LocaleHelper
+import io.github.kiraherk.smarttodo.data.repo.CategoryRepository
+import io.github.kiraherk.smarttodo.ui.displayName
 import io.github.kiraherk.smarttodo.voice.Pcm
 import io.github.kiraherk.smarttodo.voice.Speaker
 import io.github.kiraherk.smarttodo.voice.SpeechCache
@@ -63,9 +65,13 @@ class AppContainer(val app: Application) {
         onRemindersChanged = { reminders.rescheduleAll() },
     )
 
+    val categories = CategoryRepository(db)
     val contextBuilder = ContextBuilder(db, repo)
-    val interpreter = CommandInterpreter(ai, contextBuilder, clock) { language() }
-    val executor = ActionExecutor(repo)
+    val interpreter = CommandInterpreter(
+        ai, contextBuilder, clock,
+        categories = { val ctx = localized(); categories.all().map { it.key to it.displayName(ctx) } },
+    ) { language() }
+    val executor = ActionExecutor(repo, categories)
     val assistant = AssistantService(ai, contextBuilder, db, clock) { language() }
     val checkIns = CheckIns(db, repo) { localized() }
 
@@ -111,6 +117,7 @@ class AppContainer(val app: Application) {
 
         suspend fun run() {
             mutex.withLock {
+                runCatching { categories.ensureDefaults() }
                 runCatching { repo.rollForward() }
                 runCatching { reminders.rescheduleAll() }
                 runCatching { checkInScheduler.scheduleAll() }

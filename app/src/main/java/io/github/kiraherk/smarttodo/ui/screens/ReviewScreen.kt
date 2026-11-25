@@ -48,8 +48,6 @@ import io.github.kiraherk.smarttodo.ui.components.IconTile
 import io.github.kiraherk.smarttodo.ui.components.ScreenHeader
 import io.github.kiraherk.smarttodo.ui.components.heroCircles
 import io.github.kiraherk.smarttodo.ui.components.tint
-import io.github.kiraherk.smarttodo.ui.categoryColor
-import io.github.kiraherk.smarttodo.ui.categoryIcon
 import io.github.kiraherk.smarttodo.ui.statusIcon
 import io.github.kiraherk.smarttodo.ui.theme.LocalBrand
 import androidx.compose.foundation.BorderStroke
@@ -173,11 +171,11 @@ fun ReviewScreen(weekly: Boolean, onBack: () -> Unit, onOpenTask: (Long) -> Unit
 private fun ReviewRow(item: OccurrenceWithTask, onOpenTask: (Long) -> Unit, setStatus: (Long, TaskStatus) -> Unit) {
     val ctx = LocalContext.current
     val status = TaskStatus.parse(item.occurrence.status) ?: TaskStatus.NOT_STARTED
-    val cat = io.github.kiraherk.smarttodo.domain.CategoryKey.parse(item.task.category)
+    val cat = io.github.kiraherk.smarttodo.ui.categoryOf(item.task.category)
     AppCard(modifier = Modifier.padding(vertical = 5.dp)) {
         Column {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { onOpenTask(item.task.id) }) {
-                IconTile(categoryIcon(cat), categoryColor(cat), size = 42.dp, iconSize = 22.dp)
+                IconTile(cat.icon, cat.color, size = 42.dp, iconSize = 22.dp)
                 Spacer(Modifier.width(12.dp))
                 Text(item.task.title, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
                 if (status != TaskStatus.NOT_STARTED) StatusPill(status, item.occurrence.progress)

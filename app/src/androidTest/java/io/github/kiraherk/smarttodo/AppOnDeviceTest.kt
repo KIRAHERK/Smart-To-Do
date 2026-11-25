@@ -7,6 +7,7 @@ import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
@@ -93,9 +94,9 @@ class AppOnDeviceTest {
     @Test
     fun todayListAndDoneButtonUpdateHistory() {
         reset()
-        val late = create(TaskRepository.NewTask("تصليح المكيف", category = CategoryKey.HOME, date = today().minusDays(1)))
-        create(TaskRepository.NewTask("اتصل بالبنك", category = CategoryKey.WORK, date = today(), time = LocalTime.of(10, 0)))
-        create(TaskRepository.NewTask("حجز تذاكر دبي", category = CategoryKey.TRAVEL, date = today().plusDays(4)))
+        val late = create(TaskRepository.NewTask("تصليح المكيف", category = CategoryKey.HOME.name, date = today().minusDays(1)))
+        create(TaskRepository.NewTask("اتصل بالبنك", category = CategoryKey.WORK.name, date = today(), time = LocalTime.of(10, 0)))
+        create(TaskRepository.NewTask("حجز تذاكر دبي", category = CategoryKey.TRAVEL.name, date = today().plusDays(4)))
         launch()
         compose.waitForText("اتصل بالبنك")
         shot("03-today-tasks")
@@ -131,7 +132,7 @@ class AppOnDeviceTest {
     @Test
     fun taskDetailPartlyDoneWithPercentage() {
         reset()
-        val id = create(TaskRepository.NewTask("تقرير المبيعات", category = CategoryKey.WORK, date = today()))
+        val id = create(TaskRepository.NewTask("تقرير المبيعات", category = CategoryKey.WORK.name, date = today()))
         launch()
         compose.waitForText("تقرير المبيعات")
         compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("تقرير المبيعات") and hasClickAction())
@@ -188,9 +189,9 @@ class AppOnDeviceTest {
             compose.waitForText("ذكرني بكرة الساعة 12 الظهر اتصل بأحمد شماط", substring = true)
             compose.waitForText("سأضيف مهمة: الاتصال بأحمد شماط", substring = true)
             compose.clickable(str(R.string.yes_save)).performClick()
-            compose.waitForText(str(R.string.saved_ok))
+            compose.waitUntil(15_000) { runBlocking { c.db.tasks().all() }.isNotEmpty() }
             assertEquals("الاتصال بأحمد شماط", runBlocking { c.db.tasks().all() }.single().title)
-            compose.clickable(str(R.string.ok)).performClick()
+            compose.waitUntil(10_000) { compose.onAllNodesWithText(str(R.string.confirm_title)).fetchSemanticsNodes().isEmpty() }
             runBlocking { c.settings.setListenMode(io.github.kiraherk.smarttodo.data.settings.LISTEN_AUTO) }
         }
     }
@@ -214,8 +215,9 @@ class AppOnDeviceTest {
             compose.waitForText("سأضيف مهمة: الاطمئنان على أحمد", substring = true)
             shot("06-confirm")
             compose.clickable(str(R.string.yes_save)).performClick()
-            compose.waitForText(str(R.string.saved_ok))
-            compose.clickable(str(R.string.ok)).performClick()
+            // Saved: the window closes by itself, no message to dismiss.
+            compose.waitUntil(15_000) { runBlocking { c.db.tasks().all() }.isNotEmpty() }
+            compose.waitUntil(10_000) { compose.onAllNodesWithText(str(R.string.confirm_title)).fetchSemanticsNodes().isEmpty() }
 
             val task = runBlocking { c.db.tasks().all() }.single()
             assertEquals("الاطمئنان على أحمد", task.title)
@@ -264,7 +266,7 @@ class AppOnDeviceTest {
         reset()
         val at = LocalDateTime.now().plusMinutes(2).withSecond(0).withNano(0)
         val id = create(
-            TaskRepository.NewTask("موعد طبيب الأسنان", category = CategoryKey.PERSONAL, date = at.toLocalDate(), time = at.toLocalTime(), reminder = true)
+            TaskRepository.NewTask("موعد طبيب الأسنان", category = CategoryKey.PERSONAL.name, date = at.toLocalDate(), time = at.toLocalTime(), reminder = true)
         )
         val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         device.pressHome()
@@ -290,7 +292,7 @@ class AppOnDeviceTest {
     @Test
     fun everyScreenOpensInArabicAndEnglish() {
         reset()
-        create(TaskRepository.NewTask("زيارة المصنع", category = CategoryKey.WORK, date = today()))
+        create(TaskRepository.NewTask("زيارة المصنع", category = CategoryKey.WORK.name, date = today()))
         launch()
         compose.waitForText("زيارة المصنع")
 
@@ -316,6 +318,19 @@ class AppOnDeviceTest {
         compose.clickable(str(R.string.inbox_title)).performScrollTo().performClick()
         compose.waitForText(str(R.string.inbox_explain))
         compose.clickableDesc(str(R.string.back)).performClick()
+
+        // His own category: add it, and it is there for the AI and the screens.
+        compose.clickable(str(R.string.categories_title)).performScrollTo().performClick()
+        compose.waitForText(str(R.string.categories_hint))
+        compose.clickable(str(R.string.category_add)).performClick()
+        compose.waitForText(str(R.string.category_name))
+        compose.onNode(hasSetTextAction()).performTextInput("المزرعة")
+        compose.clickable(str(R.string.save)).performClick()
+        compose.waitForText("المزرعة")
+        compose.waitUntil(10_000) { runBlocking { c.categories.all() }.any { it.name == "المزرعة" } }
+        shot("15-categories")
+        compose.clickableDesc(str(R.string.back)).performClick()
+        compose.waitForText(str(R.string.gemini_key))
 
         // Switch to English and back: the app must restart its screen without crashing.
         compose.clickable(str(R.string.app_language)).performScrollTo().performClick()

@@ -264,6 +264,6 @@ class GeminiFlowTest {
         assertEquals("الاطمئنان على أحمد", task.title)
         assertEquals(true, task.reminderEnabled)
         assertEquals(2, RecurrenceRule.fromJson(task.recurrenceJson)!!.interval)
-        assertEquals("سأضيف مهمة: الاطمئنان على أحمد كل أسبوعين مع تذكير.", db.activity().all().single().text)
+        assertEquals("الاطمئنان على أحمد", db.activity().all().single().text)
     }
 }

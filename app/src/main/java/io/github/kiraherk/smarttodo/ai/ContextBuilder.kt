@@ -21,6 +21,7 @@ class ContextBuilder(
 
     /** One line per task that is open or was touched in the last two weeks. */
     suspend fun taskList(focusTaskId: Long? = null, limit: Int = 150): String {
+        names = categoryNames()
         val today = repo.today()
         val open = db.occurrences().open(TaskStatus.OPEN)
         val firstOpen = LinkedHashMap<Long, Pair<TaskEntity, OccurrenceEntity>>()
@@ -50,6 +51,7 @@ class ContextBuilder(
 
     /** Everything relevant for answering a question: open tasks, recent history, notes, and older matches. */
     suspend fun assistantDigest(question: String, maxChars: Int = 60_000): String {
+        names = categoryNames()
         val today = repo.today()
         val open = db.occurrences().open(TaskStatus.OPEN)
         val since = today.minusDays(90).atStartOfDay(zone()).toInstant().toEpochMilli()
@@ -66,7 +68,7 @@ class ContextBuilder(
                 appendLine("TASKS MATCHING THE QUESTION, WITH ALL THEIR NOTES:")
                 hits.forEach { hit ->
                     val t = hit.task
-                    appendLine("#${t.id} ${t.title} [${t.category}]${if (t.archived) " (deleted)" else ""} created ${day(t.createdAt)}")
+                    appendLine("#${t.id} ${t.title} [${names[t.category] ?: t.category}]${if (t.archived) " (deleted)" else ""} created ${day(t.createdAt)}")
                     if (t.details.isNotBlank()) appendLine("  details: ${t.details}")
                     db.notes().forTask(t.id).take(15).forEach { n -> appendLine("  note ${day(n.createdAt)}: ${n.text}") }
                 }
@@ -75,7 +77,7 @@ class ContextBuilder(
         val activityLines = activity.map { a ->
             val x = a.activity
             val change = if (x.toStatus != null) " ${x.fromStatus ?: ""}→${x.toStatus}" else ""
-            "${day(x.at)} | #${a.task.id} ${a.task.title} [${a.task.category}] | ${x.type}$change${x.text?.let { " | $it" } ?: ""}"
+            "${day(x.at)} | #${a.task.id} ${a.task.title} [${names[a.task.category] ?: a.task.category}] | ${x.type}$change${x.text?.let { " | $it" } ?: ""}"
         }
         val budget = maxChars - openSection.length - matchSection.length - 200
         val kept = ArrayDeque<String>()
@@ -96,6 +98,12 @@ class ContextBuilder(
         }
     }
 
+    /** His own categories are shown by name (the built-in keys are clear enough to the AI). */
+    private suspend fun categoryNames(): Map<String, String> =
+        runCatching { db.categories().all().filter { it.name.isNotBlank() }.associate { it.key to it.name } }.getOrDefault(emptyMap())
+
+    private var names: Map<String, String> = emptyMap()
+
     private fun line(t: TaskEntity, o: OccurrenceEntity): String {
         val rule = RecurrenceRule.fromJson(t.recurrenceJson)
         val repeat = rule?.let { r ->
@@ -107,7 +115,8 @@ class ContextBuilder(
             }
         } ?: "no"
         val progress = if (o.progress in 1..99) " ${o.progress}%" else ""
-        return "#${t.id} | ${t.title}${if (t.details.isNotBlank()) " (${t.details.take(80)})" else ""} | ${t.category} | " +
+        val cat = names[t.category]?.let { "${t.category} ($it)" } ?: t.category
+        return "#${t.id} | ${t.title}${if (t.details.isNotBlank()) " (${t.details.take(80)})" else ""} | $cat | " +
             "${o.date ?: "no date"}${o.time?.let { " $it" } ?: ""} | ${o.status}$progress | repeat: $repeat | reminder: ${if (t.reminderEnabled) "on" else "off"}"
     }
 

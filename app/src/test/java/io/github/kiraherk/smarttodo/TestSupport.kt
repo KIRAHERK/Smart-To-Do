@@ -20,4 +20,4 @@ class MutableClock(var now: Instant, private val zoneId: ZoneId) : Clock() {
 fun testContext(): Context = ApplicationProvider.getApplicationContext()
 
 fun inMemoryDb(): AppDatabase =
-    Room.inMemoryDatabaseBuilder(testContext(), AppDatabase::class.java).allowMainThreadQueries().build()
+    Room.inMemoryDatabaseBuilder(testContext(), AppDatabase::class.java).addCallback(AppDatabase.SEED_CALLBACK).allowMainThreadQueries().build()

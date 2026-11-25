@@ -39,6 +39,16 @@
     <string name="cat_home">البيت</string>
     <string name="cat_personal">شخصي</string>
     <string name="cat_travel">السفر</string>
+    <string name="categories_title">التصنيفات</string>
+    <string name="categories_settings_hint">إضافة تصنيف أو تغيير اسمه أو حذفه</string>
+    <string name="categories_hint">التصنيفات ترتّب مهامك، والذكاء الاصطناعي يضع كل مهمة جديدة في التصنيف المناسب لها. أضف تصنيفاتك، مثل «الصحة» أو «الأولاد».</string>
+    <string name="category_add">إضافة تصنيف</string>
+    <string name="category_edit">تعديل التصنيف</string>
+    <string name="category_delete">حذف التصنيف</string>
+    <string name="category_delete_explain">لن تضيع مهامه، ستنتقل إلى «%1$s».</string>
+    <string name="category_name">الاسم</string>
+    <string name="category_color">اللون</string>
+    <string name="category_icon">الأيقونة</string>
 
     <string name="status_not_started">لم يبدأ</string>
     <string name="status_in_progress">قيد التنفيذ</string>
@@ -135,6 +145,10 @@
     <string name="time">الوقت</string>
     <string name="no_date">بدون تاريخ</string>
     <string name="no_time">بدون وقت</string>
+    <string name="reminder_on">مع تذكير</string>
+    <string name="reminder_off">بدون تذكير</string>
+    <string name="confirm_add_summary">سأضيف مهمة: %1$s</string>
+    <string name="confirm_edit_hint">اضغط على أي تفصيل لتغييره قبل الحفظ.</string>
     <string name="repeat">التكرار</string>
     <string name="no_repeat">لا تتكرر</string>
     <string name="reminder">التذكير</string>

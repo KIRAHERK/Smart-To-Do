@@ -7,6 +7,7 @@ import androidx.room.withTransaction
 import io.github.kiraherk.smarttodo.BuildConfig
 import io.github.kiraherk.smarttodo.data.db.ActivityEntity
 import io.github.kiraherk.smarttodo.data.db.AppDatabase
+import io.github.kiraherk.smarttodo.data.db.CategoryEntity
 import io.github.kiraherk.smarttodo.data.db.ChatMessageEntity
 import io.github.kiraherk.smarttodo.data.db.InboxEntity
 import io.github.kiraherk.smarttodo.data.db.NoteEntity
@@ -34,6 +35,8 @@ data class BackupFile(
     val activity: List<ActivityEntity> = emptyList(),
     val inbox: List<InboxEntity> = emptyList(),
     val chat: List<ChatMessageEntity> = emptyList(),
+    /** Added in app 0.3.0; older backups have none (the built-in ones are then kept). */
+    val categories: List<CategoryEntity> = emptyList(),
 ) {
     companion object {
         const val FORMAT = 1
@@ -66,6 +69,7 @@ class BackupManager(
             activity = db.activity().all(),
             inbox = db.inbox().all(),
             chat = db.chat().all(),
+            categories = db.categories().all(),
         )
     }
 
@@ -110,6 +114,10 @@ class BackupManager(
             db.activity().insertAll(backup.activity)
             db.inbox().insertAll(backup.inbox)
             db.chat().insertAll(backup.chat)
+            if (backup.categories.isNotEmpty()) {
+                db.categories().deleteAll()
+                db.categories().insertAll(backup.categories)
+            }
         }
         afterRestore()
     }

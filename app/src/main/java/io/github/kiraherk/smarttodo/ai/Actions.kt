@@ -93,7 +93,11 @@ object ActionJson {
     }
 
     /** Response schema in the OpenAPI subset the Gemini API accepts. */
-    val schema: JsonObject = buildJsonObject {
+    /** Schema with the built-in categories (tests, and before his categories are known). */
+    val schema: JsonObject by lazy { schema(CategoryKey.entries.map { it.name }) }
+
+    /** Response schema; [categoryKeys] = the categories that exist now (his own ones included). */
+    fun schema(categoryKeys: List<String>): JsonObject = buildJsonObject {
         put("type", "OBJECT")
         putJsonObject("properties") {
             putJsonObject("actions") {
@@ -105,7 +109,7 @@ object ActionJson {
                         integer("taskId")
                         string("title", description = "Only the task's short name in his language, 2 to 8 words, e.g. الاتصال بأحمد شماط. Never reasoning, field names or dates.")
                         string("details", description = "Extra facts he said about the task, in his language. Never your reasoning.")
-                        string("category", enum = CategoryKey.entries.map { it.name })
+                        string("category", enum = categoryKeys.ifEmpty { CategoryKey.entries.map { it.name } })
                         string("priority", enum = Priority.entries.map { it.name })
                         string("date")
                         string("time")

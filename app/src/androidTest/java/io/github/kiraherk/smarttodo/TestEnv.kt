@@ -32,6 +32,7 @@ object TestEnv {
     fun reset(setupDone: Boolean = true) = runBlocking {
         LocaleHelper.setLanguage(app, "ar")
         c.db.clearAllTables()
+        c.categories.ensureDefaults()
         c.settings.setSetupDone(setupDone)
         c.settings.setCachedModels("")
         c.settings.setCommandModel("")

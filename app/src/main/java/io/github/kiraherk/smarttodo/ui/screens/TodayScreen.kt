@@ -80,8 +80,8 @@ import java.time.LocalTime
 
 class TodayViewModel(private val c: AppContainer) : ViewModel() {
     val today = c.repo.today()
-    val filter = MutableStateFlow<CategoryKey?>(null)
-    val open = combine(c.repo.observeOpen(), filter) { list, f -> if (f == null) list else list.filter { it.task.category == f.name } }
+    val filter = MutableStateFlow<String?>(null)
+    val open = combine(c.repo.observeOpen(), filter) { list, f -> if (f == null) list else list.filter { it.task.category == f } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
     val doneToday = c.repo.observeBetween(today, today).map { list -> list.count { it.occurrence.status == TaskStatus.DONE.name } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)

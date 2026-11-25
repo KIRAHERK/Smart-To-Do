@@ -9,6 +9,16 @@ import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
 @Dao
+interface CategoryDao {
+    @Query("SELECT * FROM categories ORDER BY sortOrder, `key`") fun observeAll(): Flow<List<CategoryEntity>>
+    @Query("SELECT * FROM categories ORDER BY sortOrder, `key`") suspend fun all(): List<CategoryEntity>
+    @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun upsert(category: CategoryEntity)
+    @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertAll(items: List<CategoryEntity>)
+    @Query("DELETE FROM categories WHERE `key` = :key") suspend fun delete(key: String)
+    @Query("DELETE FROM categories") suspend fun deleteAll()
+}
+
+@Dao
 interface TaskDao {
     @Insert suspend fun insert(task: TaskEntity): Long
     @Update suspend fun update(task: TaskEntity)
@@ -22,6 +32,7 @@ interface TaskDao {
     suspend fun search(q: String, limit: Int = 50): List<TaskEntity>
 
     @Query("SELECT * FROM tasks") suspend fun all(): List<TaskEntity>
+    @Query("UPDATE tasks SET category = :to WHERE category = :from") suspend fun moveCategory(from: String, to: String)
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertAll(items: List<TaskEntity>)
     @Query("DELETE FROM tasks") suspend fun deleteAll()
 }
@@ -116,6 +127,7 @@ interface ActivityDao {
     suspend fun since(since: Long): List<ActivityWithTask>
 
     @Query("SELECT * FROM activity") suspend fun all(): List<ActivityEntity>
+    @Query("SELECT * FROM activity WHERE taskId = :taskId ORDER BY at DESC, id DESC LIMIT 1") suspend fun latestForTask(taskId: Long): ActivityEntity?
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertAll(items: List<ActivityEntity>)
     @Query("DELETE FROM activity") suspend fun deleteAll()
 }

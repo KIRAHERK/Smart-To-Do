@@ -68,8 +68,6 @@ import io.github.kiraherk.smarttodo.domain.Priority
 import io.github.kiraherk.smarttodo.domain.RecurrenceRule
 import io.github.kiraherk.smarttodo.domain.TaskStatus
 import io.github.kiraherk.smarttodo.ui.activityName
-import io.github.kiraherk.smarttodo.ui.categoryColor
-import io.github.kiraherk.smarttodo.ui.categoryIcon
 import io.github.kiraherk.smarttodo.ui.categoryName
 import io.github.kiraherk.smarttodo.ui.components.AppCard
 import io.github.kiraherk.smarttodo.ui.components.ChipFlow
@@ -109,8 +107,8 @@ class TaskDetailViewModel(private val c: AppContainer, val taskId: Long) : ViewM
     fun setStatus(occurrenceId: Long, status: TaskStatus, progress: Int? = null) =
         viewModelScope.launch { c.repo.setStatus(occurrenceId, status, progress) }
 
-    fun setCategory(key: CategoryKey) = viewModelScope.launch {
-        c.repo.updateTask(taskId, category = key, logText = categoryName(c.localized(), key))
+    fun setCategory(key: String) = viewModelScope.launch {
+        c.repo.updateTask(taskId, category = key, logText = io.github.kiraherk.smarttodo.ui.categoryLabel(c.localized(), c.categories.all(), key))
     }
 
     fun rename(title: String) = viewModelScope.launch {
@@ -169,9 +167,10 @@ fun TaskDetailScreen(taskId: Long, onBack: () -> Unit) {
 
     val t = task
     val current = currentOccurrence(occurrences)
-    val category = CategoryKey.parse(t?.category)
+    val category = io.github.kiraherk.smarttodo.ui.categoryOf(t?.category)
+    val allCategories = io.github.kiraherk.smarttodo.ui.currentCategories()
     val rule = RecurrenceRule.fromJson(t?.recurrenceJson)
-    val catColor = categoryColor(category)
+    val catColor = category.color
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -193,10 +192,10 @@ fun TaskDetailScreen(taskId: Long, onBack: () -> Unit) {
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(28.dp)).background(tint(catColor, 0.12f, 0.24f)).padding(18.dp),
             ) {
                 Row(verticalAlignment = Alignment.Top) {
-                    IconTile(categoryIcon(category), catColor, size = 58.dp, iconSize = 32.dp, filled = true)
+                    IconTile(category.icon, catColor, size = 58.dp, iconSize = 32.dp, filled = true)
                     Spacer(Modifier.width(14.dp))
                     Column(Modifier.weight(1f)) {
-                        Text(category?.let { categoryName(ctx, it) } ?: "", style = MaterialTheme.typography.labelLarge, color = catColor)
+                        Text(category.name, style = MaterialTheme.typography.labelLarge, color = catColor)
                         Text(t.title, style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onSurface)
                     }
                     IconButton(onClick = { editTitle = true }, modifier = Modifier.size(48.dp)) {
@@ -278,7 +277,7 @@ fun TaskDetailScreen(taskId: Long, onBack: () -> Unit) {
                 }
                 SettingRow(Icons.Filled.Repeat, stringResource(R.string.repeat), rule?.let { recurrenceText(ctx, it) } ?: stringResource(R.string.no_repeat)) { showRepeat = true }
                 SwitchRow(Icons.Filled.NotificationsActive, stringResource(R.string.reminder), t.reminderEnabled) { vm.setReminder(it) }
-                SettingRow(categoryIcon(category), stringResource(R.string.category), category?.let { categoryName(ctx, it) } ?: "—", color = catColor) { showCategory = true }
+                SettingRow(category.icon, stringResource(R.string.category), category.name, color = catColor) { showCategory = true }
             }
 
             // Notes
@@ -324,7 +323,7 @@ fun TaskDetailScreen(taskId: Long, onBack: () -> Unit) {
                             style = MaterialTheme.typography.titleSmall,
                             color = to?.let { statusColor(it) } ?: MaterialTheme.colorScheme.onSurface,
                         )
-                        a.text?.takeIf { it.isNotBlank() }?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
+                        historyText(a, t.title)?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
                     }
                 }
             }
@@ -350,8 +349,8 @@ fun TaskDetailScreen(taskId: Long, onBack: () -> Unit) {
     if (showCategory) {
         ChoiceDialog(
             title = stringResource(R.string.category),
-            options = CategoryKey.entries.map { it to categoryName(ctx, it) },
-            selected = category,
+            options = allCategories.map { it.key to it.name },
+            selected = t?.category,
             onSelect = { vm.setCategory(it) },
             onDismiss = { showCategory = false },
         )

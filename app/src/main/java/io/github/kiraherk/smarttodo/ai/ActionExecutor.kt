@@ -1,5 +1,6 @@
 package io.github.kiraherk.smarttodo.ai
 
+import io.github.kiraherk.smarttodo.data.repo.CategoryRepository
 import io.github.kiraherk.smarttodo.data.repo.TaskRepository
 import io.github.kiraherk.smarttodo.domain.CategoryKey
 import io.github.kiraherk.smarttodo.domain.EditScope
@@ -9,7 +10,14 @@ import io.github.kiraherk.smarttodo.domain.TaskStatus
 import io.github.kiraherk.smarttodo.util.Dates
 
 /** Applies the actions he confirmed. Every change ends up in the history via [TaskRepository]. */
-class ActionExecutor(private val repo: TaskRepository) {
+class ActionExecutor(private val repo: TaskRepository, private val categories: CategoryRepository? = null) {
+
+    /** A category key that exists (his own ones included); Personal if the AI gave none. */
+    private suspend fun categoryFor(raw: String?): String =
+        categories?.resolve(raw) ?: (CategoryKey.parse(raw)?.name ?: CategoryKey.PERSONAL.name)
+
+    private suspend fun categoryOrNull(raw: String?): String? =
+        if (raw.isNullOrBlank()) null else categories?.existing(raw) ?: CategoryKey.parse(raw)?.name
 
     data class Result(val applied: Int, val failed: Int, val taskIds: List<Long>)
 
@@ -41,7 +49,7 @@ class ActionExecutor(private val repo: TaskRepository) {
                     TaskRepository.NewTask(
                         title = title,
                         details = a.details.orEmpty(),
-                        category = CategoryKey.parse(a.category) ?: CategoryKey.PERSONAL,
+                        category = categoryFor(a.category),
                         priority = Priority.parse(a.priority) ?: Priority.NORMAL,
                         date = date,
                         time = time,
@@ -49,13 +57,12 @@ class ActionExecutor(private val repo: TaskRepository) {
                         reminder = a.reminder == true,
                         reminderMinutesBefore = a.reminderMinutesBefore ?: 0,
                         transcript = transcript,
-                        logText = summary,
                     )
                 )
             }
             ActionType.UPDATE -> {
                 val id = existing(a) ?: return null
-                repo.updateTask(id, a.title, a.details, CategoryKey.parse(a.category), Priority.parse(a.priority), summary)
+                repo.updateTask(id, a.title, a.details, categoryOrNull(a.category), Priority.parse(a.priority), summary)
                 if (date != null || time != null) {
                     repo.reschedule(id, date, time, allFuture = EditScope.parse(a.scope) == EditScope.ALL_FUTURE, postponed = false, logText = summary)
                 }

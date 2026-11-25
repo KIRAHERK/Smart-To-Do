@@ -65,6 +65,8 @@ import io.github.kiraherk.smarttodo.ui.screens.appContainer
 import io.github.kiraherk.smarttodo.ui.theme.SmartTodoTheme
 import io.github.kiraherk.smarttodo.ui.voice.VoiceOverlay
 import io.github.kiraherk.smarttodo.ui.voice.VoiceViewModel
+import io.github.kiraherk.smarttodo.ui.LocalCategories
+import io.github.kiraherk.smarttodo.ui.toUi
 import kotlinx.coroutines.flow.StateFlow
 
 @Composable
@@ -152,7 +154,11 @@ fun AppRoot(navRequests: StateFlow<NavRequest?>, onNavHandled: () -> Unit) {
             }
         }
 
-        CompositionLocalProvider(LocalVoice provides voiceActions) {
+        // His categories (built-in and his own), for every screen.
+        val categoryRows by c.categories.observe().collectAsStateWithLifecycle(initialValue = emptyList())
+        val categoryList = remember(categoryRows, ctx) { categoryRows.map { it.toUi(ctx) } }
+
+        CompositionLocalProvider(LocalVoice provides voiceActions, LocalCategories provides categoryList) {
             val backStack by nav.currentBackStackEntryAsState()
             val route = backStack?.destination?.route
             val topLevel = route in listOf(Routes.TODAY, Routes.HISTORY, Routes.ASSISTANT, Routes.SETTINGS)
@@ -210,6 +216,7 @@ fun AppRoot(navRequests: StateFlow<NavRequest?>, onNavHandled: () -> Unit) {
                             onUpdateOpened = { openUpdate = false },
                             onOpenSetup = { nav.navigate(Routes.SETUP) },
                             onOpenInbox = { nav.navigate(Routes.INBOX) },
+                            onOpenCategories = { nav.navigate(Routes.CATEGORIES) },
                         )
                     }
                     composable(Routes.TASK, arguments = listOf(navArgument("id") { type = NavType.LongType })) { entry ->
@@ -223,6 +230,7 @@ fun AppRoot(navRequests: StateFlow<NavRequest?>, onNavHandled: () -> Unit) {
                         )
                     }
                     composable(Routes.INBOX) { InboxScreen(onBack = { nav.popBackStack() }) }
+                    composable(Routes.CATEGORIES) { io.github.kiraherk.smarttodo.ui.screens.CategoriesScreen(onBack = { nav.popBackStack() }) }
                     composable(Routes.SETUP) {
                         SetupScreen(
                             onDone = { navigateTop(nav, Routes.TODAY) },
@@ -241,6 +249,7 @@ fun AppRoot(navRequests: StateFlow<NavRequest?>, onNavHandled: () -> Unit) {
                 onRetry = { voiceVm.retry() },
                 onSpeakAgain = { voiceVm.speakAgain() },
                 onDismiss = { voiceVm.dismiss() },
+                onEdit = { i, a -> voiceVm.editPending(i, a) },
             )
         }
     }

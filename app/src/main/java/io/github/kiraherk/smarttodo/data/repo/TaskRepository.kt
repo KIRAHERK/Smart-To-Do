@@ -50,7 +50,8 @@ class TaskRepository(
     data class NewTask(
         val title: String,
         val details: String = "",
-        val category: CategoryKey = CategoryKey.PERSONAL,
+        /** A category key (see CategoryRepository). */
+        val category: String = CategoryKey.PERSONAL.name,
         val priority: Priority = Priority.NORMAL,
         val date: LocalDate? = null,
         val time: LocalTime? = null,
@@ -69,7 +70,7 @@ class TaskRepository(
         val base = TaskEntity(
             title = spec.title.trim(),
             details = spec.details.trim(),
-            category = spec.category.name,
+            category = spec.category,
             priority = spec.priority.name,
             startDate = firstDate?.toString(),
             time = time,
@@ -96,7 +97,7 @@ class TaskRepository(
         taskId: Long,
         title: String? = null,
         details: String? = null,
-        category: CategoryKey? = null,
+        category: String? = null,
         priority: Priority? = null,
         logText: String? = null,
     ) {
@@ -104,7 +105,7 @@ class TaskRepository(
         var n = t
         if (!title.isNullOrBlank()) n = n.copy(title = title.trim())
         if (details != null) n = n.copy(details = details.trim())
-        if (category != null) n = n.copy(category = category.name)
+        if (!category.isNullOrBlank()) n = n.copy(category = category)
         if (priority != null) n = n.copy(priority = priority.name)
         if (n == t) return
         n = n.copy(searchText = searchText(n.title, n.details), updatedAt = now())
@@ -392,8 +393,16 @@ class TaskRepository(
         if (today().atTime(time).atZone(clock.zone).toInstant().toEpochMilli() > now()) today() else today().plusDays(1)
 
     private suspend fun log(taskId: Long, occurrenceId: Long?, type: ActivityType, from: String? = null, to: String? = null, text: String? = null) {
+        // One change can touch the task in two steps (e.g. new name + new date from one sentence);
+        // keep a single line in the history for it.
+        val last = activity.latestForTask(taskId)
+        if (last != null && last.type == type.name && last.toStatus == to && last.text == text && now() - last.at < SAME_CHANGE_MS) return
         activity.insert(ActivityEntity(taskId = taskId, occurrenceId = occurrenceId, type = type.name, fromStatus = from, toStatus = to, text = text, at = now()))
     }
 
     private fun searchText(title: String, details: String) = ArabicText.normalize("$title $details")
+
+    private companion object {
+        const val SAME_CHANGE_MS = 10_000L
+    }
 }

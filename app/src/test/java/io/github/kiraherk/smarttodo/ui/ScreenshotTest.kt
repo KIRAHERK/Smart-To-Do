@@ -24,6 +24,9 @@ import io.github.kiraherk.smarttodo.ui.screens.VoiceActions
 import io.github.kiraherk.smarttodo.ui.theme.SmartTodoTheme
 import io.github.kiraherk.smarttodo.ui.voice.VoiceOverlayContent
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onLast
+import io.github.kiraherk.smarttodo.R
+import io.github.kiraherk.smarttodo.util.LocaleHelper
 import io.github.kiraherk.smarttodo.ui.voice.VoiceViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.runBlocking
@@ -54,11 +57,11 @@ class ScreenshotTest {
     private fun seed(): Long = runBlocking {
         val repo = app().container.repo
         val today = repo.today()
-        val a = repo.createTask(TaskRepository.NewTask("الاتصال بأحمد بخصوص الشحنة", category = CategoryKey.WORK, date = today, time = LocalTime.of(10, 0), reminder = true, priority = Priority.HIGH))
-        repo.createTask(TaskRepository.NewTask("شراء دواء الضغط", category = CategoryKey.PERSONAL, date = today, time = LocalTime.of(17, 30)))
-        val c = repo.createTask(TaskRepository.NewTask("الاطمئنان على أبو خالد", category = CategoryKey.PERSONAL, recurrence = RecurrenceRule(Frequency.WEEKLY, interval = 2, weekdays = listOf(today.plusDays(2).dayOfWeek.value)), reminder = true))
-        repo.createTask(TaskRepository.NewTask("حجز تذاكر دبي", category = CategoryKey.TRAVEL, date = today.plusDays(5)))
-        repo.createTask(TaskRepository.NewTask("تصليح المكيف", category = CategoryKey.HOME, date = today.minusDays(1)))
+        val a = repo.createTask(TaskRepository.NewTask("الاتصال بأحمد بخصوص الشحنة", category = CategoryKey.WORK.name, date = today, time = LocalTime.of(10, 0), reminder = true, priority = Priority.HIGH))
+        repo.createTask(TaskRepository.NewTask("شراء دواء الضغط", category = CategoryKey.PERSONAL.name, date = today, time = LocalTime.of(17, 30)))
+        val c = repo.createTask(TaskRepository.NewTask("الاطمئنان على أبو خالد", category = CategoryKey.PERSONAL.name, recurrence = RecurrenceRule(Frequency.WEEKLY, interval = 2, weekdays = listOf(today.plusDays(2).dayOfWeek.value)), reminder = true))
+        repo.createTask(TaskRepository.NewTask("حجز تذاكر دبي", category = CategoryKey.TRAVEL.name, date = today.plusDays(5)))
+        repo.createTask(TaskRepository.NewTask("تصليح المكيف", category = CategoryKey.HOME.name, date = today.minusDays(1)))
         repo.setStatusForTask(a, TaskStatus.PARTIALLY_DONE, progress = 50, note = "كلمته، بقي تأكيد موعد الوصول")
         repo.addNote(c, "قال إنه مسافر نهاية الشهر")
         a
@@ -121,6 +124,12 @@ class ScreenshotTest {
                     state = VoiceViewModel.UiState.Confirm(
                         "ذكرني كل أسبوعين يوم الاثنين الساعة عشرة أتصل بأحمد",
                         listOf(VoiceViewModel.Preview("create_task", "سأضيف مهمة: الاتصال بأحمد في العمل، كل أسبوعين يوم الاثنين الساعة العاشرة صباحاً، مع تذكير.", "الاتصال بأحمد · العمل · كل أسبوعين يوم الاثنين · 🔔")),
+                        listOf(
+                            io.github.kiraherk.smarttodo.ai.AiAction(
+                                type = "create_task", title = "الاتصال بأحمد", category = "WORK", time = "10:00", reminder = true,
+                                recurrence = io.github.kiraherk.smarttodo.ai.AiRecurrence("WEEKLY", 2, listOf(1)),
+                            ),
+                        ),
                     ),
                     onFinish = {}, onConfirm = {}, onReject = {}, onRetry = {}, onSpeakAgain = {}, onDismiss = {},
                 )
@@ -202,6 +211,22 @@ class ScreenshotTest {
 
     @Test
     @Config(qualifiers = "+h2600dp")
+    fun categoriesScreen() {
+        runBlocking {
+            val cats = app().container.categories
+            cats.ensureDefaults()
+            cats.add("المزرعة", 5, "money")
+        }
+        compose.setContent {
+            SmartTodoTheme(1.15f) {
+                CompositionLocalProvider(LocalVoice provides voice) { io.github.kiraherk.smarttodo.ui.screens.CategoriesScreen(onBack = {}) }
+            }
+        }
+        compose.waitUntil(10_000) { compose.onAllNodesWithText("المزرعة").fetchSemanticsNodes().isNotEmpty() }
+        save("categories")
+    }
+
+    @Test
     fun settingsScreen() {
         compose.setContent {
             SmartTodoTheme(1.15f) {

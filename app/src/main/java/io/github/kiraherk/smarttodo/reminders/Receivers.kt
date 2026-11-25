@@ -41,7 +41,7 @@ class AlarmReceiver : BroadcastReceiver() {
         val ctx = c.localized()
         val parts = buildList {
             Dates.parseTime(item.occurrence.time)?.let { add(Dates.friendlyTime(ctx, it)) }
-            CategoryKey.parse(item.task.category)?.let { add(categoryName(ctx, it)) }
+            io.github.kiraherk.smarttodo.ui.categoryLabel(ctx, c.categories.all(), item.task.category).takeIf { it.isNotBlank() }?.let { add(it) }
             if (item.task.details.isNotBlank()) add(item.task.details)
         }
         val id = occurrenceId.toInt()

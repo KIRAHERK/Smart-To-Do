@@ -51,7 +51,7 @@ class TaskRepositoryTest {
     @Test
     fun oneOffTaskWithReminder() = runBlocking {
         val id = repo.createTask(
-            TaskRepository.NewTask("اتصل بالبنك", category = CategoryKey.WORK, date = LocalDate.parse("2026-11-11"), time = LocalTime.of(10, 0), reminder = true)
+            TaskRepository.NewTask("اتصل بالبنك", category = CategoryKey.WORK.name, date = LocalDate.parse("2026-11-11"), time = LocalTime.of(10, 0), reminder = true)
         )
         val o = repo.currentOccurrence(id)!!
         assertEquals("2026-11-11", o.date)
@@ -131,9 +131,9 @@ class TaskRepositoryTest {
 
     @Test
     fun searchFindsNotesDespiteSpellingDifferences() = runBlocking {
-        val id = repo.createTask(TaskRepository.NewTask("متابعة الشحنة", category = CategoryKey.WORK))
+        val id = repo.createTask(TaskRepository.NewTask("متابعة الشحنة", category = CategoryKey.WORK.name))
         repo.addNote(id, "اتصلت بأحمد بخصوص الدفع")
-        repo.createTask(TaskRepository.NewTask("شراء خبز", category = CategoryKey.HOME))
+        repo.createTask(TaskRepository.NewTask("شراء خبز", category = CategoryKey.HOME.name))
         val hits = repo.search("متى كلمت أحمد؟")
         assertEquals(id, hits.first().task.id)
         assertTrue(hits.first().note!!.text.contains("بأحمد"))

@@ -1,6 +1,7 @@
 package io.github.kiraherk.smarttodo.ui.voice
 
 import androidx.annotation.StringRes
+import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.kiraherk.smarttodo.AppContainer
@@ -54,7 +55,8 @@ class VoiceViewModel(private val c: AppContainer) : ViewModel() {
         data class Listening(val text: String, val level: Float, val recording: Boolean = false, val elapsedMs: Long = 0) : UiState
         /** [slow] = it is taking long (Google busy), so the screen says so and offers Cancel. */
         data class Thinking(val transcript: String, val slow: Boolean = false) : UiState
-        data class Confirm(val transcript: String, val previews: List<Preview>) : UiState
+        /** [actions] = what will be saved; new tasks can still be changed on the card. */
+        data class Confirm(val transcript: String, val previews: List<Preview>, val actions: List<AiAction> = emptyList()) : UiState
         data class Answer(val question: String, val answer: String) : UiState
         data class Message(val text: String, val error: Boolean = false, val canRetry: Boolean = false) : UiState
     }
@@ -237,8 +239,30 @@ class VoiceViewModel(private val c: AppContainer) : ViewModel() {
             val result = c.executor.apply(actions, pendingTranscript)
             pendingInboxId?.let { c.db.inbox().delete(it) }
             pendingInboxId = null
-            val msg = if (result.failed == 0) str(R.string.saved_ok) else str(R.string.saved_partly, result.applied, result.applied + result.failed)
-            say(UiState.Message(msg, error = result.applied == 0))
+            if (result.failed == 0) {
+                // Saved: close the window straight away (no extra "Saved" screen to dismiss).
+                c.speaker.stop()
+                _state.value = UiState.Idle
+                Toast.makeText(c.localized(), str(R.string.saved_ok), Toast.LENGTH_SHORT).show()
+            } else {
+                say(UiState.Message(str(R.string.saved_partly, result.applied, result.applied + result.failed), error = result.applied == 0))
+            }
+        }
+    }
+
+    /** He changed a detail of a new task on the confirmation card. */
+    fun editPending(index: Int, edited: AiAction) {
+        val current = _state.value as? UiState.Confirm ?: return
+        if (index !in pendingActions.indices) return
+        c.speaker.stop()
+        val fixed = if (edited.type == ActionType.CREATE) {
+            edited.copy(spokenSummary = str(R.string.confirm_add_summary, edited.title.orEmpty()))
+        } else {
+            edited
+        }
+        pendingActions = pendingActions.toMutableList().also { it[index] = fixed }
+        viewModelScope.launch {
+            _state.value = current.copy(previews = pendingActions.map { preview(it) }, actions = pendingActions)
         }
     }
 
@@ -331,7 +355,7 @@ class VoiceViewModel(private val c: AppContainer) : ViewModel() {
                     pendingTranscript = text
                     pendingInboxId = request.inboxId
                     val previews = changes.map { preview(it) }
-                    _state.value = UiState.Confirm(text, previews)
+                    _state.value = UiState.Confirm(text, previews, changes)
                     val auto = c.settings.current().autoConfirm && changes.all { it.type == ActionType.CREATE || it.type == ActionType.ADD_NOTE }
                     if (auto) confirm() else speak(previews.joinToString(" ") { it.summary } + " " + str(R.string.confirm_spoken))
                 }
@@ -389,7 +413,7 @@ class VoiceViewModel(private val c: AppContainer) : ViewModel() {
         val parts = mutableListOf<String>()
         a.taskId?.let { id -> c.repo.task(id)?.let { parts += "«${it.title}»" } }
         if (a.type == ActionType.CREATE) a.title?.takeIf { it.isNotBlank() }?.let { parts += it }
-        CategoryKey.parse(a.category)?.let { parts += categoryName(ctx, it) }
+        a.category?.takeIf { it.isNotBlank() }?.let { parts += io.github.kiraherk.smarttodo.ui.categoryLabel(ctx, c.categories.all(), it) }
         Dates.parseDate(a.date)?.let { parts += Dates.friendlyDate(ctx, it) }
         Dates.parseTime(a.time)?.let { parts += Dates.friendlyTime(ctx, it) }
         a.recurrence?.toRule()?.let { parts += recurrenceText(ctx, it) }

@@ -18,6 +18,20 @@ import kotlinx.serialization.Serializable
  *  - These classes are also the backup file format (BackupManager), so keep them @Serializable.
  */
 
+/**
+ * A category (Work, Home… or one he made). [key] is what tasks store. Added in database version 2.
+ * [name] "" = the built-in name in the app language (so switching language renames it too).
+ */
+@Serializable
+@Entity(tableName = "categories")
+data class CategoryEntity(
+    @PrimaryKey val key: String,
+    val name: String = "",
+    val colorIndex: Int = 0,
+    val icon: String = "person",
+    val sortOrder: Int = 0,
+)
+
 /** A thing to do. Repeating tasks have a [recurrenceJson]; each round is an [OccurrenceEntity]. */
 @Serializable
 @Entity(tableName = "tasks", indices = [Index("archived")])

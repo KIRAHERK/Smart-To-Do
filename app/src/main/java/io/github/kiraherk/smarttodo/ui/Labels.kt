@@ -44,21 +44,6 @@ fun categoryName(ctx: Context, key: CategoryKey): String = ctx.getString(
     }
 )
 
-fun categoryColor(key: CategoryKey?): Color = when (key) {
-    CategoryKey.WORK -> Color(0xFF2F5DA8)
-    CategoryKey.HOME -> Color(0xFF2E8B57)
-    CategoryKey.PERSONAL -> Color(0xFF8A4FA3)
-    CategoryKey.TRAVEL -> Color(0xFFD27A1F)
-    null -> Color(0xFF7A8580)
-}
-
-fun categoryIcon(key: CategoryKey?): ImageVector = when (key) {
-    CategoryKey.WORK -> Icons.Filled.BusinessCenter
-    CategoryKey.HOME -> Icons.Filled.Home
-    CategoryKey.TRAVEL -> Icons.Filled.Flight
-    else -> Icons.Filled.Person
-}
-
 fun statusIcon(status: TaskStatus?): ImageVector = when (status) {
     TaskStatus.DONE -> Icons.Filled.CheckCircle
     TaskStatus.PARTIALLY_DONE -> Icons.Filled.Contrast
