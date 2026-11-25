@@ -13,6 +13,9 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -149,11 +152,14 @@ fun GuideOverlay(steps: List<GuideStep>, whatsNew: Boolean, onGoTo: (String) -> 
 
         Column(
             Modifier.align(Alignment.BottomCenter).fillMaxWidth()
+                .padding(top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + 12.dp)
                 .padding(start = 14.dp, end = 14.dp, bottom = navBottom + if (tabIndex != null) barHeight + 12.dp else 28.dp),
         ) {
             Surface(shape = RoundedCornerShape(28.dp), color = MaterialTheme.colorScheme.surface, shadowElevation = 8.dp) {
                 Column(Modifier.padding(20.dp)) {
+                    // On a small screen with big text the words scroll; Back / Next always stay visible.
                     AnimatedContent(
+                        modifier = Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()),
                         targetState = step,
                         transitionSpec = {
                             val dir = if (targetState > initialState) 1 else -1

@@ -89,11 +89,12 @@ class AppOnDeviceTest {
         // The guide walks through every tab once, after the setup.
         compose.waitForText(str(R.string.guide_today_title))
         shot("02a-guide")
-        repeat(4) {
-            compose.clickable(str(R.string.guide_next)).performClick()
-            compose.waitForIdle()
+        // Next, card by card, until the last one (each tap must move it on).
+        val titles = listOf(R.string.guide_chat_title, R.string.guide_history_title, R.string.guide_settings_title, R.string.guide_done_title)
+        titles.forEach { next ->
+            compose.clickable(str(R.string.guide_next)).performSemanticsAction(SemanticsActions.OnClick)
+            compose.waitForText(str(next))
         }
-        compose.waitForText(str(R.string.guide_done_title))
         compose.clickable(str(R.string.guide_start)).performClick()
         compose.waitUntilTrue { compose.onAllNodes(hasText(str(R.string.guide_start))).fetchSemanticsNodes().isEmpty() }
         assertEquals(io.github.kiraherk.smarttodo.BuildConfig.VERSION_NAME, runBlocking { c.settings.current().guideVersion })

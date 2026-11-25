@@ -1,5 +1,7 @@
 package io.github.kiraherk.smarttodo.ui
 
+import androidx.compose.ui.test.assertIsDisplayed
+
 import androidx.compose.ui.test.performScrollTo
 
 import androidx.compose.ui.test.onFirst
@@ -244,6 +246,24 @@ class ScreenshotTest {
         compose.mainClock.advanceTimeBy(2_000)
         assertTrue(compose.onAllNodesWithContentDescription("المساعد يكتب").fetchSemanticsNodes().isNotEmpty())
         save("assistant-typing")
+    }
+
+    /** A small phone with big text: the guide's text scrolls, Back / Next stay on screen. */
+    @Test
+    @org.robolectric.annotation.Config(qualifiers = "ar-w320dp-h540dp-xhdpi")
+    fun guideButtonsStayVisibleOnASmallScreen() {
+        compose.mainClock.autoAdvance = false
+        compose.setContent {
+            SmartTodoTheme(1.3f) {
+                io.github.kiraherk.smarttodo.ui.GuideOverlay(
+                    steps = io.github.kiraherk.smarttodo.ui.Guide.steps.drop(1),
+                    whatsNew = false, onGoTo = {}, onDone = {},
+                )
+            }
+        }
+        compose.mainClock.advanceTimeBy(1_000)
+        compose.onNodeWithText("التالي").assertIsDisplayed()
+        save("guide-small")
     }
 
     @Test
