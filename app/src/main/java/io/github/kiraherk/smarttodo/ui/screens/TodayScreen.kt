@@ -227,6 +227,7 @@ private fun HeroCard(
         Column(Modifier.padding(start = 14.dp, end = 14.dp, top = 10.dp, bottom = 10.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.today_title), style = MaterialTheme.typography.labelMedium, color = Color.White.copy(alpha = 0.75f))
                     Text(greeting, style = MaterialTheme.typography.titleLarge, color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Text(Dates.fullDate(ctx, today), style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.9f), maxLines = 1, overflow = TextOverflow.Ellipsis)
                     if (next != null) {

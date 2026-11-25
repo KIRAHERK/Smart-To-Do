@@ -98,7 +98,7 @@ class AppOnDeviceTest {
         create(TaskRepository.NewTask("اتصل بالبنك", category = CategoryKey.WORK.name, date = today(), time = LocalTime.of(10, 0)))
         create(TaskRepository.NewTask("حجز تذاكر دبي", category = CategoryKey.TRAVEL.name, date = today().plusDays(4)))
         launch()
-        compose.waitForText("اتصل بالبنك")
+        compose.waitForText("اتصل بالبنك", substring = true)
         shot("03-today-tasks")
 
         // The first ✓ belongs to the late task (late tasks are listed first). On a small screen the
