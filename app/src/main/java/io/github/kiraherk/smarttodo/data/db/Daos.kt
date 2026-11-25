@@ -88,6 +88,18 @@ interface OccurrenceDao {
     @Query("SELECT * FROM occurrences WHERE taskId = :taskId ORDER BY date IS NULL, date DESC, id DESC LIMIT 1")
     suspend fun latestForTask(taskId: Long): OccurrenceEntity?
 
+    @Query("SELECT * FROM occurrences WHERE taskId = :taskId AND date = :date ORDER BY id DESC LIMIT 1")
+    suspend fun forTaskOn(taskId: Long, date: String): OccurrenceEntity?
+
+    /** Finished, cancelled or not-done rounds he changed lately, newest first (so he can change them back). */
+    @Transaction
+    @Query(
+        """SELECT o.* FROM occurrences o JOIN tasks t ON t.id = o.taskId
+           WHERE t.archived = 0 AND o.status NOT IN (:open) AND o.updatedAt >= :since
+           ORDER BY o.updatedAt DESC LIMIT :limit"""
+    )
+    suspend fun recentlyClosed(open: List<String>, since: Long, limit: Int): List<OccurrenceWithTask>
+
     @Query(
         """SELECT o.* FROM occurrences o JOIN tasks t ON t.id = o.taskId
            WHERE t.archived = 0 AND o.remindAt IS NOT NULL AND o.reminderFiredAt IS NULL AND o.status IN (:open)"""

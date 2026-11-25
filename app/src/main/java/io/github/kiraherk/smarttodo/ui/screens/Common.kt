@@ -10,6 +10,7 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Apps
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
@@ -77,6 +78,36 @@ fun CategoryFilter(selected: String?, onSelect: (String?) -> Unit) {
         io.github.kiraherk.smarttodo.ui.currentCategories().forEach { cat ->
             val key = cat.key
             FilterPill(cat.name, cat.icon, cat.color, selected == key) { onSelect(if (selected == key) null else key) }
+        }
+    }
+}
+
+/** Filter by where tasks stand now: done, in progress, not done... or deleted. */
+@Composable
+fun StatusFilter(selected: String?, onSelect: (String?) -> Unit) {
+    val ctx = LocalContext.current
+    Row(
+        Modifier.horizontalScroll(rememberScrollState()).padding(top = 8.dp, bottom = 2.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        FilterPill(stringResource(R.string.all_statuses), Icons.Filled.Apps, MaterialTheme.colorScheme.primary, selected == null) { onSelect(null) }
+        listOf(
+            io.github.kiraherk.smarttodo.domain.TaskStatus.DONE,
+            io.github.kiraherk.smarttodo.domain.TaskStatus.IN_PROGRESS,
+            io.github.kiraherk.smarttodo.domain.TaskStatus.PARTIALLY_DONE,
+            io.github.kiraherk.smarttodo.domain.TaskStatus.NOT_STARTED,
+            io.github.kiraherk.smarttodo.domain.TaskStatus.POSTPONED,
+            io.github.kiraherk.smarttodo.domain.TaskStatus.NOT_DONE,
+            io.github.kiraherk.smarttodo.domain.TaskStatus.MISSED,
+            io.github.kiraherk.smarttodo.domain.TaskStatus.CANCELLED,
+        ).forEach { s ->
+            FilterPill(io.github.kiraherk.smarttodo.ui.statusName(ctx, s), io.github.kiraherk.smarttodo.ui.statusIcon(s), io.github.kiraherk.smarttodo.ui.statusColor(s), selected == s.name) {
+                onSelect(if (selected == s.name) null else s.name)
+            }
+        }
+        val deleted = HistoryGrouping.DELETED
+        FilterPill(stringResource(R.string.status_deleted), Icons.Filled.Delete, MaterialTheme.colorScheme.error, selected == deleted) {
+            onSelect(if (selected == deleted) null else deleted)
         }
     }
 }

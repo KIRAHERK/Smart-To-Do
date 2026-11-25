@@ -113,7 +113,7 @@
     <string name="voice_error_network">Voice recognition needs the internet. Please check Wi-Fi.</string>
     <string name="mic_denied">Without the microphone the app can\'t hear you. You can allow it in Settings.</string>
     <string name="saved_inbox_no_key">I saved what you said in the Inbox. It will be organised once the AI key is set up in Settings.</string>
-    <string name="saved_inbox_later">What you said is saved in the Inbox, nothing is lost.</string>
+    <string name="saved_inbox_later">What you said is saved and will be added by itself as soon as the connection is back.</string>
     <string name="err_no_key">The AI key is not set up yet (Settings).</string>
     <string name="err_invalid_key">The AI key is not working. Please check it in Settings.</string>
     <string name="err_quota">The free AI limit for now is used up. Try again a bit later.</string>
@@ -127,7 +127,6 @@
     <string name="greeting_afternoon">Good afternoon</string>
     <string name="greeting_evening">Good evening</string>
     <string name="next_up">Next</string>
-    <string name="done_of">done</string>
     <string name="all_clear">All done for today</string>
     <string name="empty_today_title">Your day is clear</string>
     <string name="empty_today_hint">Press Talk and say what you need to do.</string>
@@ -154,6 +153,12 @@
     <string name="time">Time</string>
     <string name="no_date">No date</string>
     <string name="no_time">No time</string>
+    <string name="all_statuses">Any status</string>
+    <string name="status_deleted">Deleted</string>
+    <plurals name="earlier_changes">
+        <item quantity="one">+ %d earlier change (tap to see it)</item>
+        <item quantity="other">+ %d earlier changes (tap to see them)</item>
+    </plurals>
     <string name="reminder_on">Reminder on</string>
     <string name="reminder_off">No reminder</string>
     <string name="confirm_add_summary">I will add: %1$s</string>
@@ -198,12 +203,14 @@
     <string name="week_summary">This week: %1$d done, %2$d partly done, %3$d not done, %4$d missed. %5$d still open.</string>
 
     <!-- Inbox -->
-    <string name="inbox_title">Inbox</string>
-    <string name="inbox_explain">Things you said when there was no internet or AI. Nothing is lost: tap to organise them now.</string>
+    <string name="inbox_title">Said while offline</string>
+    <string name="offline_now">No internet right now. Speak as usual; I\'ll add what you say by itself when the connection is back.</string>
+    <string name="offline_waiting_auto">Will be added by itself when the connection is back</string>
+    <string name="offline_needs_you">I couldn\'t understand this one. Tap “Try now” or delete it</string>
+    <string name="inbox_explain">What you said while there was no internet. It is added by itself as soon as the connection is back; nothing to press.</string>
     <string name="inbox_empty">The inbox is empty.</string>
-    <string name="understand_now">Organise now</string>
+    <string name="understand_now">Try now</string>
     <string name="inbox_delete_explain">Delete this recording?</string>
-    <string name="inbox_settings_hint">Things said while offline</string>
 
     <!-- Settings -->
     <string name="settings_title">Settings</string>
@@ -277,6 +284,7 @@
     <string name="section_updates">Updates</string>
     <string name="check_updates">Check for updates</string>
     <string name="current_version">Current version %1$s</string>
+    <string name="made_by">Made by KIRAHERK</string>
     <string name="update_checking">Checking…</string>
     <string name="update_up_to_date">You have the latest version ✓</string>
     <string name="update_available_title">New version %1$s</string>
@@ -351,8 +359,12 @@
         <item quantity="other">%1$d of %2$d tasks today are still open. Tap to review.</item>
     </plurals>
     <plurals name="inbox_waiting">
-        <item quantity="one">1 recording waiting to be organised</item>
-        <item quantity="other">%d recordings waiting to be organised</item>
+        <item quantity="one">1 thing said offline, it will be added by itself</item>
+        <item quantity="other">%d things said offline, they will be added by themselves</item>
+    </plurals>
+    <plurals name="offline_added">
+        <item quantity="one">Added what you said offline</item>
+        <item quantity="other">Added %d things you said offline</item>
     </plurals>
     <plurals name="done_count">
         <item quantity="one">✓ 1 done</item>

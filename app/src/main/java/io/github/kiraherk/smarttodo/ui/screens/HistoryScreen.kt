@@ -73,6 +73,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
+import androidx.compose.material.icons.filled.Delete
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import java.time.Instant
@@ -86,8 +87,15 @@ class HistoryViewModel(private val c: AppContainer) : ViewModel() {
     val query = MutableStateFlow("")
     val today: LocalDate = c.repo.today()
 
-    val history = combine(days.flatMapLatest { d -> c.repo.observeHistory(System.currentTimeMillis() - d * 86_400_000L) }, filter) { list, f ->
-        if (f == null) list else list.filter { it.task.category == f }
+    /** A status name, or [DELETED]; null = all. */
+    val statusFilter = MutableStateFlow<String?>(null)
+
+    val history = combine(days.flatMapLatest { d -> c.repo.observeHistory(System.currentTimeMillis() - d * 86_400_000L) }, filter, statusFilter) { list, f, s ->
+        Triple(list, f, s)
+    }.mapLatest { (list, f, s) ->
+        HistoryGrouping.group(list) { taskId, occurrenceId ->
+            (occurrenceId?.let { c.db.occurrences().get(it) } ?: c.repo.currentOccurrence(taskId))
+        }.filter { (f == null || it.task.category == f) && (s == null || it.statusKey == s) }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     val results = query.debounce(250).mapLatest { q -> if (q.isBlank()) emptyList() else c.repo.search(q) }
@@ -110,7 +118,8 @@ fun HistoryScreen(onOpenTask: (Long) -> Unit) {
     LaunchedEffect(Unit) { voice.searchText.collect { vm.query.value = it } }
 
     val zone = ZoneId.systemDefault()
-    val byDay = history.groupBy { Instant.ofEpochMilli(it.activity.at).atZone(zone).toLocalDate() }
+    val statusFilter by vm.statusFilter.collectAsStateWithLifecycle()
+    val byDay = history.groupBy { Instant.ofEpochMilli(it.latest.at).atZone(zone).toLocalDate() }
     val noResults = stringResource(R.string.no_results)
     val emptyHistory = stringResource(R.string.empty_history)
     val showMore = stringResource(R.string.show_more)
@@ -149,6 +158,7 @@ fun HistoryScreen(onOpenTask: (Long) -> Unit) {
                 )
             }
             item { CategoryFilter(filter) { vm.filter.value = it } }
+            item { StatusFilter(statusFilter) { vm.statusFilter.value = it } }
 
             if (query.isNotBlank()) {
                 if (results.isEmpty()) item { EmptyState(noResults, Icons.Filled.Search) }
@@ -169,7 +179,7 @@ fun HistoryScreen(onOpenTask: (Long) -> Unit) {
                 if (history.isEmpty()) item { EmptyState(emptyHistory, Icons.Filled.History) }
                 byDay.forEach { (day, entries) ->
                     item(key = "d-$day") {
-                        val done = entries.count { it.activity.toStatus == TaskStatus.DONE.name }
+                        val done = entries.count { it.status == TaskStatus.DONE }
                         Column {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 SectionHeader(Dates.friendlyDate(ctx, day, vm.today), MaterialTheme.colorScheme.primary)
@@ -206,32 +216,105 @@ fun historyText(a: io.github.kiraherk.smarttodo.data.db.ActivityEntity, title: S
 }
 
 @Composable
-private fun HistoryRow(entry: ActivityWithTask, last: Boolean, onClick: () -> Unit) {
+private fun HistoryRow(entry: HistoryItem, last: Boolean, onClick: () -> Unit) {
     val ctx = LocalContext.current
-    val a = entry.activity
+    val a = entry.latest
     val type = ActivityType.entries.firstOrNull { it.name == a.type }
-    val to = TaskStatus.parse(a.toStatus)
     val cat = io.github.kiraherk.smarttodo.ui.categoryOf(entry.task.category)
     val time = Instant.ofEpochMilli(a.at).atZone(ZoneId.systemDefault()).toLocalTime()
+    val deletedColor = MaterialTheme.colorScheme.error
     Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).clickable(onClick = onClick)) {
-        TimelineRow(to?.let { statusColor(it) } ?: cat.color, last) {
+        TimelineRow(if (entry.deleted) deletedColor else entry.status?.let { statusColor(it) } ?: cat.color, last) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(entry.task.title, style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
                 Text(Dates.friendlyTime(ctx, time), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 2.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
                 Icon(cat.icon, contentDescription = null, tint = cat.color, modifier = Modifier.size(16.dp))
                 Spacer(Modifier.width(6.dp))
+                // Where the task stands now; one row per task, however often it changed.
+                when {
+                    entry.deleted -> Pill(stringResource(R.string.status_deleted), deletedColor, icon = Icons.Filled.Delete)
+                    entry.status != null -> Pill(
+                        statusName(ctx, entry.status) + (entry.progress.takeIf { it in 1..99 && entry.status.isOpen }?.let { " $it%" } ?: ""),
+                        statusColor(entry.status),
+                        icon = io.github.kiraherk.smarttodo.ui.statusIcon(entry.status),
+                    )
+                }
+                Spacer(Modifier.width(8.dp))
                 Text(
-                    if (to != null) statusName(ctx, to) else activityName(ctx, type),
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = to?.let { statusColor(it) } ?: MaterialTheme.colorScheme.onSurfaceVariant,
+                    activityName(ctx, type),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    modifier = Modifier.weight(1f, fill = false),
                 )
             }
             historyText(a, entry.task.title)?.let {
-                Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 4)
+                Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 3)
             }
+            if (entry.earlier > 0) {
+                Text(
+                    pluralStringResource(R.plurals.earlier_changes, entry.earlier, entry.earlier),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(top = 2.dp),
+                )
+            }
+        }
+    }
+}
+
+/** One line in the history list: a task (or one round of a repeating task) and where it stands now. */
+data class HistoryItem(
+    val task: io.github.kiraherk.smarttodo.data.db.TaskEntity,
+    val status: TaskStatus?,
+    val progress: Int,
+    val deleted: Boolean,
+    /** The newest change, shown in the row. */
+    val latest: io.github.kiraherk.smarttodo.data.db.ActivityEntity,
+    /** How many older changes are folded into it (the task page shows them all). */
+    val earlier: Int,
+) {
+    val statusKey: String? get() = if (deleted) HistoryGrouping.DELETED else status?.name
+}
+
+object HistoryGrouping {
+    const val DELETED = "DELETED"
+
+    /**
+     * Folds the change log into one item per task, newest first; a repeating task gets one item per
+     * round (day), so each day keeps its own result. [round] finds the round's current state.
+     */
+    suspend fun group(
+        log: List<ActivityWithTask>,
+        round: suspend (taskId: Long, occurrenceId: Long?) -> io.github.kiraherk.smarttodo.data.db.OccurrenceEntity?,
+    ): List<HistoryItem> {
+        val newestFirst = log.sortedWith(compareByDescending<ActivityWithTask> { it.activity.at }.thenByDescending { it.activity.id })
+        // Changes to a repeating task that aren't tied to a round (renamed, deleted...) join its newest round.
+        val newestRound = HashMap<Long, Long>()
+        newestFirst.forEach { e -> e.activity.occurrenceId?.let { newestRound.putIfAbsent(e.task.id, it) } }
+        val groups = LinkedHashMap<String, MutableList<ActivityWithTask>>()
+        newestFirst.forEach { e ->
+            val key = if (e.task.recurrenceJson == null) {
+                "t${e.task.id}"
+            } else {
+                "o${e.activity.occurrenceId ?: newestRound[e.task.id] ?: "t${e.task.id}"}"
+            }
+            groups.getOrPut(key) { mutableListOf() }.add(e)
+        }
+        return groups.values.map { entries ->
+            val first = entries.first()
+            val occurrenceId = if (first.task.recurrenceJson == null) null else entries.firstNotNullOfOrNull { it.activity.occurrenceId }
+            val o = round(first.task.id, occurrenceId)
+            HistoryItem(
+                task = first.task,
+                status = TaskStatus.parse(o?.status),
+                progress = o?.progress ?: 0,
+                deleted = first.task.archived,
+                latest = first.activity,
+                earlier = entries.size - 1,
+            )
         }
     }
 }

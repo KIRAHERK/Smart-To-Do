@@ -83,6 +83,11 @@ fun InboxScreen(onBack: () -> Unit) {
                 AppCard(modifier = Modifier.padding(vertical = 6.dp)) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(Dates.dateTimeOf(ctx, item.createdAt), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(
+                            stringResource(if (item.state == io.github.kiraherk.smarttodo.inbox.OfflineQueue.NEEDS_HIM) R.string.offline_needs_you else R.string.offline_waiting_auto),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = if (item.state == io.github.kiraherk.smarttodo.inbox.OfflineQueue.NEEDS_HIM) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                        )
                         Text(item.text, style = BigText)
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                             Button(

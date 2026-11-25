@@ -149,9 +149,37 @@ class TaskRepository(
         onRemindersChanged()
     }
 
-    suspend fun setStatusForTask(taskId: Long, status: TaskStatus, progress: Int? = null, note: String? = null) {
-        val o = currentOccurrence(taskId) ?: return
+    /** [date] = the round of that day (for a repeating task, e.g. "yesterday I didn't do it"); else the current one. */
+    suspend fun setStatusForTask(taskId: Long, status: TaskStatus, progress: Int? = null, note: String? = null, date: LocalDate? = null) {
+        val o = date?.let { occ.forTaskOn(taskId, it.toString()) } ?: currentOccurrence(taskId) ?: return
         setStatus(o.id, status, progress, note)
+    }
+
+    /** Takes the day and/or the time off a task ("it has no fixed day any more"). */
+    suspend fun clearSchedule(taskId: Long, clearDate: Boolean, clearTime: Boolean, logText: String? = null) {
+        if (!clearDate && !clearTime) return
+        val t = tasks.get(taskId) ?: return
+        val o = currentOccurrence(taskId)
+        val now = now()
+        // A repeating task keeps its days; only the time can go.
+        val dropDate = clearDate && t.recurrenceJson == null
+        if (!dropDate && !clearTime) return
+        db.withTransaction {
+            val n = t.copy(
+                startDate = if (dropDate) null else t.startDate,
+                time = if (clearTime) null else t.time,
+                updatedAt = now,
+            )
+            tasks.update(n)
+            if (o != null && o.isOpen) {
+                val date = if (dropDate) null else o.date
+                val time = if (clearTime) null else o.time
+                occ.update(o.copy(date = date, time = time, remindAt = computeRemindAt(n, Dates.parseDate(date), time), reminderFiredAt = null, updatedAt = now))
+            }
+            val from = listOfNotNull(o?.date, o?.time).joinToString(" ").ifEmpty { "—" }
+            log(taskId, o?.id, ActivityType.EDIT, text = logText ?: "$from → —")
+        }
+        onRemindersChanged()
     }
 
     suspend fun addNote(taskId: Long, text: String, source: NoteSource = NoteSource.VOICE, occurrenceId: Long? = null) {

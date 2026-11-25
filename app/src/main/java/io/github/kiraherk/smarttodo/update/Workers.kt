@@ -32,7 +32,9 @@ class DailyCheckWorker(context: Context, params: WorkerParameters) : CoroutineWo
             }
         }
 
-        val waiting = c.db.inbox().count()
+        // Anything said offline is added by itself; only what the AI couldn't understand needs him.
+        runCatching { c.offlineQueue.processAll() }
+        val waiting = c.db.inbox().all().count { it.state == io.github.kiraherk.smarttodo.inbox.OfflineQueue.NEEDS_HIM }
         if (waiting > 0 && c.secrets.hasApiKey()) {
             Notifications.post(
                 ctx, Notifications.ID_INBOX,

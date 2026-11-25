@@ -106,7 +106,7 @@
     <string name="voice_error_network">التعرّف على الصوت يحتاج إلى الإنترنت. تأكد من الواي فاي.</string>
     <string name="mic_denied">بدون الميكروفون لا يستطيع التطبيق سماعك. يمكنك السماح به من الإعدادات.</string>
     <string name="saved_inbox_no_key">حفظتُ كلامك في صندوق الوارد، وسأرتّبه بعد إعداد مفتاح الذكاء الاصطناعي في الإعدادات.</string>
-    <string name="saved_inbox_later">كلامك محفوظ في صندوق الوارد، لم يضِع شيء.</string>
+    <string name="saved_inbox_later">كلامك محفوظ، وسأضيفه تلقائياً فور عودة الاتصال.</string>
     <string name="err_no_key">لم يُضبط مفتاح الذكاء الاصطناعي بعد (الإعدادات).</string>
     <string name="err_invalid_key">مفتاح الذكاء الاصطناعي لا يعمل. تحقّق منه في الإعدادات.</string>
     <string name="err_quota">انتهى الحدّ المجاني للذكاء الاصطناعي حالياً. حاول بعد قليل.</string>
@@ -119,7 +119,6 @@
     <string name="greeting_afternoon">مساء الخير</string>
     <string name="greeting_evening">مساء الخير</string>
     <string name="next_up">التالي</string>
-    <string name="done_of">منجزة</string>
     <string name="all_clear">أنجزت كل مهام اليوم</string>
     <string name="empty_today_title">يومك خالٍ من المهام</string>
     <string name="empty_today_hint">اضغط «تكلّم» وقل ما تريد أن تفعله.</string>
@@ -145,6 +144,16 @@
     <string name="time">الوقت</string>
     <string name="no_date">بدون تاريخ</string>
     <string name="no_time">بدون وقت</string>
+    <string name="all_statuses">كل الحالات</string>
+    <string name="status_deleted">محذوفة</string>
+    <plurals name="earlier_changes">
+        <item quantity="zero">لا تغييرات سابقة</item>
+        <item quantity="one">+ تغيير سابق واحد (اضغط لرؤيته)</item>
+        <item quantity="two">+ تغييران سابقان (اضغط لرؤيتهما)</item>
+        <item quantity="few">+ %d تغييرات سابقة (اضغط لرؤيتها)</item>
+        <item quantity="many">+ %d تغييراً سابقاً (اضغط لرؤيتها)</item>
+        <item quantity="other">+ %d تغيير سابق (اضغط لرؤيتها)</item>
+    </plurals>
     <string name="reminder_on">مع تذكير</string>
     <string name="reminder_off">بدون تذكير</string>
     <string name="confirm_add_summary">سأضيف مهمة: %1$s</string>
@@ -185,12 +194,14 @@
     <string name="next_7_days">الأيام السبعة القادمة</string>
     <string name="week_summary">هذا الأسبوع: تم %1$d، أُنجز جزئياً %2$d، لم يتم %3$d، فات موعده %4$d. وما زال %5$d مفتوحاً.</string>
 
-    <string name="inbox_title">صندوق الوارد</string>
-    <string name="inbox_explain">أشياء قلتها عندما لم يكن هناك إنترنت أو ذكاء اصطناعي. لم يضِع شيء: اضغط لترتيبها الآن.</string>
+    <string name="inbox_title">ما قلته بدون اتصال</string>
+    <string name="offline_now">لا يوجد إنترنت الآن. تكلّم عادي، وسأضيف كلامك تلقائياً عند عودة الاتصال.</string>
+    <string name="offline_waiting_auto">سيُضاف تلقائياً عند عودة الاتصال</string>
+    <string name="offline_needs_you">لم أفهمها، اضغط «حاول الآن» أو احذفها</string>
+    <string name="inbox_explain">ما قلته عندما لم يكن هناك إنترنت. يُضاف تلقائياً فور عودة الاتصال، دون أن تضغط شيئاً.</string>
     <string name="inbox_empty">صندوق الوارد فارغ.</string>
-    <string name="understand_now">رتّبها الآن</string>
+    <string name="understand_now">حاول الآن</string>
     <string name="inbox_delete_explain">حذف هذا التسجيل؟</string>
-    <string name="inbox_settings_hint">ما قلته بدون اتصال</string>
 
     <string name="settings_title">الإعدادات</string>
     <string name="section_ai">الذكاء الاصطناعي</string>
@@ -263,6 +274,7 @@
     <string name="section_updates">التحديثات</string>
     <string name="check_updates">البحث عن تحديث</string>
     <string name="current_version">الإصدار الحالي %1$s</string>
+    <string name="made_by">صنعه KIRAHERK</string>
     <string name="update_checking">جارٍ البحث…</string>
     <string name="update_up_to_date">لديك أحدث إصدار ✓</string>
     <string name="update_available_title">إصدار جديد %1$s</string>
@@ -347,12 +359,20 @@
         <item quantity="other">ما زالت %1$d مهمة من %2$d مفتوحة اليوم. اضغط للمراجعة.</item>
     </plurals>
     <plurals name="inbox_waiting">
-        <item quantity="zero">لا توجد تسجيلات بانتظار الترتيب</item>
-        <item quantity="one">تسجيل واحد بانتظار الترتيب</item>
-        <item quantity="two">تسجيلان بانتظار الترتيب</item>
-        <item quantity="few">%d تسجيلات بانتظار الترتيب</item>
-        <item quantity="many">%d تسجيلاً بانتظار الترتيب</item>
-        <item quantity="other">%d تسجيل بانتظار الترتيب</item>
+        <item quantity="zero">لا شيء بانتظار الاتصال</item>
+        <item quantity="one">شيء واحد قلته بدون اتصال، سيُضاف تلقائياً</item>
+        <item quantity="two">شيئان قلتهما بدون اتصال، سيُضافان تلقائياً</item>
+        <item quantity="few">%d أشياء قلتها بدون اتصال، ستُضاف تلقائياً</item>
+        <item quantity="many">%d شيئاً قلته بدون اتصال، سيُضاف تلقائياً</item>
+        <item quantity="other">%d شيء قلته بدون اتصال، سيُضاف تلقائياً</item>
+    </plurals>
+    <plurals name="offline_added">
+        <item quantity="zero">لم يُضف شيء</item>
+        <item quantity="one">أُضيف ما قلته بدون اتصال</item>
+        <item quantity="two">أُضيف شيئان قلتهما بدون اتصال</item>
+        <item quantity="few">أُضيفت %d أشياء قلتها بدون اتصال</item>
+        <item quantity="many">أُضيف %d شيئاً قلته بدون اتصال</item>
+        <item quantity="other">أُضيف %d شيء قلته بدون اتصال</item>
     </plurals>
     <plurals name="done_count">
         <item quantity="zero">✓ لا شيء</item>

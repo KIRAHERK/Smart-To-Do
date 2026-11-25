@@ -63,6 +63,9 @@ class ActionExecutor(private val repo: TaskRepository, private val categories: C
             ActionType.UPDATE -> {
                 val id = existing(a) ?: return null
                 repo.updateTask(id, a.title, a.details, categoryOrNull(a.category), Priority.parse(a.priority), summary)
+                if (a.removeDate == true || a.removeTime == true) {
+                    repo.clearSchedule(id, clearDate = a.removeDate == true && date == null, clearTime = a.removeTime == true && time == null, logText = summary)
+                }
                 if (date != null || time != null) {
                     repo.reschedule(id, date, time, allFuture = EditScope.parse(a.scope) == EditScope.ALL_FUTURE, postponed = false, logText = summary)
                 }
@@ -74,7 +77,7 @@ class ActionExecutor(private val repo: TaskRepository, private val categories: C
                 if (status == TaskStatus.POSTPONED && (date != null || time != null)) {
                     repo.reschedule(id, date, time, postponed = true, logText = a.note ?: summary)
                 } else {
-                    repo.setStatusForTask(id, status, a.progress, a.note)
+                    repo.setStatusForTask(id, status, a.progress, a.note, date ?: SpokenDays.pastDay(transcript, repo.today()))
                 }
                 id
             }
@@ -118,4 +121,19 @@ class ActionExecutor(private val repo: TaskRepository, private val categories: C
     }
 
     private suspend fun existing(a: AiAction): Long? = a.taskId?.takeIf { repo.task(it) != null }
+}
+
+/** "Yesterday" and "the day before" in what he said, for reports about a repeating task's earlier round. */
+object SpokenDays {
+    private val dayBefore = Regex("(أول|قبل) ?(امبارح|أمس|البارحة|البارح)")
+    private val yesterday = Regex("امبارح|إمبارح|أمس|امس|البارحة|البارح|yesterday", RegexOption.IGNORE_CASE)
+
+    fun pastDay(transcript: String?, today: java.time.LocalDate): java.time.LocalDate? {
+        val t = transcript ?: return null
+        return when {
+            dayBefore.containsMatchIn(t) -> today.minusDays(2)
+            yesterday.containsMatchIn(t) -> today.minusDays(1)
+            else -> null
+        }
+    }
 }

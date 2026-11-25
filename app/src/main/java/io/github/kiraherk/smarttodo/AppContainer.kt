@@ -73,6 +73,9 @@ class AppContainer(val app: Application) {
     ) { language() }
     val executor = ActionExecutor(repo, categories)
     val assistant = AssistantService(ai, contextBuilder, db, clock) { language() }
+
+    /** What he said offline, added by itself once the connection is back. */
+    val offlineQueue = io.github.kiraherk.smarttodo.inbox.OfflineQueue(this)
     val checkIns = CheckIns(db, repo) { localized() }
 
     val backup: BackupManager = BackupManager(app, db, settings) { maintenance.run() }

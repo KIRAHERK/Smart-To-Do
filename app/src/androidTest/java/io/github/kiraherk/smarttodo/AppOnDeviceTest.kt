@@ -259,6 +259,33 @@ class AppOnDeviceTest {
         compose.waitForText(str(R.string.saved_inbox_no_key))
         compose.clickable(str(R.string.ok)).performClick()
         assertEquals("بكرة أروح للبنك", runBlocking { c.db.inbox().all() }.single().text)
+
+        // Easy to find: a banner on Today (not in Settings) opens what he said offline.
+        compose.clickable(str(R.string.nav_today)).performClick()
+        val waiting = io.github.kiraherk.smarttodo.util.LocaleHelper.wrap(io.github.kiraherk.smarttodo.TestEnv.app).resources.getQuantityString(R.plurals.inbox_waiting, 1, 1)
+        compose.waitForText(waiting)
+        compose.clickable(waiting).performClick()
+        compose.waitForText(str(R.string.inbox_explain))
+        compose.waitForText("بكرة أروح للبنك")
+        shot("16-offline-list")
+        compose.clickableDesc(str(R.string.back)).performClick()
+    }
+
+    @Test
+    fun whatHeSaidOfflineIsAddedByItselfWhenOnline() {
+        reset()
+        FakeGemini().use { gemini ->
+            gemini.commandReply = """{"actions":[{"type":"create_task","title":"الاتصال بالبنك","category":"WORK",
+                "spokenSummary":"سأضيف مهمة: الاتصال بالبنك."}]}"""
+            c.geminiBaseUrl = gemini.baseUrl
+            c.secrets.setApiKey("test-key")
+            runBlocking {
+                c.db.inbox().insert(io.github.kiraherk.smarttodo.data.db.InboxEntity(text = "بكرة أتصل بالبنك", createdAt = System.currentTimeMillis()))
+                c.offlineQueue.processAll()
+            }
+            assertEquals("الاتصال بالبنك", runBlocking { c.db.tasks().all() }.single().title)
+            assertTrue(runBlocking { c.db.inbox().all() }.isEmpty())
+        }
     }
 
     @Test
@@ -315,9 +342,6 @@ class AppOnDeviceTest {
         compose.clickable(str(R.string.nav_settings)).performClick()
         compose.waitForText(str(R.string.gemini_key))
         shot("13-settings")
-        compose.clickable(str(R.string.inbox_title)).performScrollTo().performClick()
-        compose.waitForText(str(R.string.inbox_explain))
-        compose.clickableDesc(str(R.string.back)).performClick()
 
         // His own category: add it, and it is there for the AI and the screens.
         compose.clickable(str(R.string.categories_title)).performScrollTo().performClick()

@@ -90,8 +90,9 @@ can contain mistakes, so infer what he most likely meant.
 
 Turn what he said into a JSON list of actions. Action types:
 - create_task: a new thing to do. Give a short clear title in his language (2 to 8 words, the thing itself, e.g. "الاتصال بأحمد شماط") without date/time words, optional details, the best category, and date/time/recurrence/reminder if he mentioned them.
-- update_task: change the title, details, category or priority of an existing task (date/time changes go in date/time with scope).
-- set_status: he reports what happened with an existing task. status is one of NOT_STARTED, IN_PROGRESS, PARTIALLY_DONE, DONE, NOT_DONE, POSTPONED, CANCELLED. Put his explanation in note. For PARTIALLY_DONE or IN_PROGRESS give progress 0-100 if he implied one ("half" = 50).
+- update_task: change anything about an existing task: title, details, category, priority, date, time (with scope). removeDate true / removeTime true take the day / the time off it ("بدون موعد", "شيل الوقت").
+- set_status: he reports what happened with an existing task, or asks to change its status. status is one of NOT_STARTED, IN_PROGRESS, PARTIALLY_DONE, DONE, NOT_DONE, POSTPONED, CANCELLED. Put his explanation in note. For PARTIALLY_DONE or IN_PROGRESS give progress 0-100 if he implied one ("half" = 50). Works on finished tasks too: "رجّعها/ما خلصت/افتحها من جديد" on a DONE task = NOT_STARTED (or what he says). Whenever he names a day for a status (امبارح = yesterday, أول أمس, يوم الأحد...), put that day in date as yyyy-MM-dd; leave date empty only when he names no day.
+  Status words: خلصت/تم/انتهيت/سويتها = DONE; بديت/شغال عليها/قيد التنفيذ = IN_PROGRESS; نصها/جزء منها/منجز جزئياً = PARTIALLY_DONE; ما سويتها/ما قدرت/لم تنجز = NOT_DONE; أجّلها/مؤجلة = POSTPONED; ألغيها/ملغية/ما عاد لها داعي = CANCELLED; لم تبدأ/ما بديت = NOT_STARTED.
 - add_note: add a note to an existing task; keep his words (cleaned up, not shortened).
 - set_reminder: turn a reminder on (reminder true) or off (false) for an existing task, optionally with date, time, reminderMinutesBefore and recurrence.
 - change_recurrence: change how an existing task repeats (recurrence), or stop repeating (removeRecurrence true).
@@ -103,7 +104,8 @@ Turn what he said into a JSON list of actions. Action types:
 
 Rules:
 - One sentence can contain several actions; return all of them in the order he said them.
-- When he refers to an existing task (by name, person, place, or "it/this"), use its taskId from EXISTING TASKS. Never invent ids. If nothing matches, create a new task instead.
+- When he refers to an existing task (by name, person, place, or "it/this"), use its taskId from EXISTING TASKS (whatever its status). Never invent ids. If nothing matches, create a new task instead.
+- He can change anything by voice. Prefer changing an existing task over creating a duplicate of it.
 - Categories: put each task in the one category from CATEGORIES that fits it best, judging by the category names (he may have made his own, e.g. "الصحة" or "المزرعة"; prefer a specific one of his over a general one). Use only keys from that list.
 - Dates are ISO yyyy-MM-dd computed from NOW; times are 24-hour HH:mm. بكرة/غدا = tomorrow, بعد بكرة = the day after, الأسبوع الجاي = next week, a weekday name = the next such day. Without an exact time: الصبح ≈ 09:00, الظهر ≈ 13:00, العصر ≈ 16:00, المغرب ≈ 18:00, المسا/بالليل ≈ 20:00.
 - Recurrence: frequency DAILY/WEEKLY/MONTHLY/YEARLY plus interval ("every two weeks" = WEEKLY interval 2, "every other day" = DAILY interval 2), weekdays as ISO numbers (1=Monday, 2=Tuesday, 3=Wednesday, 4=Thursday, 5=Friday, 6=Saturday, 7=Sunday), dayOfMonth for monthly, endDate if he says until when. A repeating task without a start date starts from today.

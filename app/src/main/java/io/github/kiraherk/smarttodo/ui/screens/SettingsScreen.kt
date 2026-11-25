@@ -378,7 +378,6 @@ fun SettingsScreen(openUpdate: Boolean, onUpdateOpened: () -> Unit, onOpenSetup:
                 SettingRow(Icons.Filled.Restore, stringResource(R.string.restore_backup), stringResource(R.string.restore_backup_hint), color = green) {
                     restorePicker.launch(arrayOf("application/json", "text/plain", "application/octet-stream", "*/*"))
                 }
-                SettingRow(Icons.Filled.Inbox, stringResource(R.string.inbox_title), stringResource(R.string.inbox_settings_hint), color = green) { onOpenInbox() }
             }
 
             SectionHeader(stringResource(R.string.section_updates), MaterialTheme.colorScheme.primary)
@@ -390,7 +389,7 @@ fun SettingsScreen(openUpdate: Boolean, onUpdateOpened: () -> Unit, onOpenSetup:
             SectionHeader(stringResource(R.string.section_phone), grey)
             Group {
                 SettingRow(Icons.Filled.Checklist, stringResource(R.string.setup_title), stringResource(R.string.setup_settings_hint), color = grey) { onOpenSetup() }
-                SettingRow(Icons.Filled.Code, stringResource(R.string.open_source), "github.com/" + BuildConfig.GITHUB_REPO, color = grey) {
+                SettingRow(Icons.Filled.Code, stringResource(R.string.open_source), stringResource(R.string.made_by) + " · github.com/" + BuildConfig.GITHUB_REPO, color = grey) {
                     ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/" + BuildConfig.GITHUB_REPO)))
                 }
             }

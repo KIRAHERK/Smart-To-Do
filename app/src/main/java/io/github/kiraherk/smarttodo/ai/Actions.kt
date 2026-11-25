@@ -63,6 +63,8 @@ data class AiAction(
     val reminderMinutesBefore: Int? = null,
     val recurrence: AiRecurrence? = null,
     val removeRecurrence: Boolean? = null,
+    val removeDate: Boolean? = null,
+    val removeTime: Boolean? = null,
     val scope: String? = null,
     val question: String? = null,
     val spokenSummary: String = "",
@@ -135,6 +137,8 @@ object ActionJson {
                             order("frequency", "interval", "weekdays", "dayOfMonth", "endDate")
                         }
                         boolean("removeRecurrence")
+                        boolean("removeDate")
+                        boolean("removeTime")
                         string("scope", enum = listOf("THIS", "ALL_FUTURE"))
                         string("question")
                         string("spokenSummary", nullable = false, description = "One short sentence in the reply language saying what will be done.")
@@ -144,7 +148,7 @@ object ActionJson {
                     // title near the end). The name should be decided right after the action type.
                     order(
                         "type", "taskId", "title", "category", "priority", "date", "time", "reminder", "reminderMinutesBefore",
-                        "recurrence", "removeRecurrence", "scope", "status", "progress", "note", "details", "question", "spokenSummary",
+                        "recurrence", "removeRecurrence", "removeDate", "removeTime", "scope", "status", "progress", "note", "details", "question", "spokenSummary",
                     )
                 }
             }

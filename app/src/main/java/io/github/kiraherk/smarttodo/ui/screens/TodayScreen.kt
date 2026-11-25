@@ -23,7 +23,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Done
-import androidx.compose.material.icons.filled.Inbox
+import androidx.compose.material.icons.filled.CloudOff
+import androidx.compose.material.icons.filled.CloudSync
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.TaskAlt
@@ -86,6 +87,7 @@ class TodayViewModel(private val c: AppContainer) : ViewModel() {
     val doneToday = c.repo.observeBetween(today, today).map { list -> list.count { it.occurrence.status == TaskStatus.DONE.name } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
     val inboxCount = c.db.inbox().observeCount().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
+    val online = (c.app as io.github.kiraherk.smarttodo.SmartTodoApp).network.online
 
     fun hasKey() = c.secrets.hasApiKey()
     fun markDone(occurrenceId: Long) = viewModelScope.launch { c.repo.setStatus(occurrenceId, TaskStatus.DONE) }
@@ -106,6 +108,7 @@ fun TodayScreen(
     val filter by vm.filter.collectAsStateWithLifecycle()
     val doneToday by vm.doneToday.collectAsStateWithLifecycle()
     val inboxCount by vm.inboxCount.collectAsStateWithLifecycle()
+    val online by vm.online.collectAsStateWithLifecycle()
     val today = vm.today
     val todayIso = today.toString()
 
@@ -157,8 +160,12 @@ fun TodayScreen(
             if (!vm.hasKey()) {
                 item { Banner(Icons.Filled.Key, noKeyText, colors.error) { onNavigate(Routes.SETTINGS) } }
             }
+            // Offline: say so right here, and that what he says will be added by itself later.
+            if (!online) {
+                item(key = "offline") { Banner(Icons.Filled.CloudOff, stringResource(R.string.offline_now), colors.tertiary) { onNavigate(Routes.INBOX) } }
+            }
             if (inboxCount > 0) {
-                item { Banner(Icons.Filled.Inbox, pluralStringResource(R.plurals.inbox_waiting, inboxCount, inboxCount), colors.secondary) { onNavigate(Routes.INBOX) } }
+                item(key = "waiting") { Banner(Icons.Filled.CloudSync, pluralStringResource(R.plurals.inbox_waiting, inboxCount, inboxCount), colors.secondary) { onNavigate(Routes.INBOX) } }
             }
             item(key = "filter") { CategoryFilter(filter) { vm.filter.value = it } }
 
@@ -212,38 +219,32 @@ private fun HeroCard(
     Box(
         Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(30.dp))
+            .clip(RoundedCornerShape(24.dp))
             .background(brand.heroBrush)
             .heroCircles(),
     ) {
-        Column(Modifier.padding(start = 18.dp, end = 18.dp, top = 14.dp, bottom = 14.dp)) {
+        // Compact on purpose: greeting, date, what's next and progress in one block, actions in a slim row.
+        Column(Modifier.padding(start = 14.dp, end = 14.dp, top = 10.dp, bottom = 10.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text(stringResource(R.string.today_title), style = MaterialTheme.typography.labelLarge, color = Color.White.copy(alpha = 0.75f))
-                    Text(greeting, style = MaterialTheme.typography.headlineMedium, color = Color.White)
-                    Text(Dates.fullDate(ctx, today), style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.92f))
-                }
-                Spacer(Modifier.width(12.dp))
-                ProgressRing(done, total)
-            }
-            if (next != null) {
-                Spacer(Modifier.size(10.dp))
-                Row(
-                    Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(Color.White.copy(alpha = 0.14f)).padding(horizontal = 12.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Icon(Icons.Filled.Schedule, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.next_up) + ":", style = MaterialTheme.typography.labelLarge, color = Color.White.copy(alpha = 0.8f))
-                    Spacer(Modifier.width(6.dp))
-                    Text(next.task.title, style = MaterialTheme.typography.titleSmall, color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-                    Dates.parseTime(next.occurrence.time)?.let {
-                        Text(Dates.friendlyTime(ctx, it), style = MaterialTheme.typography.titleSmall, color = Color.White)
+                    Text(greeting, style = MaterialTheme.typography.titleLarge, color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(Dates.fullDate(ctx, today), style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.9f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    if (next != null) {
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 2.dp)) {
+                            Icon(Icons.Filled.Schedule, contentDescription = stringResource(R.string.next_up), tint = Color.White, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(4.dp))
+                            Text(
+                                next.task.title + (Dates.parseTime(next.occurrence.time)?.let { " · " + Dates.friendlyTime(ctx, it) } ?: ""),
+                                style = MaterialTheme.typography.labelLarge, color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                            )
+                        }
                     }
                 }
+                Spacer(Modifier.width(10.dp))
+                ProgressRing(done, total)
             }
-            Spacer(Modifier.size(10.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Spacer(Modifier.size(8.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 QuickAction(Icons.AutoMirrored.Filled.VolumeUp, stringResource(R.string.read_my_day_short), stringResource(R.string.read_my_day), onRead)
                 QuickAction(Icons.Filled.TaskAlt, stringResource(R.string.review_today_short), stringResource(R.string.review_today), onReviewDay)
                 QuickAction(Icons.Filled.DateRange, stringResource(R.string.review_week_short), stringResource(R.string.review_week), onReviewWeek)
@@ -261,12 +262,12 @@ private fun androidx.compose.foundation.layout.RowScope.QuickAction(icon: ImageV
             .background(Color.White.copy(alpha = 0.14f))
             .semantics(mergeDescendants = true) { contentDescription = description }
             .clickable(role = Role.Button, onClick = onClick)
-            .heightIn(min = 56.dp)
-            .padding(horizontal = 6.dp, vertical = 6.dp),
+            .heightIn(min = 48.dp)
+            .padding(horizontal = 4.dp, vertical = 3.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Icon(icon, contentDescription = null, tint = Color.White, modifier = Modifier.size(22.dp))
+        Icon(icon, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
         Text(label, style = MaterialTheme.typography.labelMedium, color = Color.White, textAlign = TextAlign.Center, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
@@ -277,19 +278,16 @@ private fun ProgressRing(done: Int, total: Int) {
     val brand = LocalBrand.current
     val fraction = if (total == 0) 0f else done.toFloat() / total
     val gold = Color(0xFFF3D99B)
-    Box(Modifier.size(82.dp), contentAlignment = Alignment.Center) {
+    Box(Modifier.size(60.dp), contentAlignment = Alignment.Center) {
         Canvas(Modifier.fillMaxSize()) {
-            val stroke = 8.dp.toPx()
+            val stroke = 6.dp.toPx()
             drawArc(Color.White.copy(alpha = 0.18f), 0f, 360f, false, style = Stroke(stroke))
             if (fraction > 0f) drawArc(if (brand.dark) brand.gold else gold, -90f, 360f * fraction, false, style = Stroke(stroke, cap = StrokeCap.Round))
         }
         if (total > 0 && done >= total) {
-            Icon(Icons.Filled.Done, contentDescription = stringResource(R.string.all_clear), tint = Color.White, modifier = Modifier.size(40.dp))
+            Icon(Icons.Filled.Done, contentDescription = stringResource(R.string.all_clear), tint = Color.White, modifier = Modifier.size(30.dp))
         } else {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("$done/$total", style = MaterialTheme.typography.titleLarge, color = Color.White)
-                Text(stringResource(R.string.done_of), style = MaterialTheme.typography.labelSmall, color = Color.White.copy(alpha = 0.8f))
-            }
+            Text("$done/$total", style = MaterialTheme.typography.titleMedium, color = Color.White)
         }
     }
 }

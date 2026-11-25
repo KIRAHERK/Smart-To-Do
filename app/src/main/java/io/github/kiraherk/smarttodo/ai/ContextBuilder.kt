@@ -26,10 +26,15 @@ class ContextBuilder(
         val open = db.occurrences().open(TaskStatus.OPEN)
         val firstOpen = LinkedHashMap<Long, Pair<TaskEntity, OccurrenceEntity>>()
         open.forEach { firstOpen.putIfAbsent(it.task.id, it.task to it.occurrence) }
-        val recentClosed = db.occurrences().between(today.minusDays(14).toString(), today.toString())
-            .filter { !it.occurrence.isOpen && it.task.id !in firstOpen }
-            .associateBy { it.task.id }
-            .values.map { it.task to it.occurrence }
+        // Finished ones too (also without a date, or closed weeks ago), so "it isn't done after all" works.
+        val since = today.minusDays(60).atStartOfDay(zone()).toInstant().toEpochMilli()
+        val recentClosed = (
+            db.occurrences().recentlyClosed(TaskStatus.OPEN, since, 60) +
+                db.occurrences().between(today.minusDays(14).toString(), today.toString()).filter { !it.occurrence.isOpen }
+            )
+            .filter { it.task.id !in firstOpen }
+            .distinctBy { it.task.id }
+            .map { it.task to it.occurrence }
         val all = (firstOpen.values + recentClosed)
             .sortedWith(compareBy<Pair<TaskEntity, OccurrenceEntity>> { if (it.first.id == focusTaskId) 0 else 1 }.thenBy { it.second.date ?: "9999" })
             .take(limit)

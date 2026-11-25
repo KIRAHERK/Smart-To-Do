@@ -395,6 +395,9 @@ class VoiceViewModel(private val c: AppContainer) : ViewModel() {
         } else {
             c.db.inbox().insert(InboxEntity(text = text, createdAt = System.currentTimeMillis(), error = error))
         }
+        // No button to press: it is added by itself once the connection (or the AI) is back.
+        io.github.kiraherk.smarttodo.inbox.OfflineQueue.scheduleOnConnection(c.app)
+        io.github.kiraherk.smarttodo.inbox.OfflineQueue.scheduleLater(c.app, io.github.kiraherk.smarttodo.inbox.OfflineQueue.NETWORK_RETRY_MS)
     }
 
     private fun errorMessage(e: Exception): String = str(
@@ -418,6 +421,8 @@ class VoiceViewModel(private val c: AppContainer) : ViewModel() {
         Dates.parseTime(a.time)?.let { parts += Dates.friendlyTime(ctx, it) }
         a.recurrence?.toRule()?.let { parts += recurrenceText(ctx, it) }
         if (a.removeRecurrence == true) parts += str(R.string.no_repeat)
+        if (a.removeDate == true && a.date.isNullOrBlank()) parts += str(R.string.no_date)
+        if (a.removeTime == true && a.time.isNullOrBlank()) parts += str(R.string.no_time)
         if (a.reminder == true) parts += "🔔"
         TaskStatus.parse(a.status)?.let { parts += statusName(ctx, it) + (a.progress?.takeIf { p -> p in 1..99 }?.let { p -> " $p%" } ?: "") }
         a.note?.takeIf { it.isNotBlank() }?.let { parts += "📝 $it" }
