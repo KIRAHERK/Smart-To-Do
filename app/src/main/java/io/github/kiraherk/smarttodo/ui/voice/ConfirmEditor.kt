@@ -62,7 +62,10 @@ fun NewTaskEditor(action: AiAction, onChange: (AiAction) -> Unit) {
     val date = Dates.parseDate(action.date)
     val time = Dates.parseTime(action.time)
     val rule = action.recurrence?.toRule()
-    val cat = categoryOf(action.category)
+    // Same choice the save makes: his category if it exists, else Personal, else the first one.
+    val cat = categories.firstOrNull { it.key.equals(action.category, ignoreCase = true) }
+        ?: categories.firstOrNull { it.key == io.github.kiraherk.smarttodo.domain.CategoryKey.PERSONAL.name }
+        ?: categories.firstOrNull() ?: categoryOf(action.category)
     val primary = MaterialTheme.colorScheme.primary
 
     ChipFlow {
