@@ -111,18 +111,25 @@ fun VoiceOverlayContent(
         shadowElevation = 8.dp,
         modifier = Modifier.fillMaxWidth().padding(12.dp),
     ) {
-        Column(
-            Modifier.padding(horizontal = 20.dp, vertical = 22.dp).heightIn(max = 660.dp).verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(14.dp),
-        ) {
-            when (state) {
-                is VoiceViewModel.UiState.Listening -> Listening(state, onFinish, onDismiss)
-                is VoiceViewModel.UiState.Thinking -> Thinking(state, onDismiss)
-                is VoiceViewModel.UiState.Confirm -> Confirm(state, onConfirm, onReject, onSpeakAgain, onEdit)
-                is VoiceViewModel.UiState.Answer -> Answer(state, onRetry, onSpeakAgain, onDismiss)
-                is VoiceViewModel.UiState.Message -> Message(state, onRetry, onSpeakAgain, onDismiss)
-                VoiceViewModel.UiState.Idle -> Unit
+        Column(Modifier.padding(horizontal = 20.dp, vertical = 22.dp).heightIn(max = 660.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(
+                Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(14.dp),
+            ) {
+                when (state) {
+                    is VoiceViewModel.UiState.Listening -> Listening(state, onFinish, onDismiss)
+                    is VoiceViewModel.UiState.Thinking -> Thinking(state, onDismiss)
+                    is VoiceViewModel.UiState.Confirm -> Confirm(state, onEdit)
+                    is VoiceViewModel.UiState.Answer -> Answer(state, onRetry, onSpeakAgain, onDismiss)
+                    is VoiceViewModel.UiState.Message -> Message(state, onRetry, onSpeakAgain, onDismiss)
+                    VoiceViewModel.UiState.Idle -> Unit
+                }
+            }
+            // The save button never scrolls away, however long the card gets.
+            if (state is VoiceViewModel.UiState.Confirm) {
+                Spacer(Modifier.size(14.dp))
+                ConfirmButtons(onConfirm, onReject, onSpeakAgain)
             }
         }
     }
@@ -200,9 +207,6 @@ private fun Thinking(state: VoiceViewModel.UiState.Thinking, onCancel: () -> Uni
 @Composable
 private fun Confirm(
     state: VoiceViewModel.UiState.Confirm,
-    onConfirm: () -> Unit,
-    onReject: () -> Unit,
-    onSpeakAgain: () -> Unit,
     onEdit: (Int, io.github.kiraherk.smarttodo.ai.AiAction) -> Unit,
 ) {
     Text(stringResource(R.string.confirm_title), style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
@@ -237,11 +241,17 @@ private fun Confirm(
         }
     }
     Quote(state.transcript, small = true)
-    BigButton(stringResource(R.string.yes_save), Icons.Filled.Check, onConfirm)
-    ButtonPair(
-        Icons.Filled.Close, stringResource(R.string.no_cancel), onReject,
-        Icons.AutoMirrored.Filled.VolumeUp, stringResource(R.string.read_aloud), onSpeakAgain,
-    )
+}
+
+@Composable
+private fun ConfirmButtons(onConfirm: () -> Unit, onReject: () -> Unit, onSpeakAgain: () -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        BigButton(stringResource(R.string.yes_save), Icons.Filled.Check, onConfirm)
+        ButtonPair(
+            Icons.Filled.Close, stringResource(R.string.no_cancel), onReject,
+            Icons.AutoMirrored.Filled.VolumeUp, stringResource(R.string.read_aloud), onSpeakAgain,
+        )
+    }
 }
 
 @Composable
