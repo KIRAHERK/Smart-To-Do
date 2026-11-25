@@ -1,5 +1,15 @@
 package io.github.kiraherk.smarttodo.ui.voice
 
+import androidx.compose.foundation.clickable
+
+import androidx.compose.runtime.setValue
+
+import androidx.compose.runtime.remember
+
+import androidx.compose.runtime.mutableStateOf
+
+import androidx.compose.material.icons.filled.Edit
+
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
@@ -82,6 +92,7 @@ fun VoiceOverlay(
     onSpeakAgain: () -> Unit,
     onDismiss: () -> Unit,
     onEdit: (Int, io.github.kiraherk.smarttodo.ai.AiAction) -> Unit = { _, _ -> },
+    onEditTranscript: (String) -> Unit = {},
 ) {
     if (state is VoiceViewModel.UiState.Idle) return
     Dialog(
@@ -89,7 +100,7 @@ fun VoiceOverlay(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false, dismissOnClickOutside = false),
     ) {
-        VoiceOverlayContent(state, onFinish, onConfirm, onReject, onRetry, onSpeakAgain, onDismiss, onEdit)
+        VoiceOverlayContent(state, onFinish, onConfirm, onReject, onRetry, onSpeakAgain, onDismiss, onEdit, onEditTranscript)
     }
 }
 
@@ -104,6 +115,7 @@ fun VoiceOverlayContent(
     onSpeakAgain: () -> Unit,
     onDismiss: () -> Unit,
     onEdit: (Int, io.github.kiraherk.smarttodo.ai.AiAction) -> Unit = { _, _ -> },
+    onEditTranscript: (String) -> Unit = {},
 ) {
     Surface(
         shape = RoundedCornerShape(32.dp),
@@ -120,7 +132,7 @@ fun VoiceOverlayContent(
                 when (state) {
                     is VoiceViewModel.UiState.Listening -> Listening(state, onFinish, onDismiss)
                     is VoiceViewModel.UiState.Thinking -> Thinking(state, onDismiss)
-                    is VoiceViewModel.UiState.Confirm -> Confirm(state, onEdit)
+                    is VoiceViewModel.UiState.Confirm -> Confirm(state, onEdit, onEditTranscript)
                     is VoiceViewModel.UiState.Answer -> Answer(state, onRetry, onSpeakAgain, onDismiss)
                     is VoiceViewModel.UiState.Message -> Message(state, onRetry, onSpeakAgain, onDismiss)
                     VoiceViewModel.UiState.Idle -> Unit
@@ -208,11 +220,12 @@ private fun Thinking(state: VoiceViewModel.UiState.Thinking, onCancel: () -> Uni
 private fun Confirm(
     state: VoiceViewModel.UiState.Confirm,
     onEdit: (Int, io.github.kiraherk.smarttodo.ai.AiAction) -> Unit,
+    onEditTranscript: (String) -> Unit,
 ) {
     Text(stringResource(R.string.confirm_title), style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
     state.previews.forEachIndexed { index, p ->
         val action = state.actions.getOrNull(index)
-        val color = if (p.type == ActionType.DELETE) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+        val color = if (p.type == ActionType.DELETE || p.type == ActionType.CLEAR_HISTORY) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
         Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)).background(tint(color, 0.07f, 0.16f)).padding(16.dp)) {
             Row(verticalAlignment = Alignment.Top) {
                 IconTile(actionIcon(p.type), color, size = 46.dp, iconSize = 26.dp, filled = true)
@@ -240,7 +253,17 @@ private fun Confirm(
             }
         }
     }
-    Quote(state.transcript, small = true)
+    // What he said: tap to correct a misheard word; the corrected sentence is understood again.
+    var editing by remember { mutableStateOf(false) }
+    Quote(state.transcript, small = true, onEdit = { editing = true })
+    if (editing) {
+        io.github.kiraherk.smarttodo.ui.components.TextInputDialog(
+            title = stringResource(R.string.edit_what_i_said),
+            initial = state.transcript,
+            onSave = { if (it.isNotBlank() && it.trim() != state.transcript.trim()) onEditTranscript(it.trim()) },
+            onDismiss = { editing = false },
+        )
+    }
 }
 
 @Composable
@@ -320,9 +343,11 @@ private fun SideButton(icon: ImageVector, label: String, onClick: () -> Unit, mo
 
 /** What he said, shown as a soft quote. */
 @Composable
-private fun Quote(text: String, small: Boolean = false) {
+private fun Quote(text: String, small: Boolean = false, onEdit: (() -> Unit)? = null) {
     Row(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(MaterialTheme.colorScheme.surfaceContainer).padding(horizontal = 14.dp, vertical = 10.dp),
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(MaterialTheme.colorScheme.surfaceContainer)
+            .then(if (onEdit != null) Modifier.clickable(onClickLabel = stringResource(R.string.edit_what_i_said), onClick = onEdit) else Modifier)
+            .padding(horizontal = 14.dp, vertical = 10.dp),
         verticalAlignment = Alignment.Top,
     ) {
         Icon(Icons.Filled.FormatQuote, contentDescription = null, tint = MaterialTheme.colorScheme.outline, modifier = Modifier.size(22.dp))
@@ -333,6 +358,10 @@ private fun Quote(text: String, small: Boolean = false) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.weight(1f),
         )
+        if (onEdit != null) {
+            Spacer(Modifier.width(6.dp))
+            Icon(Icons.Filled.Edit, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+        }
     }
 }
 

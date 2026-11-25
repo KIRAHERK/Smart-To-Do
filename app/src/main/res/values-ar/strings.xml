@@ -26,6 +26,12 @@
     <string name="change">تغيير</string>
     <string name="clear">مسح</string>
     <string name="send">إرسال</string>
+    <string name="listen">استمع</string>
+    <string name="pause_voice">إيقاف</string>
+    <string name="voice_loading">جارٍ تجهيز الصوت…</string>
+    <string name="voice_loading_short">جارٍ التحميل…</string>
+    <string name="edit_what_i_said">صحّح ما قلته</string>
+    <string name="assistant_typing">المساعد يكتب</string>
     <string name="all">الكل</string>
     <string name="today">اليوم</string>
     <string name="tomorrow">غداً</string>
@@ -76,6 +82,31 @@
     <string name="act_postpone">تأجيل</string>
     <string name="act_delete">حذف مهمة</string>
     <string name="act_restore">استرجاع مهمة</string>
+    <string name="act_clear_history">حذف من السجل</string>
+    <string name="history_clear_all">مسح السجل</string>
+    <string name="history_clear_all_explain">سيُحذف كل ما في السجل نهائياً: المهام المنتهية والمحذوفة تختفي. المهام التي لم تُنجز بعد تبقى في «اليوم».</string>
+    <string name="history_delete_explain">ستُحذف من السجل نهائياً. المهمة التي لم تُنجز بعد تبقى في «اليوم».</string>
+    <string name="history_select">اختر للحذف</string>
+    <string name="select_all">تحديد الكل</string>
+    <string name="selected">محدد</string>
+    <string name="not_selected">غير محدد</string>
+    <string name="whole_history">السجل كله</string>
+    <plurals name="history_selected">
+        <item quantity="zero">لا شيء محدد</item>
+        <item quantity="one">واحد محدد</item>
+        <item quantity="two">اثنان محددان</item>
+        <item quantity="few">%d محددة</item>
+        <item quantity="many">%d محدداً</item>
+        <item quantity="other">%d محدد</item>
+    </plurals>
+    <plurals name="history_delete_title">
+        <item quantity="zero">حذف من السجل؟</item>
+        <item quantity="one">حذف عنصر واحد من السجل؟</item>
+        <item quantity="two">حذف عنصرين من السجل؟</item>
+        <item quantity="few">حذف %d عناصر من السجل؟</item>
+        <item quantity="many">حذف %d عنصراً من السجل؟</item>
+        <item quantity="other">حذف %d عنصر من السجل؟</item>
+    </plurals>
     <string name="act_other">أخرى</string>
 
     <string name="listening">أنا أسمعك…</string>
@@ -114,7 +145,6 @@
     <string name="err_ai_generic">لم يستطع الذكاء الاصطناعي الرد الآن.</string>
     <string name="err_slow">خدمة Google للذكاء الاصطناعي مزدحمة جداً الآن ولم ترد في الوقت المناسب. حاول مرة أخرى بعد دقيقة.</string>
 
-    <string name="today_title">مهامي</string>
     <string name="greeting_morning">صباح الخير</string>
     <string name="greeting_afternoon">مساء الخير</string>
     <string name="greeting_evening">مساء الخير</string>
@@ -274,7 +304,45 @@
     <string name="section_updates">التحديثات</string>
     <string name="check_updates">البحث عن تحديث</string>
     <string name="current_version">الإصدار الحالي %1$s</string>
-    <string name="made_by">صنعه KIRAHERK</string>
+    <string name="section_about">حول التطبيق</string>
+    <string name="about_app_version">مهامي الذكية v%1$s</string>
+    <string name="about_made_by">تصميم وتطوير %1$s</string>
+    <string name="share_app">شارك التطبيق</string>
+    <string name="share_app_text">مهامي الذكية: تطبيق مهام تكلّمه بالعربي. مجاني ومفتوح المصدر.\nللتحميل: %1$s</string>
+    <string name="source_code">الكود المصدري</string>
+    <string name="about_license">مفتوح المصدر برخصة Apache 2.0. حقوق النشر 2026 %1$s. الخط: IBM Plex Sans Arabic (رخصة SIL المفتوحة للخطوط).</string>
+    <string name="guide_title">الدليل</string>
+    <string name="guide_settings_hint">جولة سريعة في كل الشاشات</string>
+    <string name="guide_whats_new">الجديد في هذا التحديث</string>
+    <string name="guide_step_of">%1$d من %2$d</string>
+    <string name="guide_back">رجوع</string>
+    <string name="guide_skip">تخطَّ</string>
+    <string name="guide_next">التالي</string>
+    <string name="guide_start">لنبدأ</string>
+    <string name="guide_today_title">يومك في شاشة واحدة</string>
+    <string name="guide_today_1">المهام المتأخرة، ثم مهام اليوم، ثم القادمة، بألوان التصنيفات.</string>
+    <string name="guide_today_2">اضغط ✓ لإنهاء مهمة، أو اضغط على المهمة لرؤية تفاصيلها وتعديلها.</string>
+    <string name="guide_today_3">«اقرأ يومي» يقرأ لك مهام اليوم، واضغطه مرة ثانية للإيقاف.</string>
+    <string name="guide_today_tip">اضغط «تكلّم» وقل مثلاً: «بكرة الساعة عشرة ذكرني أتصل بالبنك».</string>
+    <string name="guide_chat_title">المساعد: محادثة مثل واتساب</string>
+    <string name="guide_chat_1">رسالتك تظهر فوراً، والمساعد «يكتب…» ثم يرد عليك.</string>
+    <string name="guide_chat_2">الميكروفون بجانب زر الإرسال: كلامك يظهر في المربع لتصححه قبل الإرسال.</string>
+    <string name="guide_chat_3">تحت كل رد زر «استمع» لسماعه، واضغطه مرة ثانية للإيقاف.</string>
+    <string name="guide_chat_tip">يمكنك أيضاً إضافة المهام وتعديلها من هنا، مثل: «أجّل الاتصال بأحمد لبكرة».</string>
+    <string name="guide_history_title">السجل: كل ما حدث</string>
+    <string name="guide_history_1">كل مهمة تظهر مرة واحدة بحالتها الآن.</string>
+    <string name="guide_history_2">صفِّ حسب التصنيف أو الحالة، وابحث بالصوت 🎤.</string>
+    <string name="guide_history_3">اضغط مطولاً على مهمة لتحديدها، ثم حدد غيرها واحذفها معاً بعد التأكيد.</string>
+    <string name="guide_history_tip">زر المسح أعلى الشاشة يمسح السجل كله، بعد أن تؤكد.</string>
+    <string name="guide_settings_title">الإعدادات على ذوقك</string>
+    <string name="guide_settings_1">اختر الصوت، أو أطفئ قراءة الردود.</string>
+    <string name="guide_settings_2">أوقات المتابعة، التصنيفات، حجم الخط والنسخ الاحتياطي.</string>
+    <string name="guide_settings_3">التحديثات تصل من داخل التطبيق، وبياناتك تبقى كما هي.</string>
+    <string name="guide_settings_tip">أعد هذا الدليل متى شئت من الإعدادات ← الدليل.</string>
+    <string name="guide_done_title">جاهز!</string>
+    <string name="guide_done_1">ما تقوله بدون إنترنت يُضاف تلقائياً عند عودة الاتصال.</string>
+    <string name="guide_done_2">أخطأ الهاتف في سماعك؟ اضغط على كلامك في بطاقة التأكيد لتصحيحه.</string>
+    <string name="guide_done_tip">مهامي الذكية من تصميم وتطوير %1$s.</string>
     <string name="update_checking">جارٍ البحث…</string>
     <string name="update_up_to_date">لديك أحدث إصدار ✓</string>
     <string name="update_available_title">إصدار جديد %1$s</string>
@@ -297,7 +365,6 @@
     <string name="update_debug_build">هذه نسخة تجريبية؛ التحديث يعمل في النسخة الرسمية فقط.</string>
     <string name="section_phone">الهاتف</string>
     <string name="setup_settings_hint">الأذونات، البطارية، الصوت</string>
-    <string name="open_source">مفتوح المصدر</string>
 
     <string name="setup_title">تجهيز الهاتف</string>
     <string name="setup_intro">خطوات قليلة ليعمل الصوت وترنّ التذكيرات دائماً. اللون الأخضر يعني أنها جاهزة.</string>

@@ -15,10 +15,12 @@ class AssistantService(
     private val clock: Clock,
     private val replyLanguage: () -> String,
 ) {
-    suspend fun answer(question: String): String {
+    /** [alreadyInChat] = the question was put in the chat when he sent it (so it isn't added twice). */
+    suspend fun answer(question: String, alreadyInChat: Boolean = false): String {
         val now = ZonedDateTime.now(clock)
         val digest = contextBuilder.assistantDigest(question)
-        val history = db.chat().recent(8).map {
+        val earlier = db.chat().recent(9).let { if (alreadyInChat && it.lastOrNull()?.role == ChatRole.USER.name) it.dropLast(1) else it.takeLast(8) }
+        val history = earlier.map {
             if (it.role == ChatRole.USER.name) GeminiClient.Turn.user(it.text) else GeminiClient.Turn.model(it.text)
         }.dropWhile { it.role != "user" }
         val prompt = buildString {
@@ -36,8 +38,8 @@ class AssistantService(
             .replace("*", "")
             .trim()
         val t = clock.millis()
-        db.chat().insert(ChatMessageEntity(role = ChatRole.USER.name, text = question.trim(), at = t))
-        db.chat().insert(ChatMessageEntity(role = ChatRole.ASSISTANT.name, text = answer, at = t + 1))
+        if (!alreadyInChat) db.chat().insert(ChatMessageEntity(role = ChatRole.USER.name, text = question.trim(), at = t))
+        db.chat().insert(ChatMessageEntity(role = ChatRole.ASSISTANT.name, text = answer, at = maxOf(t + 1, System.currentTimeMillis())))
         return answer
     }
 

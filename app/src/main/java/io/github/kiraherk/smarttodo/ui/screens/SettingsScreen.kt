@@ -1,5 +1,11 @@
 package io.github.kiraherk.smarttodo.ui.screens
 
+import androidx.compose.foundation.layout.size
+
+import androidx.compose.foundation.shape.RoundedCornerShape
+
+import androidx.compose.material.icons.filled.Lightbulb
+
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
@@ -267,7 +273,7 @@ class SettingsViewModel(private val c: AppContainer) : ViewModel() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(openUpdate: Boolean, onUpdateOpened: () -> Unit, onOpenSetup: () -> Unit, onOpenInbox: () -> Unit, onOpenCategories: () -> Unit = {}) {
+fun SettingsScreen(openUpdate: Boolean, onUpdateOpened: () -> Unit, onOpenSetup: () -> Unit, onOpenInbox: () -> Unit, onOpenCategories: () -> Unit = {}, onOpenGuide: () -> Unit = {}) {
     val c = appContainer()
     val vm: SettingsViewModel = viewModel { SettingsViewModel(c) }
     val ctx = LocalContext.current
@@ -389,10 +395,11 @@ fun SettingsScreen(openUpdate: Boolean, onUpdateOpened: () -> Unit, onOpenSetup:
             SectionHeader(stringResource(R.string.section_phone), grey)
             Group {
                 SettingRow(Icons.Filled.Checklist, stringResource(R.string.setup_title), stringResource(R.string.setup_settings_hint), color = grey) { onOpenSetup() }
-                SettingRow(Icons.Filled.Code, stringResource(R.string.open_source), stringResource(R.string.made_by) + " · github.com/" + BuildConfig.GITHUB_REPO, color = grey) {
-                    ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/" + BuildConfig.GITHUB_REPO)))
-                }
+                SettingRow(Icons.Filled.Lightbulb, stringResource(R.string.guide_title), stringResource(R.string.guide_settings_hint), color = grey) { onOpenGuide() }
             }
+
+            SectionHeader(stringResource(R.string.section_about), MaterialTheme.colorScheme.primary)
+            AboutCard()
             Spacer(Modifier.height(40.dp))
         }
     }
@@ -620,4 +627,62 @@ private fun KeyDialog(hasKey: Boolean, onSave: (String) -> Unit, onRemove: () ->
             }
         },
     )
+}
+
+/** Who made the app, with links, like Forge's About section. */
+@Composable
+private fun AboutCard() {
+    val ctx = LocalContext.current
+    fun open(url: String) = runCatching { ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url))) }
+    io.github.kiraherk.smarttodo.ui.components.AppCard {
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text(stringResource(R.string.about_app_version, BuildConfig.VERSION_NAME), style = MaterialTheme.typography.titleMedium)
+            Text(
+                stringResource(R.string.about_made_by, io.github.kiraherk.smarttodo.Credits.AUTHOR),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                io.github.kiraherk.smarttodo.Credits.links.forEach { (label, url) ->
+                    androidx.compose.material3.OutlinedButton(
+                        onClick = { open(url) },
+                        modifier = Modifier.weight(1f).heightIn(min = 48.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        contentPadding = PaddingValues(horizontal = 4.dp),
+                    ) { Text(label, style = MaterialTheme.typography.labelLarge, maxLines = 1) }
+                }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                val shareTitle = stringResource(R.string.share_app)
+                val shareText = stringResource(R.string.share_app_text, io.github.kiraherk.smarttodo.Credits.DOWNLOAD_PAGE)
+                androidx.compose.material3.OutlinedButton(
+                    onClick = {
+                        val send = Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, shareText)
+                        runCatching { ctx.startActivity(Intent.createChooser(send, shareTitle)) }
+                    },
+                    modifier = Modifier.weight(1f).heightIn(min = 48.dp),
+                    shape = RoundedCornerShape(16.dp),
+                ) {
+                    Icon(Icons.Filled.Share, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text(shareTitle, style = MaterialTheme.typography.labelLarge, maxLines = 1)
+                }
+                androidx.compose.material3.OutlinedButton(
+                    onClick = { open("https://github.com/" + BuildConfig.GITHUB_REPO) },
+                    modifier = Modifier.weight(1f).heightIn(min = 48.dp),
+                    shape = RoundedCornerShape(16.dp),
+                ) {
+                    Icon(Icons.Filled.Code, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text(stringResource(R.string.source_code), style = MaterialTheme.typography.labelLarge, maxLines = 1)
+                }
+            }
+            Text(
+                stringResource(R.string.about_license, io.github.kiraherk.smarttodo.Credits.AUTHOR),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
 }

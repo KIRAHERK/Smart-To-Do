@@ -47,6 +47,14 @@ class VoiceActions(
     val processText: (String, VoiceViewModel.Request) -> Unit,
     val ask: (String) -> Unit,
     val searchText: SharedFlow<String>,
+    /** Sends a message in the chat (it appears there straight away). */
+    val chat: (String) -> Unit = {},
+    /** A ready-made question, answered in the chat. */
+    val chatAsk: (String) -> Unit = {},
+    /** What he said into the chat's microphone. */
+    val dictation: SharedFlow<String> = kotlinx.coroutines.flow.MutableSharedFlow(),
+    /** The assistant is "typing". */
+    val chatTyping: kotlinx.coroutines.flow.StateFlow<Boolean> = kotlinx.coroutines.flow.MutableStateFlow(false),
 )
 
 val LocalVoice = staticCompositionLocalOf<VoiceActions> { error("VoiceActions not provided") }

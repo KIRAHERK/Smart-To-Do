@@ -34,6 +34,7 @@ object TestEnv {
         c.db.clearAllTables()
         c.categories.ensureDefaults()
         c.settings.setSetupDone(setupDone)
+        c.settings.setGuideVersion("999.0.0")
         c.settings.setCachedModels("")
         c.settings.setCommandModel("")
         c.settings.setAssistantModel("")
@@ -55,6 +56,11 @@ object TestEnv {
 
 fun ComposeTestRule.waitForText(text: String, substring: Boolean = false, timeoutMs: Long = 15_000) {
     waitUntil(timeoutMs) { onAllNodes(hasText(text, substring = substring)).fetchSemanticsNodes().isNotEmpty() }
+}
+
+/** The Today screen is showing (its header has no title, so it is found by its tag). */
+fun ComposeTestRule.waitForToday(timeoutMs: Long = 15_000) {
+    waitUntil(timeoutMs) { onAllNodes(androidx.compose.ui.test.hasTestTag(io.github.kiraherk.smarttodo.ui.screens.HERO_TAG)).fetchSemanticsNodes().isNotEmpty() }
 }
 
 fun ComposeTestRule.waitUntilTrue(timeoutMs: Long = 15_000, condition: () -> Boolean) = waitUntil(timeoutMs, condition)

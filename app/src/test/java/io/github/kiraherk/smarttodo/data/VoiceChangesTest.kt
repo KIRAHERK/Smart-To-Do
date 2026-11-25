@@ -3,6 +3,7 @@ package io.github.kiraherk.smarttodo.data
 import android.app.Application
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.kiraherk.smarttodo.MutableClock
+import io.github.kiraherk.smarttodo.R
 import io.github.kiraherk.smarttodo.ai.ActionExecutor
 import io.github.kiraherk.smarttodo.ai.AiAction
 import io.github.kiraherk.smarttodo.ai.ContextBuilder
@@ -102,5 +103,68 @@ class VoiceChangesTest {
         assertEquals(TaskStatus.IN_PROGRESS, items[0].status)
         assertEquals(TaskStatus.NOT_DONE, items[1].status)
         assertEquals(4, items[1].earlier)
+    }
+}
+
+/** Deleting from the History (press and hold, "clear all", or by voice) and the guide's "what's new". */
+@RunWith(AndroidJUnit4::class)
+@Config(sdk = [29], application = Application::class)
+class HistoryDeleteTest {
+    private val clock = MutableClock(Instant.parse("2026-11-25T08:00:00Z"), ZoneId.of("Asia/Riyadh"))
+    private lateinit var db: AppDatabase
+    private lateinit var repo: TaskRepository
+
+    @Before
+    fun setUp() {
+        db = inMemoryDb()
+        repo = TaskRepository(db, defaultReminderTime = { "09:00" }, clock = clock, onRemindersChanged = {})
+    }
+
+    @After fun tearDown() = db.close()
+
+    @Test
+    fun deletingLinesRemovesFinishedTasksButKeepsOpenOnes() = runBlocking {
+        val done = repo.createTask(TaskRepository.NewTask("شرب كاسة ماء")).also { repo.setStatusForTask(it, TaskStatus.DONE) }
+        val open = repo.createTask(TaskRepository.NewTask("الاتصال بأحمد"))
+        val deleted = repo.createTask(TaskRepository.NewTask("تصليح المكيف")).also { repo.archive(it) }
+
+        repo.removeFromHistory(listOf(done, open, deleted).map { TaskRepository.HistoryTarget(it) })
+
+        assertNull(repo.task(done))
+        assertNull(repo.task(deleted))
+        // Still to do: it stays on Today, only its past entries are gone.
+        assertEquals("الاتصال بأحمد", repo.task(open)!!.title)
+        assertTrue(repo.observeHistory(0).first().isEmpty())
+    }
+
+    @Test
+    fun deletingOneDayOfARepeatingTaskKeepsTheTask() = runBlocking {
+        val id = repo.createTask(TaskRepository.NewTask("المشي", date = LocalDate.parse("2026-11-24"), recurrence = RecurrenceRule(Frequency.DAILY)))
+        repo.task(id)!!.let { repo.ensureCurrent(it) }
+        val yesterday = db.occurrences().forTaskOn(id, "2026-11-24")!!
+        repo.removeFromHistory(listOf(TaskRepository.HistoryTarget(id, yesterday.id)))
+        assertNull(db.occurrences().get(yesterday.id))
+        assertEquals("2026-11-25", repo.currentOccurrence(id)!!.date)
+    }
+
+    @Test
+    fun clearingTheWholeHistoryByVoice() = runBlocking {
+        repo.createTask(TaskRepository.NewTask("شرب كاسة ماء")).also { repo.setStatusForTask(it, TaskStatus.DONE) }
+        val open = repo.createTask(TaskRepository.NewTask("الاتصال بأحمد"))
+        val exec = ActionExecutor(repo, CategoryRepository(db))
+        val result = exec.apply(listOf(AiAction(type = "clear_history", spokenSummary = "سأمسح السجل كله")), "امسح السجل كله")
+        assertEquals(1, result.applied)
+        assertEquals(listOf(open), db.tasks().all().map { it.id })
+        assertTrue(repo.observeHistory(0).first().isEmpty())
+    }
+
+    @Test
+    fun theGuideShowsEverythingOnceAndOnlyWhatIsNewAfterAnUpdate() {
+        val all = io.github.kiraherk.smarttodo.ui.Guide.steps
+        assertEquals(all, io.github.kiraherk.smarttodo.ui.Guide.stepsFor(null, "0.4.0"))
+        val news = io.github.kiraherk.smarttodo.ui.Guide.stepsFor("0.3.1", "0.4.0")
+        assertEquals(listOf(R.string.guide_chat_title, R.string.guide_history_title, R.string.guide_done_title), news.map { it.title })
+        assertTrue(io.github.kiraherk.smarttodo.ui.Guide.stepsFor("0.4.0", "0.4.0").isEmpty())
+        assertTrue(io.github.kiraherk.smarttodo.ui.Guide.stepsFor("0.4.0", "0.4.1").isEmpty())
     }
 }

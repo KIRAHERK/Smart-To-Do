@@ -1,5 +1,17 @@
 package io.github.kiraherk.smarttodo.ui
 
+import androidx.compose.ui.test.performScrollTo
+
+import androidx.compose.ui.test.onFirst
+
+import androidx.compose.ui.test.onAllNodesWithContentDescription
+
+import androidx.compose.ui.test.onNodeWithContentDescription
+
+import androidx.compose.ui.test.performTouchInput
+
+import androidx.compose.ui.test.longClick
+
 import android.graphics.Bitmap
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.CompositionLocalProvider
@@ -191,6 +203,13 @@ class ScreenshotTest {
         }
         compose.waitUntil(10_000) { compose.onAllNodesWithText("حجز تذاكر دبي").fetchSemanticsNodes().isNotEmpty() }
         save("history")
+        // Press and hold: choosing lines to delete.
+        compose.onAllNodesWithText("حجز تذاكر دبي").onFirst().performTouchInput { longClick() }
+        compose.waitUntil(5_000) { compose.onAllNodesWithText("تحديد الكل").fetchSemanticsNodes().isNotEmpty() }
+        compose.onAllNodesWithText("تصليح المكيف").onFirst().performClick()
+        save("history-select")
+        compose.onNodeWithContentDescription("حذف").performClick()
+        compose.waitUntil(5_000) { compose.onAllNodesWithText("حذف عنصرين من السجل؟").fetchSemanticsNodes().isNotEmpty() }
     }
 
     @Test
@@ -207,6 +226,44 @@ class ScreenshotTest {
         }
         compose.waitUntil(10_000) { compose.onAllNodesWithText("عندك اليوم مهمتان", substring = true).fetchSemanticsNodes().isNotEmpty() }
         save("assistant")
+    }
+
+    @Test
+    fun assistantTyping() {
+        runBlocking {
+            val chat = app().container.db.chat()
+            chat.insert(io.github.kiraherk.smarttodo.data.db.ChatMessageEntity(role = "USER", text = "متى آخر مرة كلمت أحمد؟", at = 1))
+        }
+        val typing = VoiceActions({}, { _, _ -> }, {}, MutableSharedFlow(), chatTyping = kotlinx.coroutines.flow.MutableStateFlow(true))
+        compose.mainClock.autoAdvance = false
+        compose.setContent {
+            SmartTodoTheme(1.15f) {
+                CompositionLocalProvider(LocalVoice provides typing) { io.github.kiraherk.smarttodo.ui.screens.AssistantScreen() }
+            }
+        }
+        compose.mainClock.advanceTimeBy(2_000)
+        assertTrue(compose.onAllNodesWithContentDescription("المساعد يكتب").fetchSemanticsNodes().isNotEmpty())
+        save("assistant-typing")
+    }
+
+    @Test
+    fun guideCard() {
+        compose.mainClock.autoAdvance = false
+        compose.setContent {
+            SmartTodoTheme(1.15f) {
+                CompositionLocalProvider(LocalVoice provides voice) {
+                    androidx.compose.foundation.layout.Box {
+                        io.github.kiraherk.smarttodo.ui.screens.HistoryScreen(onOpenTask = {})
+                        io.github.kiraherk.smarttodo.ui.GuideOverlay(
+                            steps = io.github.kiraherk.smarttodo.ui.Guide.stepsFor("0.3.1", "0.4.0"),
+                            whatsNew = true, onGoTo = {}, onDone = {},
+                        )
+                    }
+                }
+            }
+        }
+        compose.mainClock.advanceTimeBy(1_000)
+        save("guide")
     }
 
     @Test
@@ -237,6 +294,8 @@ class ScreenshotTest {
         }
         compose.waitUntil(10_000) { compose.onAllNodesWithText("صوت القراءة").fetchSemanticsNodes().isNotEmpty() }
         save("settings")
+        compose.onNodeWithText("تصميم وتطوير Hussein Al Herk").performScrollTo()
+        save("settings-about")
     }
 
     @Test

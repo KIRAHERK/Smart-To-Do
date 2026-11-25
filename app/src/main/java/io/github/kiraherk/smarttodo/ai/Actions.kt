@@ -25,10 +25,11 @@ object ActionType {
     const val POSTPONE = "postpone"
     const val DELETE = "delete_task"
     const val RESTORE = "restore_task"
+    const val CLEAR_HISTORY = "clear_history"
     const val ASK = "ask_question"
     const val UNCLEAR = "unclear"
 
-    val ALL = listOf(CREATE, UPDATE, SET_STATUS, ADD_NOTE, SET_REMINDER, CHANGE_RECURRENCE, POSTPONE, DELETE, RESTORE, ASK, UNCLEAR)
+    val ALL = listOf(CREATE, UPDATE, SET_STATUS, ADD_NOTE, SET_REMINDER, CHANGE_RECURRENCE, POSTPONE, DELETE, RESTORE, CLEAR_HISTORY, ASK, UNCLEAR)
     val CHANGES = ALL - setOf(ASK, UNCLEAR)
 }
 

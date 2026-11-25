@@ -1,5 +1,9 @@
 package io.github.kiraherk.smarttodo.ui
 
+import kotlinx.coroutines.launch
+
+import androidx.compose.foundation.layout.fillMaxSize
+
 import android.Manifest
 import android.content.ActivityNotFoundException
 import android.content.Intent
@@ -82,6 +86,9 @@ fun AppRoot(navRequests: StateFlow<NavRequest?>, onNavHandled: () -> Unit) {
         var pendingVoice by remember { mutableStateOf<VoiceViewModel.Request?>(null) }
         var speakSummary by remember { mutableStateOf(false) }
         var openUpdate by remember { mutableStateOf(false) }
+        // The guide: the whole tour after the first setup or from Settings; after an update only what is new.
+        var fullGuide by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
+        val guideScope = androidx.compose.runtime.rememberCoroutineScope()
         val micDenied = stringResource(R.string.mic_denied)
 
         val micLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -126,6 +133,10 @@ fun AppRoot(navRequests: StateFlow<NavRequest?>, onNavHandled: () -> Unit) {
                 processText = { text, request -> voiceVm.processText(text, request) },
                 ask = { voiceVm.ask(it) },
                 searchText = voiceVm.searchText,
+                chat = { voiceVm.chat(it) },
+                chatAsk = { voiceVm.chatAsk(it) },
+                dictation = voiceVm.dictation,
+                chatTyping = voiceVm.chatTyping,
             )
         }
 
@@ -164,6 +175,7 @@ fun AppRoot(navRequests: StateFlow<NavRequest?>, onNavHandled: () -> Unit) {
             val topLevel = route in listOf(Routes.TODAY, Routes.HISTORY, Routes.ASSISTANT, Routes.SETTINGS)
             val outline = MaterialTheme.colorScheme.outlineVariant
 
+            androidx.compose.foundation.layout.Box(Modifier.fillMaxSize()) {
             Scaffold(
                 containerColor = MaterialTheme.colorScheme.background,
                 bottomBar = {
@@ -177,8 +189,8 @@ fun AppRoot(navRequests: StateFlow<NavRequest?>, onNavHandled: () -> Unit) {
                         ) {
                             listOf(
                                 Triple(Routes.TODAY, Icons.Filled.WbSunny, R.string.nav_today),
-                                Triple(Routes.HISTORY, Icons.Filled.History, R.string.nav_history),
                                 Triple(Routes.ASSISTANT, Icons.AutoMirrored.Filled.Chat, R.string.nav_assistant),
+                                Triple(Routes.HISTORY, Icons.Filled.History, R.string.nav_history),
                                 Triple(Routes.SETTINGS, Icons.Filled.Settings, R.string.nav_settings),
                             ).forEach { (dest, icon, label) ->
                                 NavigationBarItem(
@@ -217,6 +229,7 @@ fun AppRoot(navRequests: StateFlow<NavRequest?>, onNavHandled: () -> Unit) {
                             onOpenSetup = { nav.navigate(Routes.SETUP) },
                             onOpenInbox = { nav.navigate(Routes.INBOX) },
                             onOpenCategories = { nav.navigate(Routes.CATEGORIES) },
+                            onOpenGuide = { fullGuide = true },
                         )
                     }
                     composable(Routes.TASK, arguments = listOf(navArgument("id") { type = NavType.LongType })) { entry ->
@@ -233,12 +246,33 @@ fun AppRoot(navRequests: StateFlow<NavRequest?>, onNavHandled: () -> Unit) {
                     composable(Routes.CATEGORIES) { io.github.kiraherk.smarttodo.ui.screens.CategoriesScreen(onBack = { nav.popBackStack() }) }
                     composable(Routes.SETUP) {
                         SetupScreen(
-                            onDone = { navigateTop(nav, Routes.TODAY) },
+                            onDone = { navigateTop(nav, Routes.TODAY); fullGuide = true },
                             // Opens on top of setup, so "back" returns to the checklist.
                             onOpenSettings = { nav.navigate(Routes.SETTINGS) },
                         )
                     }
                 }
+            }
+
+            val s = settings
+            val autoSteps = if (s != null && s.setupDone && topLevel) {
+                Guide.stepsFor(s.guideVersion.ifBlank { Guide.BEFORE_GUIDE }, io.github.kiraherk.smarttodo.BuildConfig.VERSION_NAME)
+            } else {
+                emptyList()
+            }
+            val guideSteps = if (fullGuide) Guide.steps else autoSteps
+            if (guideSteps.isNotEmpty()) {
+                GuideOverlay(
+                    steps = guideSteps,
+                    whatsNew = !fullGuide,
+                    onGoTo = { navigateTop(nav, it) },
+                    onDone = {
+                        fullGuide = false
+                        guideScope.launch { c.settings.setGuideVersion(io.github.kiraherk.smarttodo.BuildConfig.VERSION_NAME) }
+                        navigateTop(nav, Routes.TODAY)
+                    },
+                )
+            }
             }
 
             VoiceOverlay(
@@ -250,6 +284,7 @@ fun AppRoot(navRequests: StateFlow<NavRequest?>, onNavHandled: () -> Unit) {
                 onSpeakAgain = { voiceVm.speakAgain() },
                 onDismiss = { voiceVm.dismiss() },
                 onEdit = { i, a -> voiceVm.editPending(i, a) },
+                onEditTranscript = { voiceVm.reprocess(it) },
             )
         }
     }

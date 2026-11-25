@@ -53,6 +53,8 @@ data class AppSettings(
     val lastBackupAt: Long = 0,
     val lastNotifiedUpdate: String = "",
     val setupDone: Boolean = false,
+    /** The app version whose guide he has seen ("" = never: an update from before the guide existed, or a new install). */
+    val guideVersion: String = "",
 )
 
 class SettingsRepository(private val context: Context) {
@@ -79,6 +81,7 @@ class SettingsRepository(private val context: Context) {
         val lastBackupAt = longPreferencesKey("last_backup_at")
         val lastNotifiedUpdate = stringPreferencesKey("last_notified_update")
         val setupDone = booleanPreferencesKey("setup_done")
+        val guideVersion = stringPreferencesKey("guide_version")
     }
 
     val settings: Flow<AppSettings> = context.dataStore.data.map { p ->
@@ -105,6 +108,7 @@ class SettingsRepository(private val context: Context) {
             lastBackupAt = p[Keys.lastBackupAt] ?: d.lastBackupAt,
             lastNotifiedUpdate = p[Keys.lastNotifiedUpdate] ?: d.lastNotifiedUpdate,
             setupDone = p[Keys.setupDone] ?: d.setupDone,
+            guideVersion = p[Keys.guideVersion] ?: d.guideVersion,
         )
     }
 
@@ -127,6 +131,7 @@ class SettingsRepository(private val context: Context) {
     suspend fun setLastBackupAt(v: Long) = put(Keys.lastBackupAt, v)
     suspend fun setLastNotifiedUpdate(v: String) = put(Keys.lastNotifiedUpdate, v)
     suspend fun setSetupDone(v: Boolean) = put(Keys.setupDone, v)
+    suspend fun setGuideVersion(v: String) = put(Keys.guideVersion, v)
 
     private suspend fun <T> put(key: Preferences.Key<T>, value: T) {
         context.dataStore.edit { it[key] = value }

@@ -99,6 +99,7 @@ Turn what he said into a JSON list of actions. Action types:
 - postpone: move an existing task to another date and/or time. scope THIS = only this time, ALL_FUTURE = from now on.
 - delete_task: remove an existing task completely (only when he clearly asks to delete or forget it).
 - restore_task: bring back a task he deleted, using its taskId from RECENTLY DELETED TASKS. "رجّعها", "استرجعها", "تراجع عن الحذف" or "bring it back" right after deleting mean the newest deleted task. Never create a new task for this.
+- clear_history: he asks to remove a task from the History/log (taskId), or to clear the whole History (no taskId): "امسحها من السجل", "نظّف السجل", "امسح السجل كله". Only when he says History/log (السجل); deleting a task itself is delete_task.
 - ask_question: he is asking about his tasks, notes or history. Put the full question in question. Never answer it yourself.
 - unclear: you really cannot tell what he wants. spokenSummary politely asks him to say it again.
 

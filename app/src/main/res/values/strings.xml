@@ -28,6 +28,12 @@
     <string name="change">Change</string>
     <string name="clear">Clear</string>
     <string name="send">Send</string>
+    <string name="listen">Listen</string>
+    <string name="pause_voice">Stop</string>
+    <string name="voice_loading">Preparing the voice…</string>
+    <string name="voice_loading_short">Loading…</string>
+    <string name="edit_what_i_said">Correct what I said</string>
+    <string name="assistant_typing">The assistant is typing</string>
     <string name="all">All</string>
     <string name="today">Today</string>
     <string name="tomorrow">Tomorrow</string>
@@ -82,6 +88,23 @@
     <string name="act_postpone">Postpone</string>
     <string name="act_delete">Delete task</string>
     <string name="act_restore">Bring back task</string>
+    <string name="act_clear_history">Remove from History</string>
+    <string name="history_clear_all">Clear History</string>
+    <string name="history_clear_all_explain">Everything in the History will be removed for good: finished and deleted tasks disappear. Tasks still to do stay on Today.</string>
+    <string name="history_delete_explain">They will be removed from the History for good. A task that is still to do stays on Today.</string>
+    <string name="history_select">Choose for deleting</string>
+    <string name="select_all">Select all</string>
+    <string name="selected">Selected</string>
+    <string name="not_selected">Not selected</string>
+    <string name="whole_history">The whole History</string>
+    <plurals name="history_selected">
+        <item quantity="one">1 selected</item>
+        <item quantity="other">%d selected</item>
+    </plurals>
+    <plurals name="history_delete_title">
+        <item quantity="one">Delete 1 item from the History?</item>
+        <item quantity="other">Delete %d items from the History?</item>
+    </plurals>
     <string name="act_other">Other</string>
 
     <!-- Voice overlay -->
@@ -122,7 +145,6 @@
     <string name="err_slow">Google\'s AI is very busy right now and didn\'t answer in time. Please try again in a minute.</string>
 
     <!-- Today -->
-    <string name="today_title">My tasks</string>
     <string name="greeting_morning">Good morning</string>
     <string name="greeting_afternoon">Good afternoon</string>
     <string name="greeting_evening">Good evening</string>
@@ -284,7 +306,45 @@
     <string name="section_updates">Updates</string>
     <string name="check_updates">Check for updates</string>
     <string name="current_version">Current version %1$s</string>
-    <string name="made_by">Made by KIRAHERK</string>
+    <string name="section_about">About</string>
+    <string name="about_app_version">Smart To-Do v%1$s</string>
+    <string name="about_made_by">Designed and developed by %1$s</string>
+    <string name="share_app">Share the app</string>
+    <string name="share_app_text">Smart To-Do: a to-do app you talk to in Arabic. Free and open source.\nDownload: %1$s</string>
+    <string name="source_code">Source code</string>
+    <string name="about_license">Open source under the Apache License 2.0. Copyright 2026 %1$s. Font: IBM Plex Sans Arabic (SIL Open Font License).</string>
+    <string name="guide_title">Guide</string>
+    <string name="guide_settings_hint">A quick tour of every tab</string>
+    <string name="guide_whats_new">New in this update</string>
+    <string name="guide_step_of">%1$d of %2$d</string>
+    <string name="guide_back">Back</string>
+    <string name="guide_skip">Skip</string>
+    <string name="guide_next">Next</string>
+    <string name="guide_start">Let\'s go</string>
+    <string name="guide_today_title">Your day on one screen</string>
+    <string name="guide_today_1">Late tasks, then today\'s, then what\'s coming, coloured by category.</string>
+    <string name="guide_today_2">Tap ✓ to finish a task, or tap the task to see and change it.</string>
+    <string name="guide_today_3">“Read my day” reads today\'s tasks to you; tap it again to stop.</string>
+    <string name="guide_today_tip">Press “Talk” and say, for example: “Remind me tomorrow at ten to call the bank”.</string>
+    <string name="guide_chat_title">The assistant: a chat like WhatsApp</string>
+    <string name="guide_chat_1">Your message shows up at once; the assistant is “typing…”, then answers.</string>
+    <string name="guide_chat_2">The microphone next to Send: your words appear in the box so you can fix them first.</string>
+    <string name="guide_chat_3">Under every answer: “Listen” to hear it; tap again to stop.</string>
+    <string name="guide_chat_tip">You can add and change tasks from here too: “Move the call with Ahmed to tomorrow”.</string>
+    <string name="guide_history_title">History: everything that happened</string>
+    <string name="guide_history_1">Each task appears once, with where it stands now.</string>
+    <string name="guide_history_2">Filter by category or status, and search by voice 🎤.</string>
+    <string name="guide_history_3">Press and hold a task to select it, select more, then delete them together after confirming.</string>
+    <string name="guide_history_tip">The sweep button at the top clears the whole History, after you confirm.</string>
+    <string name="guide_settings_title">Settings, your way</string>
+    <string name="guide_settings_1">Pick the voice, or turn reading aloud off.</string>
+    <string name="guide_settings_2">Check-in times, categories, text size and backups.</string>
+    <string name="guide_settings_3">Updates come from inside the app, and your data stays.</string>
+    <string name="guide_settings_tip">Replay this guide any time from Settings → Guide.</string>
+    <string name="guide_done_title">All set!</string>
+    <string name="guide_done_1">What you say without internet is added by itself when the connection is back.</string>
+    <string name="guide_done_2">Misheard? Tap your words on the confirmation card to correct them.</string>
+    <string name="guide_done_tip">Smart To-Do is designed and developed by %1$s.</string>
     <string name="update_checking">Checking…</string>
     <string name="update_up_to_date">You have the latest version ✓</string>
     <string name="update_available_title">New version %1$s</string>
@@ -307,7 +367,6 @@
     <string name="update_debug_build">This is a test build; updates only work in the official version.</string>
     <string name="section_phone">Phone</string>
     <string name="setup_settings_hint">Permissions, battery, voice</string>
-    <string name="open_source">Open source</string>
 
     <!-- Setup -->
     <string name="setup_title">Set up the phone</string>

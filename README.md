@@ -1,6 +1,6 @@
 # Smart To-Do · مهامي الذكية
 
-Created by **[KIRAHERK](https://github.com/KIRAHERK)**.
+Designed and developed by **Hussein Al Herk** ([@KIRAHERK](https://github.com/KIRAHERK)).
 
 An open-source Android to-do app you **talk to in Arabic** instead of typing.
 Made for a busy businessman who used to write his lists on paper: now every task, note and
@@ -89,15 +89,23 @@ Tasks are stored only on the phone. Text is sent to Google's Gemini API only to 
 command or answer a question. On the free tier Google may use this content to improve its
 products, so don't dictate passwords or bank details.
 
+## About the developer
+
+Smart To-Do is designed, built and maintained by **Hussein Al Herk**.
+
+- Portfolio: [kiraherk.github.io](https://kiraherk.github.io)
+- LinkedIn: [husseinalherk](https://www.linkedin.com/in/husseinalherk)
+- GitHub: [@KIRAHERK](https://github.com/KIRAHERK)
+
 ## Credits
 
-**Smart To-Do was created by [KIRAHERK](https://github.com/KIRAHERK)**: the idea, the design
-decisions and all the testing on real phones. If you use or build on this project, please keep
-this credit (see [NOTICE](NOTICE)).
+The idea, the design decisions and the testing on real phones: Hussein Al Herk. If you use or
+build on this project, please keep this credit (see [NOTICE](NOTICE)). Typeface: IBM Plex Sans
+Arabic (SIL Open Font License). AI: Google Gemini API.
 
 ## License
 
-[Apache License 2.0](LICENSE). Copyright 2026 KIRAHERK.
+[Apache License 2.0](LICENSE). Copyright (c) 2026 Hussein Al Herk.
 
 The app bundles the IBM Plex Sans Arabic font, licensed under the SIL Open Font License 1.1
 ([third_party/fonts](third_party/fonts/IBM-Plex-Sans-Arabic-OFL.txt)).

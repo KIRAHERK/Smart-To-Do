@@ -428,6 +428,52 @@ class TaskRepository(
         activity.insert(ActivityEntity(taskId = taskId, occurrenceId = occurrenceId, type = type.name, fromStatus = from, toStatus = to, text = text, at = now()))
     }
 
+    /** One line of the History list: a task, or one round ([occurrenceId]) of a repeating task. */
+    data class HistoryTarget(val taskId: Long, val occurrenceId: Long? = null)
+
+    /**
+     * Takes lines out of the History for good. A finished or deleted task disappears completely;
+     * a task that is still open stays on Today and only loses its past entries; for a repeating
+     * task, only that finished round goes.
+     */
+    suspend fun removeFromHistory(targets: List<HistoryTarget>) {
+        db.withTransaction {
+            targets.forEach { target ->
+                val t = tasks.get(target.taskId) ?: return@forEach
+                val round = target.occurrenceId?.let { occ.get(it) }
+                when {
+                    t.archived -> tasks.delete(t.id)
+                    t.recurrenceJson != null && round != null -> {
+                        activity.deleteForOccurrence(round.id)
+                        if (!round.isOpen) occ.delete(round.id)
+                    }
+                    currentOccurrence(t.id)?.isOpen == true -> activity.deleteForTask(t.id)
+                    else -> tasks.delete(t.id)
+                }
+            }
+        }
+        onRemindersChanged()
+    }
+
+    /** Empties the whole History: finished and deleted tasks go; open tasks stay on Today. */
+    suspend fun clearHistory() {
+        db.withTransaction {
+            tasks.all().forEach { t ->
+                when {
+                    t.archived -> tasks.delete(t.id)
+                    t.recurrenceJson != null -> occ.openForTask(t.id, TaskStatus.OPEN).let { open ->
+                        if (open.isEmpty()) tasks.delete(t.id) else allRounds(t.id).filter { !it.isOpen }.forEach { occ.delete(it.id) }
+                    }
+                    currentOccurrence(t.id)?.isOpen != true -> tasks.delete(t.id)
+                }
+            }
+            activity.deleteAll()
+        }
+        onRemindersChanged()
+    }
+
+    private suspend fun allRounds(taskId: Long) = occ.all().filter { it.taskId == taskId }
+
     private fun searchText(title: String, details: String) = ArabicText.normalize("$title $details")
 
     private companion object {

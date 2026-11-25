@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Contrast
 import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material.icons.filled.EventBusy
@@ -65,6 +66,7 @@ fun actionIcon(type: String): ImageVector = when (type) {
     ActionType.POSTPONE -> Icons.Filled.Schedule
     ActionType.DELETE -> Icons.Filled.DeleteOutline
     ActionType.RESTORE -> Icons.Filled.Restore
+    ActionType.CLEAR_HISTORY -> Icons.Filled.DeleteSweep
     else -> Icons.Filled.AutoAwesome
 }
 
@@ -116,6 +118,7 @@ fun actionName(ctx: Context, type: String): String = ctx.getString(
         ActionType.POSTPONE -> R.string.act_postpone
         ActionType.DELETE -> R.string.act_delete
         ActionType.RESTORE -> R.string.act_restore
+        ActionType.CLEAR_HISTORY -> R.string.act_clear_history
         else -> R.string.act_other
     }
 )

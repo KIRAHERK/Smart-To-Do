@@ -1,5 +1,29 @@
 package io.github.kiraherk.smarttodo.ui.screens
 
+import kotlinx.coroutines.launch
+
+import androidx.compose.ui.graphics.Color
+
+import androidx.compose.runtime.setValue
+
+import androidx.compose.runtime.mutableStateOf
+
+import androidx.compose.runtime.remember
+
+import androidx.compose.foundation.layout.statusBarsPadding
+
+import androidx.compose.material.icons.filled.Close
+
+import androidx.compose.material.icons.filled.DeleteSweep
+
+import androidx.compose.material.icons.filled.RadioButtonUnchecked
+
+import androidx.compose.material.icons.filled.CheckCircle
+
+import androidx.compose.foundation.background
+
+import androidx.compose.foundation.combinedClickable
+
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -98,6 +122,12 @@ class HistoryViewModel(private val c: AppContainer) : ViewModel() {
         }.filter { (f == null || it.task.category == f) && (s == null || it.statusKey == s) }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
+    /** Takes the chosen lines out of the History (after he confirmed). */
+    fun remove(items: List<HistoryItem>) = viewModelScope.launch { c.repo.removeFromHistory(items.map { it.target }) }
+
+    /** Empties the whole History (after he confirmed). */
+    fun clearAll() = viewModelScope.launch { c.repo.clearHistory() }
+
     val results = query.debounce(250).mapLatest { q -> if (q.isBlank()) emptyList() else c.repo.search(q) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList<TaskRepository.SearchHit>())
 }
@@ -119,6 +149,12 @@ fun HistoryScreen(onOpenTask: (Long) -> Unit) {
 
     val zone = ZoneId.systemDefault()
     val statusFilter by vm.statusFilter.collectAsStateWithLifecycle()
+    // Press and hold a line to start choosing; then tap more lines. Deleting always asks first.
+    val selected = remember { androidx.compose.runtime.mutableStateListOf<String>() }
+    var askDelete by remember { mutableStateOf(false) }
+    var askClearAll by remember { mutableStateOf(false) }
+    LaunchedEffect(history) { selected.retainAll(history.map { it.key }.toSet()) }
+    androidx.activity.compose.BackHandler(enabled = selected.isNotEmpty()) { selected.clear() }
     val byDay = history.groupBy { Instant.ofEpochMilli(it.latest.at).atZone(zone).toLocalDate() }
     val noResults = stringResource(R.string.no_results)
     val emptyHistory = stringResource(R.string.empty_history)
@@ -126,7 +162,25 @@ fun HistoryScreen(onOpenTask: (Long) -> Unit) {
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
-        topBar = { ScreenHeader(stringResource(R.string.history_title)) },
+        topBar = {
+            if (selected.isNotEmpty()) {
+                SelectionBar(
+                    count = selected.size,
+                    allSelected = selected.size == history.size,
+                    onClose = { selected.clear() },
+                    onSelectAll = { selected.clear(); selected.addAll(history.map { it.key }) },
+                    onDelete = { askDelete = true },
+                )
+            } else {
+                ScreenHeader(stringResource(R.string.history_title)) {
+                    if (history.isNotEmpty()) {
+                        IconButton(onClick = { askClearAll = true }, modifier = Modifier.size(52.dp)) {
+                            Icon(Icons.Filled.DeleteSweep, contentDescription = stringResource(R.string.history_clear_all), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                }
+            }
+        },
     ) { padding ->
         LazyColumn(
             Modifier.fillMaxSize(),
@@ -189,7 +243,17 @@ fun HistoryScreen(onOpenTask: (Long) -> Unit) {
                                 }
                             }
                             AppCard(padding = PaddingValues(start = 12.dp, end = 14.dp, top = 12.dp, bottom = 2.dp)) {
-                                entries.forEachIndexed { i, entry -> HistoryRow(entry, last = i == entries.lastIndex) { onOpenTask(entry.task.id) } }
+                                entries.forEachIndexed { i, entry ->
+                                    val isSelected = entry.key in selected
+                                    fun toggle() { if (isSelected) selected.remove(entry.key) else selected.add(entry.key) }
+                                    HistoryRow(
+                                        entry,
+                                        last = i == entries.lastIndex,
+                                        selecting = selected.isNotEmpty(),
+                                        selected = isSelected,
+                                        onLongClick = { toggle() },
+                                    ) { if (selected.isNotEmpty()) toggle() else onOpenTask(entry.task.id) }
+                                }
                             }
                         }
                     }
@@ -204,6 +268,26 @@ fun HistoryScreen(onOpenTask: (Long) -> Unit) {
             }
         }
     }
+
+    if (askDelete) {
+        val chosen = history.filter { it.key in selected }
+        io.github.kiraherk.smarttodo.ui.components.ConfirmDialog(
+            title = pluralStringResource(R.plurals.history_delete_title, chosen.size, chosen.size),
+            text = stringResource(R.string.history_delete_explain),
+            confirm = stringResource(R.string.delete),
+            onConfirm = { vm.remove(chosen); selected.clear() },
+            onDismiss = { askDelete = false },
+        )
+    }
+    if (askClearAll) {
+        io.github.kiraherk.smarttodo.ui.components.ConfirmDialog(
+            title = stringResource(R.string.history_clear_all),
+            text = stringResource(R.string.history_clear_all_explain),
+            confirm = stringResource(R.string.history_clear_all),
+            onConfirm = { vm.clearAll() },
+            onDismiss = { askClearAll = false },
+        )
+    }
 }
 
 /** The extra line under a history entry, or null when it would only repeat the task's name. */
@@ -216,16 +300,41 @@ fun historyText(a: io.github.kiraherk.smarttodo.data.db.ActivityEntity, title: S
 }
 
 @Composable
-private fun HistoryRow(entry: HistoryItem, last: Boolean, onClick: () -> Unit) {
+private fun HistoryRow(
+    entry: HistoryItem,
+    last: Boolean,
+    selecting: Boolean = false,
+    selected: Boolean = false,
+    onLongClick: () -> Unit = {},
+    onClick: () -> Unit,
+) {
     val ctx = LocalContext.current
     val a = entry.latest
     val type = ActivityType.entries.firstOrNull { it.name == a.type }
     val cat = io.github.kiraherk.smarttodo.ui.categoryOf(entry.task.category)
     val time = Instant.ofEpochMilli(a.at).atZone(ZoneId.systemDefault()).toLocalTime()
     val deletedColor = MaterialTheme.colorScheme.error
-    Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).clickable(onClick = onClick)) {
+    val haptics = androidx.compose.ui.platform.LocalHapticFeedback.current
+    Box(
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))
+            .background(if (selected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = { haptics.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress); onLongClick() },
+                onLongClickLabel = stringResource(R.string.history_select),
+            ),
+    ) {
         TimelineRow(if (entry.deleted) deletedColor else entry.status?.let { statusColor(it) } ?: cat.color, last) {
             Row(verticalAlignment = Alignment.CenterVertically) {
+                if (selecting) {
+                    Icon(
+                        if (selected) Icons.Filled.CheckCircle else Icons.Filled.RadioButtonUnchecked,
+                        contentDescription = stringResource(if (selected) R.string.selected else R.string.not_selected),
+                        tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
+                        modifier = Modifier.size(24.dp),
+                    )
+                    Spacer(Modifier.width(8.dp))
+                }
                 Text(entry.task.title, style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
                 Text(Dates.friendlyTime(ctx, time), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
@@ -275,8 +384,12 @@ data class HistoryItem(
     val latest: io.github.kiraherk.smarttodo.data.db.ActivityEntity,
     /** How many older changes are folded into it (the task page shows them all). */
     val earlier: Int,
+    /** For a repeating task: the round (day) this line is about. */
+    val roundId: Long? = null,
 ) {
     val statusKey: String? get() = if (deleted) HistoryGrouping.DELETED else status?.name
+    val key: String get() = "${task.id}-${roundId ?: 0}"
+    val target get() = TaskRepository.HistoryTarget(task.id, roundId)
 }
 
 object HistoryGrouping {
@@ -314,7 +427,34 @@ object HistoryGrouping {
                 deleted = first.task.archived,
                 latest = first.activity,
                 earlier = entries.size - 1,
+                roundId = occurrenceId,
             )
+        }
+    }
+}
+
+/** Shown instead of the title while he is choosing lines to delete. */
+@Composable
+private fun SelectionBar(count: Int, allSelected: Boolean, onClose: () -> Unit, onSelectAll: () -> Unit, onDelete: () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().statusBarsPadding().padding(start = 8.dp, end = 8.dp, top = 8.dp, bottom = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        IconButton(onClick = onClose, modifier = Modifier.size(52.dp)) {
+            Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.cancel), modifier = Modifier.size(28.dp))
+        }
+        Text(
+            pluralStringResource(R.plurals.history_selected, count, count),
+            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier.weight(1f).padding(horizontal = 4.dp),
+        )
+        if (!allSelected) {
+            androidx.compose.material3.TextButton(onClick = onSelectAll, modifier = Modifier.heightIn(min = 48.dp)) {
+                Text(stringResource(R.string.select_all), style = MaterialTheme.typography.titleSmall)
+            }
+        }
+        IconButton(onClick = onDelete, modifier = Modifier.size(52.dp)) {
+            Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.delete), tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(28.dp))
         }
     }
 }

@@ -27,6 +27,7 @@ import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.CloudSync
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.TaskAlt
 import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material3.Icon
@@ -38,6 +39,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
@@ -91,7 +93,20 @@ class TodayViewModel(private val c: AppContainer) : ViewModel() {
 
     fun hasKey() = c.secrets.hasApiKey()
     fun markDone(occurrenceId: Long) = viewModelScope.launch { c.repo.setStatus(occurrenceId, TaskStatus.DONE) }
-    fun speakSummary() = viewModelScope.launch { c.speaker.speakNow(c.checkIns.morningText(spoken = true)) }
+    fun speakSummary() = viewModelScope.launch { c.speaker.speakNow(c.checkIns.morningText(spoken = true), key = DAY_KEY) }
+
+    /** "Read my day" is a play/pause button: a second tap stops the voice. */
+    fun toggleSummary() {
+        if (c.speaker.now.value?.key == DAY_KEY) c.speaker.stop() else speakSummary()
+    }
+
+    /** Read-aloud switched on in Settings (otherwise the "Read my day" button is hidden). */
+    val readAloud = c.settings.settings.map { it.readAloud }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), true)
+    val dayVoice = c.speaker.now.map { it?.takeIf { n -> n.key == DAY_KEY } }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    companion object {
+        const val DAY_KEY = "my-day"
+    }
 }
 
 @Composable
@@ -109,6 +124,8 @@ fun TodayScreen(
     val doneToday by vm.doneToday.collectAsStateWithLifecycle()
     val inboxCount by vm.inboxCount.collectAsStateWithLifecycle()
     val online by vm.online.collectAsStateWithLifecycle()
+    val readAloud by vm.readAloud.collectAsStateWithLifecycle()
+    val dayVoice by vm.dayVoice.collectAsStateWithLifecycle()
     val today = vm.today
     val todayIso = today.toString()
 
@@ -152,7 +169,9 @@ fun TodayScreen(
                     done = doneToday,
                     total = doneToday + todays.size,
                     next = next,
-                    onRead = { vm.speakSummary() },
+                    readAloud = readAloud,
+                    dayVoice = dayVoice,
+                    onRead = { vm.toggleSummary() },
                     onReviewDay = { onNavigate(Routes.review(false)) },
                     onReviewWeek = { onNavigate(Routes.review(true)) },
                 )
@@ -202,6 +221,8 @@ private fun HeroCard(
     done: Int,
     total: Int,
     next: OccurrenceWithTask?,
+    readAloud: Boolean,
+    dayVoice: io.github.kiraherk.smarttodo.voice.Speaker.Now?,
     onRead: () -> Unit,
     onReviewDay: () -> Unit,
     onReviewWeek: () -> Unit,
@@ -219,6 +240,7 @@ private fun HeroCard(
     Box(
         Modifier
             .fillMaxWidth()
+            .testTag(HERO_TAG)
             .clip(RoundedCornerShape(24.dp))
             .background(brand.heroBrush)
             .heroCircles(),
@@ -227,7 +249,6 @@ private fun HeroCard(
         Column(Modifier.padding(start = 14.dp, end = 14.dp, top = 10.dp, bottom = 10.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text(stringResource(R.string.today_title), style = MaterialTheme.typography.labelMedium, color = Color.White.copy(alpha = 0.75f))
                     Text(greeting, style = MaterialTheme.typography.titleLarge, color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Text(Dates.fullDate(ctx, today), style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.9f), maxLines = 1, overflow = TextOverflow.Ellipsis)
                     if (next != null) {
@@ -246,7 +267,14 @@ private fun HeroCard(
             }
             Spacer(Modifier.size(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                QuickAction(Icons.AutoMirrored.Filled.VolumeUp, stringResource(R.string.read_my_day_short), stringResource(R.string.read_my_day), onRead)
+                // Only with the voice on. While loading it says so; while speaking it becomes Stop.
+                if (readAloud) {
+                    when {
+                        dayVoice == null -> QuickAction(Icons.AutoMirrored.Filled.VolumeUp, stringResource(R.string.read_my_day_short), stringResource(R.string.read_my_day), onRead)
+                        dayVoice.loading -> QuickAction(null, stringResource(R.string.voice_loading_short), stringResource(R.string.voice_loading), onRead)
+                        else -> QuickAction(Icons.Filled.Pause, stringResource(R.string.pause_voice), stringResource(R.string.pause_voice), onRead)
+                    }
+                }
                 QuickAction(Icons.Filled.TaskAlt, stringResource(R.string.review_today_short), stringResource(R.string.review_today), onReviewDay)
                 QuickAction(Icons.Filled.DateRange, stringResource(R.string.review_week_short), stringResource(R.string.review_week), onReviewWeek)
             }
@@ -255,7 +283,7 @@ private fun HeroCard(
 }
 
 @Composable
-private fun androidx.compose.foundation.layout.RowScope.QuickAction(icon: ImageVector, label: String, description: String, onClick: () -> Unit) {
+private fun androidx.compose.foundation.layout.RowScope.QuickAction(icon: ImageVector?, label: String, description: String, onClick: () -> Unit) {
     Column(
         Modifier
             .weight(1f)
@@ -268,7 +296,11 @@ private fun androidx.compose.foundation.layout.RowScope.QuickAction(icon: ImageV
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Icon(icon, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+        if (icon != null) {
+            Icon(icon, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+        } else {
+            androidx.compose.material3.CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp, modifier = Modifier.size(18.dp))
+        }
         Text(label, style = MaterialTheme.typography.labelMedium, color = Color.White, textAlign = TextAlign.Center, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
@@ -292,3 +324,6 @@ private fun ProgressRing(done: Int, total: Int) {
         }
     }
 }
+
+/** Marks the Today header (it has no title any more), for the on-device tests. */
+const val HERO_TAG = "today-hero"

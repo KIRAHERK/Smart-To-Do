@@ -35,6 +35,8 @@ interface TaskDao {
     @Query("UPDATE tasks SET category = :to WHERE category = :from") suspend fun moveCategory(from: String, to: String)
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertAll(items: List<TaskEntity>)
     @Query("DELETE FROM tasks") suspend fun deleteAll()
+    /** Removes a task for good (its rounds, notes and history go with it). */
+    @Query("DELETE FROM tasks WHERE id = :id") suspend fun delete(id: Long)
 }
 
 @Dao
@@ -109,6 +111,7 @@ interface OccurrenceDao {
     @Query("SELECT * FROM occurrences") suspend fun all(): List<OccurrenceEntity>
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertAll(items: List<OccurrenceEntity>)
     @Query("DELETE FROM occurrences") suspend fun deleteAll()
+    @Query("DELETE FROM occurrences WHERE id = :id") suspend fun delete(id: Long)
 }
 
 @Dao
@@ -142,6 +145,8 @@ interface ActivityDao {
     @Query("SELECT * FROM activity WHERE taskId = :taskId ORDER BY at DESC, id DESC LIMIT 1") suspend fun latestForTask(taskId: Long): ActivityEntity?
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertAll(items: List<ActivityEntity>)
     @Query("DELETE FROM activity") suspend fun deleteAll()
+    @Query("DELETE FROM activity WHERE taskId = :taskId") suspend fun deleteForTask(taskId: Long)
+    @Query("DELETE FROM activity WHERE occurrenceId = :occurrenceId") suspend fun deleteForOccurrence(occurrenceId: Long)
 }
 
 @Dao

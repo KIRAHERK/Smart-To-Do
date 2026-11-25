@@ -85,7 +85,18 @@ class AppOnDeviceTest {
         UiDevice.getInstance(InstrumentationRegistry.getInstrumentation()).pressBack()
         compose.waitForText(str(R.string.setup_title))
         compose.clickable(str(R.string.setup_finish)).performScrollTo().performClick()
-        compose.waitForText(str(R.string.today_title))
+        compose.waitForToday()
+        // The guide walks through every tab once, after the setup.
+        compose.waitForText(str(R.string.guide_today_title))
+        shot("02a-guide")
+        repeat(4) {
+            compose.clickable(str(R.string.guide_next)).performClick()
+            compose.waitForIdle()
+        }
+        compose.waitForText(str(R.string.guide_done_title))
+        compose.clickable(str(R.string.guide_start)).performClick()
+        compose.waitUntilTrue { compose.onAllNodes(hasText(str(R.string.guide_start))).fetchSemanticsNodes().isEmpty() }
+        assertEquals(io.github.kiraherk.smarttodo.BuildConfig.VERSION_NAME, runBlocking { c.settings.current().guideVersion })
         compose.waitForText(str(R.string.empty_today_title))
         shot("02-today-empty")
         assertTrue(runBlocking { c.settings.current().setupDone })
@@ -175,7 +186,7 @@ class AppOnDeviceTest {
             c.secrets.setApiKey("test-key")
             runBlocking { c.settings.setListenMode(io.github.kiraherk.smarttodo.data.settings.LISTEN_RECORD) }
             launch()
-            compose.waitForText(str(R.string.today_title))
+            compose.waitForToday()
             compose.onAllNodes(hasText(str(R.string.talk)) and hasClickAction()).onFirst().performSemanticsAction(SemanticsActions.OnClick)
 
             // Recording: the clock runs and there is no hurry; it only ends when he presses Done.
@@ -206,7 +217,7 @@ class AppOnDeviceTest {
             c.geminiBaseUrl = gemini.baseUrl
             c.secrets.setApiKey("test-key")
             launch()
-            compose.waitForText(str(R.string.today_title))
+            compose.waitForToday()
             compose.clickable(str(R.string.nav_assistant)).performClick()
             compose.onNode(hasSetTextAction()).performTextInput("ذكرني كل أسبوعين أطمن على أحمد")
             compose.clickableDesc(str(R.string.send)).performClick()
@@ -238,12 +249,13 @@ class AppOnDeviceTest {
             c.geminiBaseUrl = gemini.baseUrl
             c.secrets.setApiKey("test-key")
             launch()
-            compose.waitForText(str(R.string.today_title))
+            compose.waitForToday()
             compose.clickable(str(R.string.nav_assistant)).performClick()
             compose.clickable(str(R.string.suggest_today)).performClick()
             compose.waitForText("آخر مرة اتصلت بأحمد", substring = true, timeoutMs = 30_000)
             shot("08-assistant-answer")
-            compose.clickable(str(R.string.ok)).performClick()
+            // A real chat: his question and the answer, no window to close.
+            compose.waitForText(str(R.string.suggest_today))
             assertEquals(2, runBlocking { c.db.chat().all() }.size)
         }
     }
@@ -252,12 +264,13 @@ class AppOnDeviceTest {
     fun withoutKeyWhatHeSaidGoesToTheInbox() {
         reset()
         launch()
-        compose.waitForText(str(R.string.today_title))
+        compose.waitForToday()
         compose.clickable(str(R.string.nav_assistant)).performClick()
         compose.onNode(hasSetTextAction()).performTextInput("بكرة أروح للبنك")
         compose.clickableDesc(str(R.string.send)).performClick()
+        // The message and the reply are in the chat.
         compose.waitForText(str(R.string.saved_inbox_no_key))
-        compose.clickable(str(R.string.ok)).performClick()
+        compose.waitForText("بكرة أروح للبنك")
         assertEquals("بكرة أروح للبنك", runBlocking { c.db.inbox().all() }.single().text)
 
         // Easy to find: a banner on Today (not in Settings) opens what he said offline.

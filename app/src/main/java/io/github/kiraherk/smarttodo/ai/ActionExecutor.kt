@@ -110,6 +110,17 @@ class ActionExecutor(private val repo: TaskRepository, private val categories: C
                 repo.archive(id, summary)
                 id
             }
+            ActionType.CLEAR_HISTORY -> {
+                val id = a.taskId
+                if (id == null) {
+                    repo.clearHistory()
+                    0L
+                } else {
+                    repo.task(id) ?: return null
+                    repo.removeFromHistory(listOf(TaskRepository.HistoryTarget(id)))
+                    id
+                }
+            }
             ActionType.RESTORE -> {
                 val id = existing(a) ?: return null
                 if (repo.task(id)?.archived != true) return id

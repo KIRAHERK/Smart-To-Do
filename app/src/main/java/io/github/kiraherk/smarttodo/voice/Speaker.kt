@@ -8,6 +8,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.util.Locale
 
@@ -41,6 +44,13 @@ class Speaker(
 
     var enabled: Boolean = true
 
+    /** What is being read right now: [key] says which text (a chat message, "his day"...); null = silent. */
+    data class Now(val key: String, val loading: Boolean)
+
+    private val _now = MutableStateFlow<Now?>(null)
+    /** For play/pause buttons: which text is loading or being read. */
+    val now: StateFlow<Now?> = _now.asStateFlow()
+
     /** What the last request was spoken with (for tests and the settings screen). */
     @Volatile var lastSpokenWith: String = ""
         private set
@@ -59,6 +69,18 @@ class Speaker(
             return
         }
         ready = true
+        tts.setOnUtteranceProgressListener(object : android.speech.tts.UtteranceProgressListener() {
+            override fun onStart(utteranceId: String?) {
+                _now.value = _now.value?.copy(loading = false)
+            }
+
+            override fun onDone(utteranceId: String?) = finished(utteranceId)
+
+            @Deprecated("Deprecated in Java")
+            override fun onError(utteranceId: String?) = finished(utteranceId)
+
+            override fun onStop(utteranceId: String?, interrupted: Boolean) = finished(utteranceId)
+        })
         applyLanguage(null)
         pending?.let { (text, voice) -> phone(text, voice) }
         pending = null
@@ -90,21 +112,36 @@ class Speaker(
     }
 
     /** Speaks if read-aloud is on. A new text interrupts the one being spoken. */
-    fun speak(text: String) {
+    fun speak(text: String, key: String = text) {
         if (!enabled) return
-        say(text, null)
+        say(text, null, key)
     }
 
     /** Speaks even when read-aloud is switched off (for the explicit "read" buttons). */
-    fun speakNow(text: String) = say(text, null)
+    fun speakNow(text: String, key: String = text) = say(text, null, key)
 
     /** Plays [text] with a given voice ("" = phone voice) without changing the saved choice. */
-    fun preview(text: String, voice: String) = say(text, voice)
+    fun preview(text: String, voice: String) = say(text, voice, text)
 
-    private fun say(text: String, voiceOverride: String?) {
+    /** Play/pause: stops if [key] is the one being read, otherwise reads [text]. */
+    fun toggle(text: String, key: String = text) {
+        if (_now.value?.key == key) stop() else speakNow(text, key)
+    }
+
+    private var utterance: String? = null
+
+    private fun finished(utteranceId: String?) {
+        if (utteranceId != null && utteranceId == utterance) {
+            utterance = null
+            _now.value = null
+        }
+    }
+
+    private fun say(text: String, voiceOverride: String?, key: String) {
         val clean = text.replace("*", "").trim()
         if (clean.isEmpty()) return
         stop()
+        _now.value = Now(key, loading = true)
         job = scope.launch {
             val voice = voiceOverride ?: runCatching { voiceName() }.getOrDefault("")
             // A voice stored on the phone: no internet, no waiting.
@@ -126,7 +163,9 @@ class Speaker(
             if (audio != null && audio.data.isNotEmpty()) {
                 lastSpokenWith = voice
                 try {
+                    _now.value = Now(key, loading = false)
                     player.play(audio)
+                    _now.value = null
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
@@ -145,7 +184,9 @@ class Speaker(
             return
         }
         applyLanguage(preferred)
-        tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, "smarttodo-${System.nanoTime()}")
+        val id = "smarttodo-${System.nanoTime()}"
+        utterance = id
+        if (tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, id) != TextToSpeech.SUCCESS) finished(id)
     }
 
     /** Names of the voices stored on the phone for the app language (instant, no internet). */
@@ -156,8 +197,10 @@ class Speaker(
         job?.cancel()
         job = null
         player.stop()
+        utterance = null
         if (ready) runCatching { tts.stop() }
         pending = null
+        _now.value = null
     }
 
     private fun isOnline(): Boolean = runCatching {
