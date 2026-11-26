@@ -45,7 +45,6 @@ fun appContainer(): AppContainer = (LocalContext.current.applicationContext as S
 class VoiceActions(
     val start: (VoiceViewModel.Request) -> Unit,
     val processText: (String, VoiceViewModel.Request) -> Unit,
-    val ask: (String) -> Unit,
     val searchText: SharedFlow<String>,
     /** Sends a message in the chat (it appears there straight away). */
     val chat: (String) -> Unit = {},

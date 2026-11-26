@@ -131,7 +131,6 @@ fun AppRoot(navRequests: StateFlow<NavRequest?>, onNavHandled: () -> Unit) {
                     }
                 },
                 processText = { text, request -> voiceVm.processText(text, request) },
-                ask = { voiceVm.ask(it) },
                 searchText = voiceVm.searchText,
                 chat = { voiceVm.chat(it) },
                 chatAsk = { voiceVm.chatAsk(it) },
@@ -227,7 +226,6 @@ fun AppRoot(navRequests: StateFlow<NavRequest?>, onNavHandled: () -> Unit) {
                             openUpdate = openUpdate,
                             onUpdateOpened = { openUpdate = false },
                             onOpenSetup = { nav.navigate(Routes.SETUP) },
-                            onOpenInbox = { nav.navigate(Routes.INBOX) },
                             onOpenCategories = { nav.navigate(Routes.CATEGORIES) },
                             onOpenGuide = { fullGuide = true },
                         )

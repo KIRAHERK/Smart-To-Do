@@ -273,7 +273,7 @@ class SettingsViewModel(private val c: AppContainer) : ViewModel() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(openUpdate: Boolean, onUpdateOpened: () -> Unit, onOpenSetup: () -> Unit, onOpenInbox: () -> Unit, onOpenCategories: () -> Unit = {}, onOpenGuide: () -> Unit = {}) {
+fun SettingsScreen(openUpdate: Boolean, onUpdateOpened: () -> Unit, onOpenSetup: () -> Unit, onOpenCategories: () -> Unit = {}, onOpenGuide: () -> Unit = {}) {
     val c = appContainer()
     val vm: SettingsViewModel = viewModel { SettingsViewModel(c) }
     val ctx = LocalContext.current

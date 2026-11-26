@@ -78,6 +78,15 @@ class VoiceChangesTest {
     }
 
     @Test
+    fun yesterdayIsAWholeWordNotPartOfFiveOClock() {
+        val today = LocalDate.parse("2026-11-25")
+        assertNull(io.github.kiraherk.smarttodo.ai.SpokenDays.pastDay("خلصت المشي الساعة الخامسة", today))
+        assertEquals(LocalDate.parse("2026-11-24"), io.github.kiraherk.smarttodo.ai.SpokenDays.pastDay("امبارح ما مشيت", today))
+        assertEquals(LocalDate.parse("2026-11-24"), io.github.kiraherk.smarttodo.ai.SpokenDays.pastDay("سويته وامس كمان", today))
+        assertEquals(LocalDate.parse("2026-11-23"), io.github.kiraherk.smarttodo.ai.SpokenDays.pastDay("أول امبارح خلصته", today))
+    }
+
+    @Test
     fun theTimeOrDayCanBeTakenOffByVoice() = runBlocking {
         val id = repo.createTask(TaskRepository.NewTask("تصليح المكيف", date = LocalDate.parse("2026-11-27"), time = LocalTime.of(16, 0)))
         exec.apply(listOf(AiAction(type = "update_task", taskId = id, removeTime = true, spokenSummary = "x")), "شيل الوقت")

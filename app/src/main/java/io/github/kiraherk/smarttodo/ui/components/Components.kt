@@ -480,9 +480,6 @@ fun Modifier.heroCircles(color: Color = Color.White): Modifier = drawBehind {
     drawCircle(color.copy(alpha = 0.05f), radius = size.width * 0.12f, center = Offset(size.width * 0.70f, size.height * 0.18f))
 }
 
-/** Vertical gradient from the brand colours, for headers. */
-@Composable
-fun heroBrush(): Brush = LocalBrand.current.heroBrush
 
 fun pickDate(context: Context, initial: LocalDate, onPicked: (LocalDate) -> Unit) {
     DatePickerDialog(context, { _, y, m, d -> onPicked(LocalDate.of(y, m + 1, d)) }, initial.year, initial.monthValue - 1, initial.dayOfMonth).show()

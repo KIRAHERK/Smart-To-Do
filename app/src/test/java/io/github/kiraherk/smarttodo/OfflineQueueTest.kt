@@ -91,6 +91,16 @@ class OfflineQueueTest {
     }
 
     @Test
+    fun anItemHeAlreadyHandledIsNotAddedAgain() = runBlocking {
+        said("بكرة أروح للبنك", 1)
+        // He pressed "Try now" and saved it while the automatic round was waiting for the AI.
+        replies = { text -> runBlocking { db.inbox().all().forEach { db.inbox().delete(it.id) } }; listOf(AiAction(type = "create_task", title = text)) }
+        val out = queue().processAll()!!
+        assertTrue(applied.isEmpty())
+        assertTrue(out.added.isEmpty())
+    }
+
+    @Test
     fun withoutAKeyItWaits() = runBlocking {
         said("بكرة أروح للبنك", 1)
         assertNull(queue(hasKey = false).processAll())

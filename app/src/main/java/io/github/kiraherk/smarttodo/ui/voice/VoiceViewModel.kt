@@ -238,14 +238,6 @@ class VoiceViewModel(private val c: AppContainer) : ViewModel() {
         }
     }
 
-    /** A question straight to the assistant (one AI request instead of two). */
-    fun ask(question: String) {
-        launchWork {
-            c.speaker.enabled = c.settings.current().readAloud
-            answer(question, null)
-        }
-    }
-
     /**
      * A message sent in the chat (typed, dictated or a ready-made question). It shows up in the
      * chat straight away, the assistant "types" while it works, then answers there. Changes to
@@ -306,9 +298,15 @@ class VoiceViewModel(private val c: AppContainer) : ViewModel() {
         pendingFromChat = false
         val shown = (_state.value as? UiState.Confirm)?.previews.orEmpty()
         viewModelScope.launch {
-            val result = c.executor.apply(actions, pendingTranscript)
-            pendingInboxId?.let { c.db.inbox().delete(it) }
+            // Already added by the automatic offline retry while the card was open: don't add it twice.
+            val inboxId = pendingInboxId
             pendingInboxId = null
+            if (inboxId != null && c.db.inbox().get(inboxId) == null) {
+                _state.value = UiState.Idle
+                return@launch
+            }
+            val result = c.executor.apply(actions, pendingTranscript)
+            inboxId?.let { c.db.inbox().delete(it) }
             if (fromChat) {
                 val done = shown.joinToString("\n") { p -> "• " + p.detail.ifBlank { p.summary } }
                 val head = if (result.failed == 0) str(R.string.saved_ok) else str(R.string.saved_partly, result.applied, result.applied + result.failed)

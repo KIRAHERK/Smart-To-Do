@@ -66,6 +66,7 @@ class OfflineQueue(
                 when (val r = handle(item)) {
                     Handled.Done -> added += item.text
                     Handled.NeedsHim -> needsHim++
+                    Handled.Gone -> Unit
                     is Handled.Later -> {
                         retryInMs = r.afterMs
                         break
@@ -82,6 +83,7 @@ class OfflineQueue(
     private sealed interface Handled {
         data object Done : Handled
         data object NeedsHim : Handled
+        data object Gone : Handled
         data class Later(val afterMs: Long) : Handled
     }
 
@@ -91,6 +93,8 @@ class OfflineQueue(
             val changes = actions.filter { it.type in ActionType.CHANGES }
             val question = actions.firstOrNull { it.type == ActionType.ASK }
             return when {
+                // He may have handled it himself ("Try now") while the AI was thinking.
+                inbox.get(item.id) == null -> Handled.Gone
                 changes.isNotEmpty() -> {
                     if (apply(changes, item.text) > 0) {
                         inbox.delete(item.id)

@@ -90,6 +90,8 @@ interface OccurrenceDao {
     @Query("SELECT * FROM occurrences WHERE taskId = :taskId ORDER BY date IS NULL, date DESC, id DESC LIMIT 1")
     suspend fun latestForTask(taskId: Long): OccurrenceEntity?
 
+    @Query("SELECT * FROM occurrences WHERE taskId = :taskId") suspend fun forTask(taskId: Long): List<OccurrenceEntity>
+
     @Query("SELECT * FROM occurrences WHERE taskId = :taskId AND date = :date ORDER BY id DESC LIMIT 1")
     suspend fun forTaskOn(taskId: Long, date: String): OccurrenceEntity?
 

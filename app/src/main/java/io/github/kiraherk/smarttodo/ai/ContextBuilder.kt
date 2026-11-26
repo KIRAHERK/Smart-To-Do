@@ -55,7 +55,7 @@ class ContextBuilder(
     }
 
     /** Everything relevant for answering a question: open tasks, recent history, notes, and older matches. */
-    suspend fun assistantDigest(question: String, maxChars: Int = 60_000): String {
+    suspend fun assistantDigest(question: String, maxChars: Int = 24_000): String {
         names = categoryNames()
         val today = repo.today()
         val open = db.occurrences().open(TaskStatus.OPEN)

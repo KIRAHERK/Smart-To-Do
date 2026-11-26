@@ -462,7 +462,7 @@ class TaskRepository(
                 when {
                     t.archived -> tasks.delete(t.id)
                     t.recurrenceJson != null -> occ.openForTask(t.id, TaskStatus.OPEN).let { open ->
-                        if (open.isEmpty()) tasks.delete(t.id) else allRounds(t.id).filter { !it.isOpen }.forEach { occ.delete(it.id) }
+                        if (open.isEmpty()) tasks.delete(t.id) else occ.forTask(t.id).filter { !it.isOpen }.forEach { occ.delete(it.id) }
                     }
                     currentOccurrence(t.id)?.isOpen != true -> tasks.delete(t.id)
                 }
@@ -471,8 +471,6 @@ class TaskRepository(
         }
         onRemindersChanged()
     }
-
-    private suspend fun allRounds(taskId: Long) = occ.all().filter { it.taskId == taskId }
 
     private fun searchText(title: String, details: String) = ArabicText.normalize("$title $details")
 

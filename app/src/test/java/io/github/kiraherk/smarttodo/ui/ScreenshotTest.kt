@@ -64,7 +64,7 @@ class ScreenshotTest {
     @get:Rule
     val compose = createAndroidComposeRule<ComponentActivity>()
 
-    private val voice = VoiceActions({}, { _, _ -> }, {}, MutableSharedFlow())
+    private val voice = VoiceActions({}, { _, _ -> }, MutableSharedFlow())
 
     private fun app() = compose.activity.application as SmartTodoApp
 
@@ -236,7 +236,7 @@ class ScreenshotTest {
             val chat = app().container.db.chat()
             chat.insert(io.github.kiraherk.smarttodo.data.db.ChatMessageEntity(role = "USER", text = "متى آخر مرة كلمت أحمد؟", at = 1))
         }
-        val typing = VoiceActions({}, { _, _ -> }, {}, MutableSharedFlow(), chatTyping = kotlinx.coroutines.flow.MutableStateFlow(true))
+        val typing = VoiceActions({}, { _, _ -> }, MutableSharedFlow(), chatTyping = kotlinx.coroutines.flow.MutableStateFlow(true))
         compose.mainClock.autoAdvance = false
         compose.setContent {
             SmartTodoTheme(1.15f) {
@@ -308,7 +308,7 @@ class ScreenshotTest {
         compose.setContent {
             SmartTodoTheme(1.15f) {
                 CompositionLocalProvider(LocalVoice provides voice) {
-                    io.github.kiraherk.smarttodo.ui.screens.SettingsScreen(openUpdate = false, onUpdateOpened = {}, onOpenSetup = {}, onOpenInbox = {})
+                    io.github.kiraherk.smarttodo.ui.screens.SettingsScreen(openUpdate = false, onUpdateOpened = {}, onOpenSetup = {})
                 }
             }
         }

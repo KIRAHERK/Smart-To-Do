@@ -136,8 +136,9 @@ class ActionExecutor(private val repo: TaskRepository, private val categories: C
 
 /** "Yesterday" and "the day before" in what he said, for reports about a repeating task's earlier round. */
 object SpokenDays {
-    private val dayBefore = Regex("(أول|قبل) ?(امبارح|أمس|البارحة|البارح)")
-    private val yesterday = Regex("امبارح|إمبارح|أمس|امس|البارحة|البارح|yesterday", RegexOption.IGNORE_CASE)
+    // Whole words only: «امس» also sits inside «الخامسة» (five o'clock).
+    private val dayBefore = Regex("(?<!\\p{L})[وف]?(أول|قبل) ?(امبارح|أمس|امس|البارحة|البارح)(?!\\p{L})")
+    private val yesterday = Regex("(?<!\\p{L})[وف]?(امبارح|إمبارح|أمس|امس|البارحة|البارح|yesterday)(?!\\p{L})", RegexOption.IGNORE_CASE)
 
     fun pastDay(transcript: String?, today: java.time.LocalDate): java.time.LocalDate? {
         val t = transcript ?: return null
