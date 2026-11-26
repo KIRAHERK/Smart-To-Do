@@ -1,4 +1,4 @@
-<a href="https://kiraherk.github.io/Thakkirni/"><img src="docs/readme/header.webp" alt="Thakkirni · ذكّرني. Talk to your to-do list, in Arabic. It keeps everything. Five real screens of the app." width="100%"></a>
+<a href="https://kiraherk.github.io/Thakkirni/"><img src="docs/readme/header.webp" alt="Zakkirni · ذكّرني. Talk to your to-do list, in Arabic. It keeps everything. Five real screens of the app." width="100%"></a>
 
 <p align="center">
   <a href="https://kiraherk.github.io/Thakkirni/"><img src="docs/readme/download.png" alt="Download for Android" height="56"></a>
@@ -16,7 +16,7 @@
 
 ---
 
-**Thakkirni** (ذكّرني, "remind me") is an Android to-do list you talk to in Arabic, formerly called
+**Zakkirni** (ذكّرني, "remind me") is an Android to-do list you talk to in Arabic, formerly called
 Smart To-Do. Say what you must do, in any Arabic dialect. It writes it down, files it, reminds you
 on time, asks how it went, and keeps the whole record, so later you can simply ask
 *«متى آخر مرة كلمت أحمد؟»* (when did I last call Ahmed?).
@@ -158,7 +158,7 @@ products, so don't dictate passwords or bank details.
 
 ## Credits
 
-Thakkirni is designed, built and maintained by **Hussein Al Herk**
+Zakkirni is designed, built and maintained by **Hussein Al Herk**
 ([portfolio](https://kiraherk.github.io), [LinkedIn](https://www.linkedin.com/in/husseinalherk),
 [@KIRAHERK](https://github.com/KIRAHERK)): the idea, the design decisions and the testing on real
 phones. If you use or build on this project, please keep this credit (see [NOTICE](NOTICE)).

@@ -1,5 +1,5 @@
 ---
-name: Thakkirni (ذكّرني)
+name: Zakkirni (ذكّرني)
 description: An Arabic voice to-do notebook in deep emerald and gold on warm ivory, built big for an older reader.
 colors:
   emerald: "#0E5E4F"
@@ -72,7 +72,7 @@ components:
   phone-frame: { backgroundColor: "{colors.phone-black}", rounded: "{rounded.xl}", padding: "7px" }
 ---
 
-# Design System: Thakkirni (ذكّرني)
+# Design System: Zakkirni (ذكّرني)
 
 Formerly Smart To-Do. Mark: a cream microphone on emerald with a gold thread tied round its stem (`ic_launcher_foreground.xml`, `docs/icon.svg`).
 

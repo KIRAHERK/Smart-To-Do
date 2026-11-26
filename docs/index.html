@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Thakkirni · Download</title>
-<meta name="description" content="Thakkirni (ذكّرني): an Android to-do list you talk to in Arabic. It writes down what you say, reminds you on time and keeps every change. Free and open source.">
+<title>Zakkirni · Download</title>
+<meta name="description" content="Zakkirni (ذكّرني): an Android to-do list you talk to in Arabic. It writes down what you say, reminds you on time and keeps every change. Free and open source.">
 <meta name="theme-color" content="#0A4A3F">
-<meta property="og:title" content="Thakkirni · Talk to your to-do list, in Arabic">
+<meta property="og:title" content="Zakkirni · Talk to your to-do list, in Arabic">
 <meta property="og:description" content="Say what you must do, in any Arabic dialect. It writes it down, reminds you, asks how it went and keeps the whole record. Free for Android.">
 <meta property="og:image" content="https://kiraherk.github.io/Thakkirni/screenshots/share.png">
 <meta property="og:url" content="https://kiraherk.github.io/Thakkirni/">
@@ -174,9 +174,9 @@
 <body>
 
 <header class="wrap bar">
-  <a class="brand" href="#" aria-label="Thakkirni">
+  <a class="brand" href="#" aria-label="Zakkirni">
     <svg viewBox="0 0 108 108" aria-hidden="true"><rect width="108" height="108" rx="30" fill="#0E5E4F"/><g transform="translate(54 54.5) scale(1.12) translate(-54 -54.5)"><rect x="44.5" y="26" width="19" height="33" rx="9.5" fill="#FBF9F5"/><path d="M37 50a17 17 0 0 0 34 0" fill="none" stroke="#FBF9F5" stroke-width="4.6" stroke-linecap="round"/><path d="M54 67v13" stroke="#FBF9F5" stroke-width="4.6" stroke-linecap="round"/><g fill="none" stroke="#E5C27A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M54 74C47 67 39 70 42.5 75.5C45 79 50 77 54 74C58 77 63 79 65.5 75.5C69 70 61 67 54 74Z"/><path d="M54 74L49 83M54 74L59 83"/></g><circle cx="54" cy="74" r="2.6" fill="#E5C27A"/></g></svg>
-    <span data-ar="ذكّرني">Thakkirni</span>
+    <span data-ar="ذكّرني">Zakkirni</span>
   </a>
   <nav>
     <a href="#say" data-ar="ماذا تقول">What to say</a>
@@ -311,7 +311,7 @@
     nodes.forEach(function (n) { n.innerHTML = n.getAttribute(ar ? "data-ar" : "data-en"); });
     btn.textContent = ar ? "English" : "العربية";
     btn.lang = ar ? "en" : "ar";
-    document.title = ar ? "ذكّرني · تنزيل" : "Thakkirni · Download";
+    document.title = ar ? "ذكّرني · تنزيل" : "Zakkirni · Download";
     try { localStorage.setItem("lang", lang); } catch (e) {}
   }
   btn.addEventListener("click", function () { setLang(root.lang === "ar" ? "en" : "ar"); });

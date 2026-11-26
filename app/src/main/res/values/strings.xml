@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Thakkirni</string>
+    <string name="app_name">Zakkirni</string>
     <string name="talk">Talk</string>
     <string name="ask">Ask</string>
     <string name="tell_me">Tell me</string>
@@ -306,10 +306,10 @@
     <string name="check_updates">Check for updates</string>
     <string name="current_version">Current version %1$s</string>
     <string name="section_about">About</string>
-    <string name="about_app_version">Thakkirni v%1$s</string>
+    <string name="about_app_version">Zakkirni v%1$s</string>
     <string name="about_made_by">Designed and developed by %1$s</string>
     <string name="share_app">Share the app</string>
-    <string name="share_app_text">Thakkirni: a to-do app you talk to in Arabic. Free and open source.\nDownload: %1$s</string>
+    <string name="share_app_text">Zakkirni: a to-do app you talk to in Arabic. Free and open source.\nDownload: %1$s</string>
     <string name="source_code">Source code</string>
     <string name="about_license">Open source under the Apache License 2.0. Copyright 2026 %1$s. Font: IBM Plex Sans Arabic (SIL Open Font License).</string>
     <string name="guide_title">Guide</string>
@@ -343,7 +343,7 @@
     <string name="guide_done_title">All set!</string>
     <string name="guide_done_1">What you say without internet is added by itself when the connection is back.</string>
     <string name="guide_done_2">Misheard? Tap your words on the confirmation card to correct them.</string>
-    <string name="guide_done_tip">Thakkirni is designed and developed by %1$s.</string>
+    <string name="guide_done_tip">Zakkirni is designed and developed by %1$s.</string>
     <string name="update_checking">Checking…</string>
     <string name="update_up_to_date">You have the latest version ✓</string>
     <string name="update_available_title">New version %1$s</string>
@@ -352,14 +352,14 @@
     <string name="update_in_browser">Download the update in the browser</string>
     <string name="update_downloading">Downloading… %1$d%%</string>
     <string name="update_installing">Installing… confirm on the screen if asked.</string>
-    <string name="update_needs_permission">Allow Thakkirni to install updates (once), then tap Update now.</string>
+    <string name="update_needs_permission">Allow Zakkirni to install updates (once), then tap Update now.</string>
     <string name="allow_install">Allow</string>
     <string name="update_failed">Update failed.</string>
     <string name="update_confirm_title">Finish the update</string>
     <string name="update_confirm_text">Tap here, then press Install.</string>
     <string name="update_stopped">The update was stopped. Open Settings › Updates and press Update to try again.</string>
     <string name="update_no_space">Not enough space on the phone. Free some space and try again.</string>
-    <string name="update_blocked">The phone blocked the update. Check that installing from Thakkirni is allowed, then try again.</string>
+    <string name="update_blocked">The phone blocked the update. Check that installing from Zakkirni is allowed, then try again.</string>
     <string name="update_try_again">Something went wrong. Open Settings › Updates and press Update to try again.</string>
     <string name="update_check_failed">Could not check for updates.</string>
     <string name="update_bad_signature">This file is not signed by the official app, so it was not installed.</string>
@@ -377,7 +377,7 @@
     <string name="setup_alarms">Exact reminders</string>
     <string name="setup_alarms_hint">So reminders ring on time</string>
     <string name="setup_battery">Keep reminders running</string>
-    <string name="setup_battery_hint">Samsung puts apps to sleep. Allow, and also set Settings → Apps → Thakkirni → Battery → Unrestricted.</string>
+    <string name="setup_battery_hint">Samsung puts apps to sleep. Allow, and also set Settings → Apps → Zakkirni → Battery → Unrestricted.</string>
     <string name="setup_speech">Voice recognition</string>
     <string name="setup_speech_hint">Uses the Google app. Keep it installed and updated.</string>
     <string name="setup_voice">Reading voice</string>

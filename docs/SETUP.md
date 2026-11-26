@@ -1,6 +1,6 @@
 # Setup guide
 
-Everything needed to get Thakkirni (ذكّرني) onto his phone and keep it updated.
+Everything needed to get Zakkirni (ذكّرني) onto his phone and keep it updated.
 Steps 1–3 are done once by you (the maintainer); step 4 is on his phone.
 
 ## 1. Repository
@@ -46,7 +46,7 @@ Notes:
 ## 4. Install on his phone (Samsung Galaxy A9)
 
 1. On his phone, open `https://github.com/KIRAHERK/Thakkirni/releases/latest`.
-2. Tap `Thakkirni-vX.Y.Z.apk` to download, then open it.
+2. Tap `Zakkirni-vX.Y.Z.apk` to download, then open it.
 3. If Android asks, allow **Install unknown apps** for the browser, then **Install**.
 4. Open **ذكّرني**. The setup checklist appears:
    - **Microphone**: Allow.
