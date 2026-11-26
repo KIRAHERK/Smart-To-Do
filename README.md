@@ -1,12 +1,12 @@
-<a href="https://kiraherk.github.io/Smart-To-Do/"><img src="docs/readme/header.webp" alt="Thakkirni · ذكّرني. Talk to your to-do list, in Arabic. It keeps everything. Five real screens of the app." width="100%"></a>
+<a href="https://kiraherk.github.io/Thakkirni/"><img src="docs/readme/header.webp" alt="Thakkirni · ذكّرني. Talk to your to-do list, in Arabic. It keeps everything. Five real screens of the app." width="100%"></a>
 
 <p align="center">
-  <a href="https://kiraherk.github.io/Smart-To-Do/"><img src="docs/readme/download.png" alt="Download for Android" height="56"></a>
+  <a href="https://kiraherk.github.io/Thakkirni/"><img src="docs/readme/download.png" alt="Download for Android" height="56"></a>
 </p>
 
 <p align="center">
   Free · open source · Android 8 and newer<br>
-  <a href="https://kiraherk.github.io/Smart-To-Do/">Website</a> ·
+  <a href="https://kiraherk.github.io/Thakkirni/">Website</a> ·
   <a href="../../releases/latest">Latest release</a> ·
   <a href="docs/USER_GUIDE_ar.md">دليل الاستخدام</a> ·
   <a href="docs/SETUP.md">Setup guide</a>
@@ -79,7 +79,7 @@ contrast, right-to-left Arabic, English available, and a short guide on first ru
 
 ## Install in a minute
 
-1. Open the [website](https://kiraherk.github.io/Smart-To-Do/) on the phone and tap **Download for Android**.
+1. Open the [website](https://kiraherk.github.io/Thakkirni/) on the phone and tap **Download for Android**.
 2. Open the file and allow "Install unknown apps" when Android asks.
 3. Follow the setup list: microphone, notifications, battery, then paste a free Gemini key from
    [Google AI Studio](https://aistudio.google.com/apikey) once (two minutes, no card needed).
