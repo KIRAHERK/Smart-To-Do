@@ -1,0 +1,514 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-26T00:00:00Z",
+  "title": "Design System: Smart To-Do (مهامي الذكية)",
+  "extensions": {
+    "colorMeta": {
+      "emerald": {
+        "role": "primary",
+        "displayName": "Notebook Emerald",
+        "canonical": "oklch(43.3% 0.076 176.1)",
+        "tonalRamp": [
+          "#032C24",
+          "#00382D",
+          "#0A4A3F",
+          "#0E5E4F",
+          "#18876F",
+          "#7FD4BE",
+          "#C9EFE3",
+          "#D5ECE4"
+        ],
+        "source": "Theme.kt Emerald; docs --emerald"
+      },
+      "emerald-deep": {
+        "role": "primary",
+        "displayName": "Deep Binding Emerald",
+        "source": "Theme.kt EmeraldDeep (heroStart); docs --deep"
+      },
+      "emerald-bright": {
+        "role": "primary",
+        "displayName": "Lit Emerald",
+        "source": "Theme.kt EmeraldBright (heroEnd)"
+      },
+      "hero-glow": {
+        "role": "primary",
+        "displayName": "Hero Glow",
+        "source": "BrandColors.heroGlow"
+      },
+      "mint": {
+        "role": "primary",
+        "displayName": "Mint Wash",
+        "source": "primaryContainer; docs --mint"
+      },
+      "on-mint": {
+        "role": "primary",
+        "displayName": "Mint Ink"
+      },
+      "gold": {
+        "role": "secondary",
+        "displayName": "Thread Gold",
+        "canonical": "oklch(66.3% 0.120 80.3)",
+        "tonalRamp": [
+          "#160700",
+          "#361F00",
+          "#583900",
+          "#7D5500",
+          "#A0751B",
+          "#BD9856",
+          "#DEBF8C",
+          "#FFEBC6"
+        ]
+      },
+      "gold-text": {
+        "role": "secondary",
+        "displayName": "Gold Ink",
+        "source": "docs --gold-text"
+      },
+      "gold-container": {
+        "role": "secondary",
+        "displayName": "Gold Wash"
+      },
+      "terracotta": {
+        "role": "tertiary",
+        "displayName": "Terracotta",
+        "canonical": "oklch(58.3% 0.145 40.9)",
+        "tonalRamp": [
+          "#200000",
+          "#440F00",
+          "#6D2605",
+          "#983E18",
+          "#BF5D37",
+          "#DB8565",
+          "#F8B197",
+          "#FFE1CD"
+        ]
+      },
+      "terracotta-container": {
+        "role": "tertiary",
+        "displayName": "Terracotta Wash"
+      },
+      "ivory-ground": {
+        "role": "neutral",
+        "displayName": "Ivory Ground",
+        "canonical": "oklch(96.5% 0.010 87.5)",
+        "tonalRamp": [
+          "#1D1B17",
+          "#35332E",
+          "#615B50",
+          "#6E685D",
+          "#CFC7B7",
+          "#E6E0D4",
+          "#EFEBE2",
+          "#F6F3EC"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Paper"
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Card White"
+      },
+      "surface-container": {
+        "role": "neutral",
+        "displayName": "Chip Ground"
+      },
+      "surface-variant": {
+        "role": "neutral",
+        "displayName": "Warm Variant"
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "oklch(22.3% 0.008 84.6)",
+        "tonalRamp": [
+          "#0C0B09",
+          "#252421",
+          "#413F3C",
+          "#5F5D59",
+          "#7F7D78",
+          "#A09E9A",
+          "#C6C4C0",
+          "#EFEEEC"
+        ]
+      },
+      "ink-muted": {
+        "role": "neutral",
+        "displayName": "Muted Ink (app)"
+      },
+      "ink-muted-web": {
+        "role": "neutral",
+        "displayName": "Muted Ink (web)"
+      },
+      "outline": {
+        "role": "neutral",
+        "displayName": "Outline"
+      },
+      "outline-variant": {
+        "role": "neutral",
+        "displayName": "Hairline"
+      },
+      "rule-web": {
+        "role": "neutral",
+        "displayName": "Web Rule"
+      },
+      "on-deep-muted": {
+        "role": "neutral",
+        "displayName": "On-Emerald Muted"
+      },
+      "phone-black": {
+        "role": "neutral",
+        "displayName": "Phone Black"
+      },
+      "error": {
+        "role": "status",
+        "displayName": "Not Done Red",
+        "canonical": "oklch(54.3% 0.172 30.0)",
+        "tonalRamp": [
+          "#230000",
+          "#4A0200",
+          "#75170E",
+          "#A32E21",
+          "#CC4E3E",
+          "#E77B6A",
+          "#FFA99A",
+          "#FFDCD0"
+        ]
+      },
+      "success": {
+        "role": "status",
+        "displayName": "Done Green",
+        "canonical": "oklch(56.9% 0.119 154.9)",
+        "tonalRamp": [
+          "#001103",
+          "#002E13",
+          "#034D2A",
+          "#1A6F42",
+          "#3C915F",
+          "#6CB085",
+          "#9ED3AF",
+          "#D3FADF"
+        ]
+      },
+      "status-partly": {
+        "role": "status",
+        "displayName": "Partly Done Amber"
+      },
+      "status-in-progress": {
+        "role": "status",
+        "displayName": "In Progress Blue"
+      },
+      "status-postponed": {
+        "role": "status",
+        "displayName": "Postponed Orange"
+      },
+      "status-missed": {
+        "role": "status",
+        "displayName": "Missed Brown"
+      },
+      "status-cancelled": {
+        "role": "status",
+        "displayName": "Cancelled Grey"
+      },
+      "status-not-started": {
+        "role": "status",
+        "displayName": "Not Started Sage"
+      },
+      "dark-ground": {
+        "role": "neutral",
+        "displayName": "Night Ground"
+      },
+      "dark-surface": {
+        "role": "neutral",
+        "displayName": "Night Card"
+      },
+      "dark-ink": {
+        "role": "neutral",
+        "displayName": "Night Ink"
+      },
+      "dark-emerald": {
+        "role": "primary",
+        "displayName": "Night Emerald"
+      },
+      "dark-gold": {
+        "role": "secondary",
+        "displayName": "Night Gold"
+      },
+      "dark-success": {
+        "role": "status",
+        "displayName": "Night Done Green"
+      },
+      "dark-hero-start": {
+        "role": "primary",
+        "displayName": "Night Hero Start"
+      },
+      "dark-hero-end": {
+        "role": "primary",
+        "displayName": "Night Hero End"
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Large app moments; headlineLarge 31sp and headlineMedium 28sp sit between display and headline."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Inner screen titles on the warm ground."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Talk label, dialog titles, Today greeting."
+      },
+      "title-medium": {
+        "displayName": "Title Medium",
+        "purpose": "Task titles, section headers, text field input."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Dialog text and choice rows; BigText 22/33sp for the live transcript."
+      },
+      "body-medium": {
+        "displayName": "Body Medium",
+        "purpose": "Subtitles, setting values, hints."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Buttons, count bubbles, next-up line."
+      },
+      "label-medium": {
+        "displayName": "Label Medium",
+        "purpose": "Pills and meta chips."
+      },
+      "web-display": {
+        "displayName": "Web Display",
+        "purpose": "Download page h1, max 15ch; 34px under 640px."
+      },
+      "web-display-ar": {
+        "displayName": "Web Display (Arabic)",
+        "purpose": "h1 in Arabic mode, El Messiri, max 22ch, no tracking."
+      },
+      "web-headline": {
+        "displayName": "Web Headline",
+        "purpose": "Section h2s; Arabic mode line-height 1.4, no tracking."
+      },
+      "web-body": {
+        "displayName": "Web Body",
+        "purpose": "English page copy, 44 to 60ch."
+      },
+      "web-body-ar": {
+        "displayName": "Web Body (Arabic)",
+        "purpose": "Arabic mode copy in Noto Naskh Arabic."
+      },
+      "web-quote": {
+        "displayName": "Spoken Example",
+        "purpose": "Arabic example sentences, always RTL, in both modes."
+      }
+    },
+    "shadows": [
+      {
+        "name": "card-hush",
+        "value": "Material shadowElevation 1dp + 1px #E7E1D5 border",
+        "purpose": "Every app card."
+      },
+      {
+        "name": "talk-lift",
+        "value": "Compose shadow 12dp, ambient and spot #0A4A3F",
+        "purpose": "Talk button only."
+      },
+      {
+        "name": "download-lift",
+        "value": "0 10px 24px -14px rgba(10, 74, 63, .7)",
+        "purpose": "Web primary button."
+      },
+      {
+        "name": "phone-hold",
+        "value": "0 30px 50px -26px rgba(0, 0, 0, .75), 0 10px 18px -12px rgba(0, 0, 0, .5)",
+        "purpose": "Phone frames on the shelf."
+      }
+    ],
+    "motion": [
+      {
+        "name": "talk-breathe",
+        "value": "1400ms linear, infinite reverse; halo alpha 0.25 to 0.55, scale 1 to 1.06",
+        "purpose": "Talk button at rest (app)."
+      },
+      {
+        "name": "guide-page",
+        "value": "slide 1/6 width + fade 260ms in, fade 140ms out",
+        "purpose": "First-run guide pages (app)."
+      },
+      {
+        "name": "ease-out-expo",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Web easing for rise and button lift."
+      },
+      {
+        "name": "shelf-rise",
+        "value": "translateY(48px) to 0, 0.8s, stagger 60ms",
+        "purpose": "Web phones, once on load; off under reduced motion."
+      },
+      {
+        "name": "hover",
+        "value": "0.2s background-color, border-color, transform; lift 1px",
+        "purpose": "Web interactive states."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "web-compact",
+        "value": "960px"
+      },
+      {
+        "name": "web-phone",
+        "value": "640px"
+      },
+      {
+        "name": "web-container",
+        "value": "1200px"
+      }
+    ],
+    "textScale": {
+      "default": 1.15,
+      "options": [
+        1.0,
+        1.15,
+        1.3,
+        1.5
+      ],
+      "purpose": "App-wide multiplier on font scale via LocalDensity, set in Settings."
+    },
+    "languageSwitch": {
+      "surface": "docs/index.html",
+      "default": "en",
+      "mechanism": "data-ar on each node, English captured at load; sets html lang and dir, swaps copy, toggle label and title; remembered via ?lang=ar or localStorage",
+      "fonts": {
+        "en": "IBM Plex Sans",
+        "ar": "El Messiri (display), Noto Naskh Arabic (body)"
+      }
+    }
+  },
+  "components": [
+    {
+      "name": "Talk Button",
+      "kind": "button",
+      "refersTo": "button-talk",
+      "description": "The app's signature: a wide emerald gradient pill with a white mic disc that breathes at rest; the one moving thing on a resting screen.",
+      "html": "<button class=\"ds-talk\"><span class=\"ds-talk-disc\"><svg viewBox=\"0 0 24 24\" width=\"32\" height=\"32\" aria-hidden=\"true\"><path fill=\"currentColor\" d=\"M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z\"/></svg></span><span>Talk</span></button>",
+      "css": ".ds-talk{position:relative;display:inline-flex;align-items:center;gap:16px;min-height:70px;padding:0 34px 0 10px;border:0;border-radius:999px;background:linear-gradient(135deg,#0A4A3F,#18876F);color:#fff;font-family:'IBM Plex Sans Arabic','IBM Plex Sans',system-ui,sans-serif;font-size:23px;font-weight:700;cursor:pointer;box-shadow:0 6px 14px rgba(10,74,63,.45),0 0 0 8px rgba(79,209,174,.14);animation:ds-breathe 1.4s linear infinite alternate}.ds-talk-disc{display:grid;place-items:center;width:52px;height:52px;border-radius:50%;background:#fff;color:#0A4A3F}.ds-talk:hover{filter:brightness(1.05)}.ds-talk:focus-visible{outline:2px solid #B98A2E;outline-offset:4px}@keyframes ds-breathe{from{box-shadow:0 6px 14px rgba(10,74,63,.45),0 0 0 6px rgba(79,209,174,.12)}to{box-shadow:0 6px 14px rgba(10,74,63,.45),0 0 0 12px rgba(79,209,174,.27)}}@media (prefers-reduced-motion:reduce){.ds-talk{animation:none}}"
+    },
+    {
+      "name": "Download Button",
+      "kind": "button",
+      "refersTo": "button-download",
+      "description": "Web primary action: emerald, 18px corners, label then a download arrow; lifts 1px on hover.",
+      "html": "<a class=\"ds-btn-download\" href=\"#\"><span>Download for Android</span><svg viewBox=\"0 0 24 24\" width=\"20\" height=\"20\" aria-hidden=\"true\"><path fill=\"currentColor\" d=\"M11 4h2v9.17l3.59-3.58L18 11l-6 6-6-6 1.41-1.41L11 13.17z\"/><path fill=\"currentColor\" d=\"M5 19h14v2H5z\"/></svg></a>",
+      "css": ".ds-btn-download{display:inline-flex;align-items:center;gap:12px;min-height:56px;padding:16px 28px;border-radius:18px;background:#0E5E4F;color:#fff;text-decoration:none;font:600 19px 'IBM Plex Sans',system-ui,sans-serif;box-shadow:0 10px 24px -14px rgba(10,74,63,.7);transition:background-color .2s,transform .2s cubic-bezier(0.16,1,0.3,1)}.ds-btn-download:hover{background:#0A4A3F;transform:translateY(-1px)}.ds-btn-download:focus-visible{outline:2px solid #B98A2E;outline-offset:3px}@media (prefers-reduced-motion:reduce){.ds-btn-download{transition:none}}"
+    },
+    {
+      "name": "Language Toggle",
+      "kind": "button",
+      "refersTo": "language-toggle",
+      "description": "Web bar pill labelled in the other language, set in that language's font; flips lang, dir, fonts and copy.",
+      "html": "<button class=\"ds-lang\" lang=\"ar\">العربية</button>",
+      "css": ".ds-lang{min-height:40px;padding:6px 16px;border:1px solid #E2DBCC;border-radius:999px;background:transparent;color:#1D1B17;font:600 15px 'El Messiri','IBM Plex Sans',sans-serif;cursor:pointer;transition:border-color .2s,background-color .2s}.ds-lang:hover{border-color:#57514A;background:#FBF9F5}.ds-lang:focus-visible{outline:2px solid #B98A2E;outline-offset:3px}"
+    },
+    {
+      "name": "Task Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "One task: tinted category tile, big title, meta chips, and a round Done button; white card, 22px corners, hairline border.",
+      "html": "<div class=\"ds-card\" dir=\"rtl\"><span class=\"ds-tile\"><svg viewBox=\"0 0 24 24\" width=\"28\" height=\"28\" aria-hidden=\"true\"><path fill=\"currentColor\" d=\"M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z\"/></svg></span><div class=\"ds-card-main\"><div class=\"ds-card-title\">أتصل بالبنك</div><div class=\"ds-chips\"><span class=\"ds-meta\"><svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" aria-hidden=\"true\"><path fill=\"currentColor\" d=\"M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z\"/></svg><span>بكرة · 10:00 ص</span></span><span class=\"ds-pill\">قيد التنفيذ</span></div></div><button class=\"ds-done\" aria-label=\"Done\"><svg viewBox=\"0 0 24 24\" width=\"30\" height=\"30\" aria-hidden=\"true\"><path fill=\"currentColor\" d=\"M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z\"/></svg></button></div>",
+      "css": ".ds-card{display:flex;align-items:center;gap:14px;max-width:420px;padding:14px 14px 14px 12px;background:#fff;border:1px solid #E7E1D5;border-radius:22px;box-shadow:0 1px 2px rgba(29,27,23,.08);font-family:'IBM Plex Sans Arabic','IBM Plex Sans',system-ui,sans-serif;color:#1D1B17;cursor:pointer;transition:background-color .2s}.ds-card:hover{background:#FBF9F5}.ds-tile{display:grid;place-items:center;flex:none;width:50px;height:50px;border-radius:16px;background:rgba(47,93,168,.12);color:#2F5DA8}.ds-card-main{flex:1;min-width:0}.ds-card-title{font-size:20px;line-height:29px;font-weight:600}.ds-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.ds-meta{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:10px;background:#F3EFE7;color:#615B50;font-size:15px;font-weight:500}.ds-pill{padding:4px 10px;border-radius:999px;background:rgba(47,93,168,.14);color:#2F5DA8;font-size:15px;font-weight:600}.ds-done{display:grid;place-items:center;flex:none;width:54px;height:54px;border-radius:50%;border:2.5px solid rgba(46,139,87,.55);background:rgba(46,139,87,.06);color:#2E8B57;cursor:pointer}.ds-done:hover{background:rgba(46,139,87,.14)}.ds-done:focus-visible{outline:2px solid #B98A2E;outline-offset:3px}"
+    },
+    {
+      "name": "Status Pill",
+      "kind": "chip",
+      "refersTo": "pill",
+      "description": "Status or category hue at 14% behind text in that hue; the word always travels with the colour.",
+      "html": "<span class=\"ds-status ds-status-done\">Done</span> <span class=\"ds-status ds-status-postponed\">Postponed</span> <span class=\"ds-status ds-status-important\">Important</span>",
+      "css": ".ds-status{display:inline-block;padding:4px 10px;border-radius:999px;font-family:'IBM Plex Sans Arabic','IBM Plex Sans',system-ui,sans-serif;font-size:15px;line-height:21px;font-weight:600}.ds-status-done{background:rgba(46,139,87,.14);color:#2E8B57}.ds-status-postponed{background:rgba(210,122,31,.14);color:#D27A1F}.ds-status-important{background:rgba(192,88,47,.14);color:#C0582F}"
+    },
+    {
+      "name": "Section Header",
+      "kind": "custom",
+      "refersTo": "",
+      "description": "App section title with a 4x20 rounded colour bar and an optional count bubble.",
+      "html": "<div class=\"ds-sec\"><span class=\"ds-sec-bar\"></span><span class=\"ds-sec-title\">Today</span><span class=\"ds-sec-count\">3</span></div>",
+      "css": ".ds-sec{display:flex;align-items:center;gap:10px;font-family:'IBM Plex Sans Arabic','IBM Plex Sans',system-ui,sans-serif;color:#1D1B17}.ds-sec-bar{width:4px;height:20px;border-radius:2px;background:rgba(14,94,79,.85)}.ds-sec-title{font-size:20px;line-height:29px;font-weight:600}.ds-sec-count{padding:1px 10px;border-radius:999px;background:rgba(14,94,79,.14);color:#0E5E4F;font-size:17px;font-weight:600}"
+    },
+    {
+      "name": "Phone on the Shelf",
+      "kind": "custom",
+      "refersTo": "phone-frame",
+      "description": "Web signature: a real screen in a 32px black frame on the emerald-deep shelf, caption below; rises once on load.",
+      "html": "<div class=\"ds-shelf\"><figure class=\"ds-ph\"><div class=\"ds-frame\"><div class=\"ds-screen\"></div></div><figcaption><b>Today</b><span>Late, today, coming up</span></figcaption></figure></div>",
+      "css": ".ds-shelf{background:#0A4A3F;color:#fff;padding:40px 32px;font-family:'IBM Plex Sans',system-ui,sans-serif}.ds-ph{margin:0;width:180px;animation:ds-rise .8s cubic-bezier(0.16,1,0.3,1) both}.ds-frame{background:#0F0F0E;border-radius:32px;padding:7px;box-shadow:0 30px 50px -26px rgba(0,0,0,.75),0 10px 18px -12px rgba(0,0,0,.5)}.ds-screen{aspect-ratio:400/860;border-radius:26px;background:linear-gradient(#F6F3EC 0 22%,#0E5E4F 22% 36%,#F6F3EC 36%)}.ds-ph b{display:block;margin-top:18px;font-size:19px;font-weight:700}.ds-ph span{display:block;margin-top:2px;color:#BFE6DA;font-size:15px;line-height:1.45}@keyframes ds-rise{from{transform:translateY(48px)}to{transform:none}}@media (prefers-reduced-motion:reduce){.ds-ph{animation:none}}"
+    },
+    {
+      "name": "Install Step",
+      "kind": "custom",
+      "refersTo": "",
+      "description": "Web numbered step: mint numeral disc, display-weight title, muted line, hairline rules between steps.",
+      "html": "<ol class=\"ds-steps\"><li><div><b>Download the APK</b><span>Open this page on the phone and tap Download for Android.</span></div></li><li><div><b>Allow the install</b><span>Open the file and allow “Install unknown apps”.</span></div></li></ol>",
+      "css": ".ds-steps{list-style:none;margin:0;padding:0;counter-reset:s;font-family:'IBM Plex Sans',system-ui,sans-serif;color:#1D1B17;max-width:520px}.ds-steps li{counter-increment:s;display:grid;grid-template-columns:52px 1fr;gap:16px;padding:20px 0;border-top:1px solid #E2DBCC}.ds-steps li:last-child{border-bottom:1px solid #E2DBCC}.ds-steps li::before{content:counter(s);display:grid;place-items:center;width:40px;height:40px;border-radius:50%;background:#D5ECE4;color:#0A4A3F;font-weight:700;font-size:17px}.ds-steps b{display:block;font-size:19px;font-weight:600}.ds-steps span{color:#57514A;font-size:16px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Emerald Notebook",
+    "overview": "A personal assistant's notebook, bound in deep emerald with a gold thread, on warm ivory paper. The app is the source of the world (`ui/theme/Theme.kt`); the download page (`docs/index.html`) is its second surface and borrows the same ground, ink, emerald and gold, then sets them at web scale.\n\nThe app is built for one older reader who speaks rather than types: few, big things per screen, high contrast, every type role above Material defaults and multiplied by a 1.15 default text scale (user options 100, 115, 130, 150%). Arabic right-to-left is first; English is available. Calm and premium, not \"default app\": no grey app bars, no cool greys, soft rounded cards on a warm ground, and one breathing emerald Talk button as the only thing that moves at rest.\n\nThe web page keeps the app's palette and corners but trades cards for editorial rules: hairline dividers, one 2px gold rule, a deep emerald shelf carrying five real phone screens. It opens in English (IBM Plex) and switches whole-page to Arabic (El Messiri headlines, Noto Naskh Arabic body, RTL).",
+    "keyCharacteristics": [
+      "Warm ivory ground, ink-brown text, deep emerald fields, gold as the single accent.",
+      "Large type, generous line height, 48dp minimum touch targets (Talk 70dp, Done 54dp).",
+      "Generous rounding (8 to 32px), pills for status, hairline borders over shadows.",
+      "Arabic-first in the app; a full Arabic/English switch on the web."
+    ],
+    "rules": [
+      {
+        "name": "The One Thread Rule",
+        "body": "Gold is a thread, not a fill: rules, rings, focus and small labels. Never a button or a large field.",
+        "section": "colors"
+      },
+      {
+        "name": "The Emerald Field Rule",
+        "body": "Large coloured areas are emerald only: the hero gradient in the app, flat emerald-deep on the web, always with white text.",
+        "section": "colors"
+      },
+      {
+        "name": "The Never Colour Alone Rule",
+        "body": "Every status colour sits in a pill with its name; every meta chip carries an icon with a content description.",
+        "section": "colors"
+      },
+      {
+        "name": "The Big Print Rule",
+        "body": "No app role is set at Material's default size; the 1.15 text scale is applied on top through density, so new screens use theme roles, never raw sp.",
+        "section": "typography"
+      },
+      {
+        "name": "The Two Scripts Rule",
+        "body": "In Arabic mode body grows to 20px/1.8, captions and steps grow by 2px, headings loosen to 1.35 to 1.4 line height and letter-spacing returns to 0. Never track Arabic.",
+        "section": "typography"
+      },
+      {
+        "name": "The Hairline First Rule",
+        "body": "Separate with a 1px rule or a tonal step before reaching for a shadow.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** set every screen on ivory-ground (dark-ground in dark) and every card on white with a hairline border.",
+      "**Do** use theme type roles so the 1.15 text scale and user scale reach new text.",
+      "**Do** keep touch targets at 48dp or more, and pair every status colour with its word.",
+      "**Do** switch fonts with the language on the web: Plex for English, El Messiri and Noto Naskh Arabic for Arabic.",
+      "**Do** honour reduced motion on the web: no rise, no transitions, no smooth scroll."
+    ],
+    "donts": [
+      "**Don't** use a grey Material app bar; titles sit on the warm ground.",
+      "**Don't** fill buttons or large fields with gold; it is a thread.",
+      "**Don't** introduce cool greys or pure black text; ink is #1D1B17.",
+      "**Don't** apply negative letter-spacing to Arabic.",
+      "**Don't** add a second moving element at rest beside the Talk button."
+    ]
+  }
+}
