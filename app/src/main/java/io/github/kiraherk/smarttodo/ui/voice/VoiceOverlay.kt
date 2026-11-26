@@ -159,7 +159,7 @@ private fun Listening(state: VoiceViewModel.UiState.Listening, onFinish: () -> U
             // Three rings drifting outwards, a little bigger when he speaks louder.
             for (i in 0 until 3) {
                 val p = (t + i / 3f) % 1f
-                val r = size.minDimension / 2 * (0.52f + 0.48f * p) * (1f + level * 0.08f)
+                val r = size.minDimension / 2 * ((0.52f + 0.48f * p) * (1f + level * 0.08f)).coerceAtMost(1f)
                 drawCircle(brand.heroGlow.copy(alpha = (1f - p) * 0.35f), radius = r)
             }
         }
@@ -196,10 +196,15 @@ private fun Thinking(state: VoiceViewModel.UiState.Thinking, onCancel: () -> Uni
     Box(Modifier.size(104.dp), contentAlignment = Alignment.Center) {
         Canvas(Modifier.fillMaxSize()) {
             val stroke = 7.dp.toPx()
-            drawCircle(primary.copy(alpha = 0.10f), style = Stroke(stroke))
+            // Inset by half the stroke: drawn on the edge, the ring spilled out and the scrolling card cut it.
+            val inset = stroke / 2
+            drawCircle(primary.copy(alpha = 0.10f), radius = size.minDimension / 2 - inset, style = Stroke(stroke))
             drawArc(
                 Brush.sweepGradient(listOf(brand.heroGlow.copy(alpha = 0f), brand.heroEnd, brand.heroStart)),
-                startAngle = angle, sweepAngle = 260f, useCenter = false, style = Stroke(stroke, cap = StrokeCap.Round),
+                startAngle = angle, sweepAngle = 260f, useCenter = false,
+                topLeft = androidx.compose.ui.geometry.Offset(inset, inset),
+                size = androidx.compose.ui.geometry.Size(size.width - stroke, size.height - stroke),
+                style = Stroke(stroke, cap = StrokeCap.Round),
             )
         }
         Icon(Icons.Filled.AutoAwesome, contentDescription = null, tint = primary, modifier = Modifier.size(40.dp))
