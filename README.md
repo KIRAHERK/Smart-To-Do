@@ -1,65 +1,92 @@
+<img src="docs/screenshots/share.png" alt="Smart To-Do: five real screens of the app, Today, Talk, Confirm, History and Assistant" width="100%">
+
 # Smart To-Do · مهامي الذكية
+
+**An Android to-do list you talk to in Arabic.** Say what you must do, in any dialect. It writes it
+down, files it, reminds you on time, asks how it went, and keeps the whole record, so you can later
+ask *"when did I last call Ahmed?"*.
+
+**[Download for Android](https://kiraherk.github.io/Smart-To-Do/)** · free · open source · Android 8+
 
 Designed and developed by **Hussein Al Herk** ([@KIRAHERK](https://github.com/KIRAHERK)).
 
-An open-source Android to-do app you **talk to in Arabic** instead of typing.
-Made for a busy businessman who used to write his lists on paper: now every task, note and
-status change is kept forever, reminders ring on time, and an assistant can answer
-questions like *"when did I last call Ahmed?"*.
+## Why it exists
 
-<p>
-<img src="docs/screenshots/today.png" width="220" alt="Today screen">
-<img src="docs/screenshots/listening.png" width="220" alt="Listening">
-<img src="docs/screenshots/confirm.png" width="220" alt="Confirm what was understood">
-<img src="docs/screenshots/task_detail.png" width="220" alt="Task details">
-</p>
+It was made for a busy businessman who wrote his daily and weekly lists on paper and threw them
+away, so nothing was kept and things were forgotten. He would rather speak than type. Smart To-Do
+lets him talk, confirms what it understood, and never loses a word.
+
+## What you can say
+
+No commands to learn. It understands plain speech, reads back what it understood, and saves only
+when you say yes. Every detail (name, category, day, time, repeat, reminder) can be tapped and
+changed first.
+
+| | Say | Meaning |
+|---|---|---|
+| Add | «بكرة الساعة عشرة أتصل بالبنك» | Tomorrow at ten, call the bank. |
+| Repeat | «ذكرني كل أسبوعين أطمّن على أبو خالد» | Remind me every two weeks to check on Abu Khaled. |
+| Update | «تقرير المبيعات خلصت نصه، باقي الجدول الأخير» | Half the sales report is done; the last table is left. |
+| Postpone | «ما قدرت أروح للبنك اليوم، أجّلها لبكرة» | Couldn't get to the bank today, move it to tomorrow. |
+| Note | «على مهمة الشحنة: أحمد قال توصل يوم الخميس» | On the shipment task: Ahmed says it arrives Thursday. |
+| Ask | «متى آخر مرة كلمت أحمد؟» | When did I last call Ahmed? |
+
+More examples are in the Arabic user guide, [docs/USER_GUIDE_ar.md](docs/USER_GUIDE_ar.md).
 
 ## What it does
 
-- **Voice first.** Press the big «تكلّم» button and speak naturally, in any Arabic dialect:
-  *«ذكرني كل أسبوعين يوم الاثنين الساعة عشرة أتصل بأحمد»*. The app shows and reads back what it
-  understood and saves it when you say yes.
-- **Organised automatically** into Work · Home · Personal · Travel.
-- **Statuses that match real life:** not started, in progress, partly done (with %), done,
-  done with a note, not done, postponed, cancelled, and *missed* for a repeating round that passed.
-- **Notes by voice** on any task, any time.
-- **Reminders and repeats:** "every two weeks", "every month on the 15th", "every Friday"…
-  Reminders ring exactly on time and have *Done / Partly / In 1 hour* buttons.
-- **Change repeating tasks by voice:** "make the Ahmed call monthly", "postpone it to Thursday".
-- **Full history:** every change is logged with date and time; search by voice or text
-  (Arabic-aware: أحمد = احمد, مدرسة = مدرسه…).
-- **Daily rhythm:** morning summary (read aloud), evening review ("tell me what you did"),
-  weekly review.
-- **Assistant:** ask anything about your tasks, notes and history; answers are read aloud.
-- **Nothing is ever lost:** if there is no internet or AI, what you said goes to the Inbox and
-  is organised later. Automatic daily backups, a backup before every update, share / restore.
-- **Updates itself** from this repository's GitHub Releases, keeping all data.
-- Large text, high contrast, Arabic right-to-left interface (English also available).
+- **Today:** what is late, due today and coming up, coloured by category: Work, Home, Personal,
+  Travel, plus your own.
+- **Statuses that match real life:** not started, in progress, partly done (with %), done, done
+  with a note, not done, postponed, cancelled, and *missed* for a repeating round that passed.
+- **Reminders and repeats:** "every two weeks", "every month on the 15th", "every Friday". Each
+  reminder has *Done*, *Partly* and *In an hour* buttons.
+- **Daily rhythm:** a morning summary read aloud, an evening review ("how was your day?") and a
+  Friday weekly review, all answered by voice.
+- **History:** every task once, with its current status and every earlier change. Filter by status
+  or category, search by voice or text (Arabic-aware: أحمد = احمد), select and delete.
+- **Assistant:** a chat that knows your tasks, notes and history. Answers are read aloud with a
+  play / pause button.
+- **Nothing is lost:** speech said offline is kept and added by itself when Wi-Fi or data returns.
+  Daily backups, a backup before every update, share and restore.
+- **Updates itself** from this repository's releases and keeps all data.
+- Large text, high contrast, right-to-left Arabic (English also available), a short guide on first
+  run and after updates.
 
-## How it works
+<p>
+<img src="docs/screenshots/today.webp" width="190" alt="Today screen">
+<img src="docs/screenshots/listening.webp" width="190" alt="Listening">
+<img src="docs/screenshots/confirm.webp" width="190" alt="Confirming what was understood">
+<img src="docs/screenshots/history.webp" width="190" alt="History">
+<img src="docs/screenshots/assistant.webp" width="190" alt="Assistant chat">
+</p>
+
+## Install
+
+1. On the phone, open the [download page](https://kiraherk.github.io/Smart-To-Do/) (or the
+   [latest release](../../releases/latest)) and download `SmartToDo-vX.Y.Z.apk`.
+2. Open it, and allow "Install unknown apps" when Android asks.
+3. Follow the setup list in the app: microphone, notifications, battery, then paste a free Gemini
+   API key from [Google AI Studio](https://aistudio.google.com/apikey) once.
+
+New versions then appear inside the app (Settings → Updates, plus a daily check). The full
+step-by-step guide, including the signing key and releasing, is in [docs/SETUP.md](docs/SETUP.md).
+
+## How it is built
 
 | Part | Technology |
 |---|---|
 | App | Kotlin, Jetpack Compose, Material 3, minSdk 26 (Android 8.0+) |
-| Speech → text | Android `SpeechRecognizer` (Google's engine, Arabic dialect chosen in Settings) |
-| Text → speech | Android `TextToSpeech` |
-| Understanding & assistant | Google **Gemini API**, free tier, via REST. The best free *flash-lite* / *flash* model is picked from the live model list, with automatic fallback when a daily limit is reached. One request per command. |
+| Speech to text | Android `SpeechRecognizer` (Arabic dialect chosen in Settings), or recording + Gemini transcription so long pauses never cut him off |
+| Text to speech | Android `TextToSpeech`, or Google's natural voices when online |
+| Understanding and assistant | Google **Gemini API**, free tier, over REST. The newest free *flash-lite* / *flash* model is picked from the live model list, with automatic fallback when a daily limit is reached. One request per command. |
 | Storage | Room (SQLite) with exported schemas and explicit migrations |
-| Reminders | `AlarmManager` exact alarms, rescheduled after reboot |
-| Updates | GitHub Releases + in-app installer (verifies the APK is signed with the same key) |
+| Reminders | `AlarmManager` exact alarms, rescheduled after a reboot |
+| Offline | A queue of unprocessed speech, retried when the network returns |
+| Updates | GitHub Releases + in-app installer that checks the APK is signed with the same key |
 
-The Gemini API key is **never** in this repository or the APK. It is typed into the app's
-Settings once and stored encrypted with the Android Keystore.
-
-## Install
-
-1. On the phone, open the [latest release](../../releases/latest) and download `SmartToDo-vX.Y.Z.apk`.
-2. Open it, allow "Install unknown apps" for the browser when asked, and install.
-3. Follow the setup checklist in the app (microphone, notifications, battery, Gemini key).
-
-After that, new versions appear inside the app (Settings → Check for updates, plus a daily
-notification). See **[docs/SETUP.md](docs/SETUP.md)** for the full step-by-step guide and
-**[docs/USER_GUIDE_ar.md](docs/USER_GUIDE_ar.md)** for the Arabic user guide.
+The Gemini API key is **never** in this repository or the APK. It is typed into the app once and
+stored encrypted with the Android Keystore.
 
 ## Build from source
 
@@ -69,11 +96,14 @@ Requirements: JDK 17+, Android SDK (platform 37, build-tools 36).
 ./gradlew assembleDebug testDebugUnitTest lintDebug
 ```
 
-The debug build installs as a separate app (`io.github.kiraherk.smarttodo.debug`), so testing
-never touches real data. `ScreenshotTest` renders the main screens to `app/build/screenshots/`.
+The debug build installs as a separate app (`io.github.kiraherk.smarttodo.debug`), so testing never
+touches real data. `ScreenshotTest` renders the main screens to `app/build/screenshots/`, and
+`StoreScreenshotTest` renders the clean screens used here and on the download page to
+`app/build/store-screenshots/`. Emulator tests run on Android 8 and 10 in CI.
 
-Releases are built by GitHub Actions (`.github/workflows/release.yml`) with the signing key
-stored in repository secrets. See [docs/SETUP.md](docs/SETUP.md#releasing-a-new-version).
+Releases are built by GitHub Actions (`.github/workflows/release.yml`) with the signing key kept in
+repository secrets. See [docs/SETUP.md](docs/SETUP.md#releasing-a-new-version). The download page
+is `docs/index.html`, served by GitHub Pages.
 
 ### Rules that keep his data safe across updates
 
@@ -100,12 +130,12 @@ Smart To-Do is designed, built and maintained by **Hussein Al Herk**.
 ## Credits
 
 The idea, the design decisions and the testing on real phones: Hussein Al Herk. If you use or
-build on this project, please keep this credit (see [NOTICE](NOTICE)). Typeface: IBM Plex Sans
-Arabic (SIL Open Font License). AI: Google Gemini API.
+build on this project, please keep this credit (see [NOTICE](NOTICE)).
+
+Typefaces, all under the SIL Open Font License 1.1: IBM Plex Sans Arabic in the app
+([third_party/fonts](third_party/fonts/IBM-Plex-Sans-Arabic-OFL.txt)); IBM Plex, El Messiri and
+Noto Naskh Arabic on the download page ([docs/licenses](docs/licenses)). AI: Google Gemini API.
 
 ## License
 
 [Apache License 2.0](LICENSE). Copyright (c) 2026 Hussein Al Herk.
-
-The app bundles the IBM Plex Sans Arabic font, licensed under the SIL Open Font License 1.1
-([third_party/fonts](third_party/fonts/IBM-Plex-Sans-Arabic-OFL.txt)).

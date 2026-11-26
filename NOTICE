@@ -6,3 +6,6 @@ Under section 4(d) of that license, copies and derivative works must keep this N
 
 This product bundles the IBM Plex Sans Arabic font, Copyright IBM Corp.,
 licensed under the SIL Open Font License 1.1 (third_party/fonts).
+
+The download page (docs/) uses IBM Plex, El Messiri and Noto Naskh Arabic, all licensed under the
+SIL Open Font License 1.1 (docs/licenses).
