@@ -7,7 +7,7 @@ related_targets: []
 
 # Download page (docs/index.html)
 
-Mode: Persuade. Served by GitHub Pages at https://kiraherk.github.io/Smart-To-Do/ (like Forge's page). Opens in English with a full Arabic (RTL) switch.
+Mode: Persuade. Served by GitHub Pages at https://kiraherk.github.io/Thakkirni/ (like Forge's page). Opens in English with a full Arabic (RTL) switch.
 
 Audience: portfolio visitors first (employers, clients judging the work), Arabic speakers who want to install it second. Action: download the latest signed APK. Proof: the real app screens (rendered by StoreScreenshotTest), real example sentences from the user guide. No invented users, reviews or numbers.
 

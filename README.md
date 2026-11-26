@@ -94,7 +94,7 @@ Later versions arrive inside the app.
 ويصنّفه ويذكّرك في وقته، ويسألك كيف جرى، ويحفظ السجل كاملاً. إذا لم يكن هناك إنترنت يُحفظ
 كلامك ويُضاف وحده عند عودة الاتصال. مجاني ومفتوح المصدر، لأندرويد 8 وأحدث.
 
-[تنزيل التطبيق](https://kiraherk.github.io/Smart-To-Do/?lang=ar) · [دليل الاستخدام](docs/USER_GUIDE_ar.md)
+[تنزيل التطبيق](https://kiraherk.github.io/Thakkirni/?lang=ar) · [دليل الاستخدام](docs/USER_GUIDE_ar.md)
 
 </div>
 

@@ -1,6 +1,6 @@
 name: Download page
 
-# Publishes docs/ (the download page) to https://kiraherk.github.io/Smart-To-Do/
+# Publishes docs/ (the download page) to https://kiraherk.github.io/Thakkirni/
 on:
   push:
     paths: ['docs/**', '.github/workflows/pages.yml']
