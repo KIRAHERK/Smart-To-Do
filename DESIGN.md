@@ -1,5 +1,5 @@
 ---
-name: Smart To-Do (مهامي الذكية)
+name: Thakkirni (ذكّرني)
 description: An Arabic voice to-do notebook in deep emerald and gold on warm ivory, built big for an older reader.
 colors:
   emerald: "#0E5E4F"
@@ -72,7 +72,11 @@ components:
   phone-frame: { backgroundColor: "{colors.phone-black}", rounded: "{rounded.xl}", padding: "7px" }
 ---
 
-# Design System: Smart To-Do (مهامي الذكية)
+# Design System: Thakkirni (ذكّرني)
+
+Formerly Smart To-Do. Mark: a cream microphone on emerald with a gold thread tied round its stem (`ic_launcher_foreground.xml`, `docs/icon.svg`).
+
+**App colours (Settings → Display):** `Accent` in `Theme.kt` swaps only `primary`, the primary container and the header gradient: Green `#0E5E4F` (default), Blue `#1F4E8C`, Purple `#5B3A8C`, Red `#9E2335`, Pink `#A3306B`, each with a dark-mode partner. Gold, the warm ground and the status colours never change.
 
 ## Overview
 

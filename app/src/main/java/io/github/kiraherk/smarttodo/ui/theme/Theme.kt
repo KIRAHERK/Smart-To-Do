@@ -123,6 +123,33 @@ private val DarkBrand = BrandColors(Color(0xFF0B3D34), Color(0xFF136B59), Color(
 
 val LocalBrand = staticCompositionLocalOf { LightBrand }
 
+/**
+ * The app colour he picks in Settings. Only the main colour and the header change; gold, the warm
+ * background and the status colours stay, so every choice is still this app.
+ */
+enum class Accent(
+    val primary: Color, val deep: Color, val bright: Color, val glow: Color,
+    val container: Color, val onContainer: Color,
+    val darkPrimary: Color, val darkOnPrimary: Color, val darkContainer: Color, val darkOnContainer: Color,
+    val darkHeroStart: Color, val darkHeroEnd: Color,
+) {
+    GREEN(Emerald, EmeraldDeep, EmeraldBright, Color(0xFF4FD1AE), Color(0xFFD5ECE4), Color(0xFF032C24),
+        Color(0xFF7FD4BE), Color(0xFF00382D), Color(0xFF0E4A3F), Color(0xFFC9EFE3), Color(0xFF0B3D34), Color(0xFF136B59)),
+    BLUE(Color(0xFF1F4E8C), Color(0xFF173D6E), Color(0xFF2F6DB5), Color(0xFF7FB2F0), Color(0xFFD9E5F5), Color(0xFF0A2147),
+        Color(0xFFA9C7F2), Color(0xFF0B2A55), Color(0xFF1E3F6B), Color(0xFFD6E4FA), Color(0xFF132D4F), Color(0xFF1F4E8C)),
+    PURPLE(Color(0xFF5B3A8C), Color(0xFF472D6E), Color(0xFF7A55B5), Color(0xFFC2A6F0), Color(0xFFE8DEF5), Color(0xFF25124A),
+        Color(0xFFCDB6F2), Color(0xFF32185C), Color(0xFF46307A), Color(0xFFEADDFB), Color(0xFF2E1D4B), Color(0xFF4E3380)),
+    RED(Color(0xFF9E2335), Color(0xFF7D1A2A), Color(0xFFC23A4E), Color(0xFFF29AA6), Color(0xFFF7DCE0), Color(0xFF3E0812),
+        Color(0xFFF2A9B3), Color(0xFF5C0F1C), Color(0xFF7A2131), Color(0xFFFFDDE2), Color(0xFF4E1119), Color(0xFF85202F)),
+    PINK(Color(0xFFA3306B), Color(0xFF822555), Color(0xFFC94E8A), Color(0xFFF5A3CB), Color(0xFFF8DDEA), Color(0xFF40102A),
+        Color(0xFFF4AFCF), Color(0xFF5A1338), Color(0xFF7A2A55), Color(0xFFFFDCEB), Color(0xFF4E1733), Color(0xFF8A2C5C)),
+    ;
+
+    companion object {
+        fun of(key: String?): Accent = entries.firstOrNull { it.name == key } ?: GREEN
+    }
+}
+
 /** Bigger than Material defaults: he should never have to squint. */
 private val AppTypography = Typography().let { t ->
     fun TextStyle.plex(size: Int, line: Int, weight: FontWeight) =
@@ -155,12 +182,20 @@ private val AppShapes = Shapes(
 val BigText = TextStyle(fontFamily = PlexArabic, fontSize = 22.sp, lineHeight = 33.sp)
 
 @Composable
-fun SmartTodoTheme(textScale: Float = 1f, dark: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
+fun SmartTodoTheme(textScale: Float = 1f, accent: Accent = Accent.GREEN, dark: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
     val density = LocalDensity.current
-    MaterialTheme(colorScheme = if (dark) Dark else Light, typography = AppTypography, shapes = AppShapes) {
+    val a = accent
+    val colors = if (dark) {
+        Dark.copy(primary = a.darkPrimary, onPrimary = a.darkOnPrimary, primaryContainer = a.darkContainer, onPrimaryContainer = a.darkOnContainer)
+    } else {
+        Light.copy(primary = a.primary, primaryContainer = a.container, onPrimaryContainer = a.onContainer)
+    }
+    val brand = if (dark) DarkBrand.copy(heroStart = a.darkHeroStart, heroEnd = a.darkHeroEnd, heroGlow = a.glow)
+        else LightBrand.copy(heroStart = a.deep, heroEnd = a.bright, heroGlow = a.glow)
+    MaterialTheme(colorScheme = colors, typography = AppTypography, shapes = AppShapes) {
         CompositionLocalProvider(
             LocalDensity provides Density(density.density, density.fontScale * textScale),
-            LocalBrand provides if (dark) DarkBrand else LightBrand,
+            LocalBrand provides brand,
         ) {
             content()
         }

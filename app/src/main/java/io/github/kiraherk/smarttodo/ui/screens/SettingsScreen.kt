@@ -90,6 +90,12 @@ import io.github.kiraherk.smarttodo.ai.AiService
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.border
 import androidx.compose.ui.draw.clip
 import io.github.kiraherk.smarttodo.ui.components.AppCard
 import io.github.kiraherk.smarttodo.ui.components.ScreenHeader
@@ -182,7 +188,7 @@ class SettingsViewModel(private val c: AppContainer) : ViewModel() {
     fun setListenMode(v: String) = viewModelScope.launch { c.settings.setListenMode(v) }
     fun listenProblem(): String? = c.speech.lastProblem
     fun setTextScale(v: Float) = viewModelScope.launch { c.settings.setTextScale(v) }
-    fun testVoice() = c.speaker.speakNow(str(R.string.voice_test_sentence))
+    fun setAccent(v: String) = viewModelScope.launch { c.settings.setAccent(v) }
     /** Plays the sample with a voice, without saving it. */
     fun previewVoice(v: String) = c.speaker.preview(str(R.string.voice_test_sentence), v)
     fun saveVoice(v: String) = viewModelScope.launch { c.settings.setVoiceName(v) }
@@ -325,7 +331,6 @@ fun SettingsScreen(openUpdate: Boolean, onUpdateOpened: () -> Unit, onOpenSetup:
             SectionHeader(stringResource(R.string.section_voice), gold)
             Group {
                 SettingRow(Icons.Filled.RecordVoiceOver, stringResource(R.string.voice_choice), voiceLabel(ctx, s.voiceName, vm.phoneVoices()), color = gold) { dialog = "voice" }
-                SettingRow(Icons.AutoMirrored.Filled.VolumeUp, stringResource(R.string.test_voice), stringResource(R.string.test_voice_hint), color = gold) { vm.testVoice() }
                 SwitchRow(Icons.AutoMirrored.Filled.VolumeUp, stringResource(R.string.read_aloud_setting), s.readAloud, color = gold) { vm.setReadAloud(it) }
                 SettingRow(Icons.Filled.Language, stringResource(R.string.dialect), Locale.forLanguageTag(s.dialect).getDisplayName(locale), color = gold) { dialog = "dialect" }
                 SwitchRow(Icons.Filled.Checklist, stringResource(R.string.auto_confirm), s.autoConfirm, color = gold) { vm.setAutoConfirm(it) }
@@ -366,6 +371,7 @@ fun SettingsScreen(openUpdate: Boolean, onUpdateOpened: () -> Unit, onOpenSetup:
                 SettingRow(Icons.Filled.Category, stringResource(R.string.categories_title), stringResource(R.string.categories_settings_hint), color = blue) { onOpenCategories() }
                 SettingRow(Icons.Filled.Language, stringResource(R.string.app_language), if (LocaleHelper.isArabic(ctx)) "العربية" else "English", color = blue) { dialog = "language" }
                 SettingRow(Icons.Filled.TextFields, stringResource(R.string.text_size), "${(s.textScale * 100).toInt()}%", color = blue) { dialog = "textSize" }
+                AccentPicker(io.github.kiraherk.smarttodo.ui.theme.Accent.of(s.accent)) { vm.setAccent(it.name) }
             }
 
             SectionHeader(stringResource(R.string.section_backup), green)
@@ -488,8 +494,8 @@ private fun friendly(ctx: android.content.Context, time: String): String =
     Dates.parseTime(time)?.let { Dates.friendlyTime(ctx, it) } ?: time
 
 /**
- * Choosing the reading voice: tapping a voice plays a sample and marks it, nothing is saved until
- * he presses Save (so he can listen to several first).
+ * Choosing the reading voice: the speaker button plays a sample without choosing; tapping the row
+ * marks a voice, and nothing is saved until he presses Save.
  */
 @Composable
 private fun VoicePickerDialog(
@@ -511,13 +517,16 @@ private fun VoicePickerDialog(
                 .fillMaxWidth()
                 .clip(androidx.compose.foundation.shape.RoundedCornerShape(16.dp))
                 .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerLow)
-                .clickable { selected = name; onPreview(name) }
+                .clickable { selected = name }
                 .padding(vertical = 4.dp, horizontal = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            androidx.compose.material3.RadioButton(selected = isSelected, onClick = { selected = name; onPreview(name) })
+            androidx.compose.material3.RadioButton(selected = isSelected, onClick = { selected = name })
             Text(voiceLabel(ctx, name, phoneVoices), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-            Icon(Icons.AutoMirrored.Filled.VolumeUp, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(end = 10.dp))
+            // Listening to a voice does not choose it; the row does.
+            androidx.compose.material3.IconButton(onClick = { onPreview(name) }, modifier = Modifier.size(48.dp)) {
+                Icon(Icons.AutoMirrored.Filled.VolumeUp, contentDescription = stringResource(R.string.voice_listen), tint = MaterialTheme.colorScheme.primary)
+            }
         }
     }
 
@@ -557,6 +566,41 @@ private fun VoicePickerDialog(
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
     )
+}
+
+/** The app colour: five swatches, the chosen one ticked. */
+@Composable
+private fun AccentPicker(current: io.github.kiraherk.smarttodo.ui.theme.Accent, onPick: (io.github.kiraherk.smarttodo.ui.theme.Accent) -> Unit) {
+    val names = mapOf(
+        io.github.kiraherk.smarttodo.ui.theme.Accent.GREEN to R.string.color_green,
+        io.github.kiraherk.smarttodo.ui.theme.Accent.BLUE to R.string.color_blue,
+        io.github.kiraherk.smarttodo.ui.theme.Accent.PURPLE to R.string.color_purple,
+        io.github.kiraherk.smarttodo.ui.theme.Accent.RED to R.string.color_red,
+        io.github.kiraherk.smarttodo.ui.theme.Accent.PINK to R.string.color_pink,
+    )
+    Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp)) {
+        Text(stringResource(R.string.app_color), style = MaterialTheme.typography.titleMedium)
+        Spacer(Modifier.size(10.dp))
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            io.github.kiraherk.smarttodo.ui.theme.Accent.entries.forEach { a ->
+                val chosen = a == current
+                val label = stringResource(names.getValue(a))
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Box(
+                        Modifier.size(48.dp).clip(androidx.compose.foundation.shape.CircleShape)
+                            .background(a.primary)
+                            .then(if (chosen) Modifier.border(3.dp, MaterialTheme.colorScheme.onSurface, androidx.compose.foundation.shape.CircleShape) else Modifier)
+                            .clickable(onClickLabel = label) { onPick(a) }
+                            .semantics { contentDescription = label; selected = chosen },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        if (chosen) Icon(Icons.Filled.Check, contentDescription = null, tint = Color.White, modifier = Modifier.size(26.dp))
+                    }
+                    Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
+                }
+            }
+        }
+    }
 }
 
 /** A white rounded group of settings rows. */

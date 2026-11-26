@@ -3,15 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Smart To-Do · Download</title>
-<meta name="description" content="Smart To-Do: an Android to-do list you talk to in Arabic. It writes down what you say, reminds you on time and keeps every change. Free and open source.">
+<title>Thakkirni · Download</title>
+<meta name="description" content="Thakkirni (ذكّرني): an Android to-do list you talk to in Arabic. It writes down what you say, reminds you on time and keeps every change. Free and open source.">
 <meta name="theme-color" content="#0A4A3F">
-<meta property="og:title" content="Smart To-Do · Talk to your to-do list, in Arabic">
+<meta property="og:title" content="Thakkirni · Talk to your to-do list, in Arabic">
 <meta property="og:description" content="Say what you must do, in any Arabic dialect. It writes it down, reminds you, asks how it went and keeps the whole record. Free for Android.">
 <meta property="og:image" content="https://kiraherk.github.io/Smart-To-Do/screenshots/share.png">
 <meta property="og:url" content="https://kiraherk.github.io/Smart-To-Do/">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%230E5E4F'/%3E%3Cpath fill='%23fff' transform='translate(4.8 4.8) scale(.6)' d='M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z'/%3E%3C/svg%3E">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="preload" href="fonts/plex-latin-700.woff2" as="font" type="font/woff2" crossorigin>
 <style>
   @font-face { font-family: "Plex"; font-weight: 400; font-display: swap; src: url("fonts/plex-latin-400.woff2") format("woff2"); }
@@ -174,9 +174,9 @@
 <body>
 
 <header class="wrap bar">
-  <a class="brand" href="#" aria-label="Smart To-Do">
-    <svg viewBox="0 0 34 34" aria-hidden="true"><rect width="34" height="34" rx="10" fill="#0E5E4F"/><path fill="#fff" transform="translate(7 7) scale(.83)" d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>
-    <span data-ar="مهامي الذكية">Smart To-Do</span>
+  <a class="brand" href="#" aria-label="Thakkirni">
+    <svg viewBox="0 0 108 108" aria-hidden="true"><rect width="108" height="108" rx="30" fill="#0E5E4F"/><g transform="translate(54 54.5) scale(1.12) translate(-54 -54.5)"><rect x="44.5" y="26" width="19" height="33" rx="9.5" fill="#FBF9F5"/><path d="M37 50a17 17 0 0 0 34 0" fill="none" stroke="#FBF9F5" stroke-width="4.6" stroke-linecap="round"/><path d="M54 67v13" stroke="#FBF9F5" stroke-width="4.6" stroke-linecap="round"/><g fill="none" stroke="#E5C27A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M54 74C47 67 39 70 42.5 75.5C45 79 50 77 54 74C58 77 63 79 65.5 75.5C69 70 61 67 54 74Z"/><path d="M54 74L49 83M54 74L59 83"/></g><circle cx="54" cy="74" r="2.6" fill="#E5C27A"/></g></svg>
+    <span data-ar="ذكّرني">Thakkirni</span>
   </a>
   <nav>
     <a href="#say" data-ar="ماذا تقول">What to say</a>
@@ -311,7 +311,7 @@
     nodes.forEach(function (n) { n.innerHTML = n.getAttribute(ar ? "data-ar" : "data-en"); });
     btn.textContent = ar ? "English" : "العربية";
     btn.lang = ar ? "en" : "ar";
-    document.title = ar ? "مهامي الذكية · تنزيل" : "Smart To-Do · Download";
+    document.title = ar ? "ذكّرني · تنزيل" : "Thakkirni · Download";
     try { localStorage.setItem("lang", lang); } catch (e) {}
   }
   btn.addEventListener("click", function () { setLang(root.lang === "ar" ? "en" : "ar"); });

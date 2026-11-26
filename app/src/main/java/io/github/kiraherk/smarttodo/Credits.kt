@@ -1,12 +1,12 @@
 package io.github.kiraherk.smarttodo
 
-/** Who made Smart To-Do. Shown in Settings → About, the guide and the README. */
+/** Who made Thakkirni. Shown in Settings → About, the guide and the README. */
 object Credits {
     const val AUTHOR = "Hussein Al Herk"
     const val GITHUB_USER = "KIRAHERK"
 
     /** The always-newest version, for sharing the app. */
-    const val DOWNLOAD_PAGE = "https://github.com/KIRAHERK/Smart-To-Do/releases/latest"
+    const val DOWNLOAD_PAGE = "https://kiraherk.github.io/Smart-To-Do/"
 
     /** Label to URL. Links left blank are not shown. */
     val links: List<Pair<String, String>> = listOf(

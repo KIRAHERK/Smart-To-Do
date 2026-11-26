@@ -79,7 +79,7 @@ fun AppRoot(navRequests: StateFlow<NavRequest?>, onNavHandled: () -> Unit) {
     val ctx = LocalContext.current
     val settings by c.settings.settings.collectAsStateWithLifecycle(initialValue = null)
 
-    SmartTodoTheme(textScale = settings?.textScale ?: 1.15f) {
+    SmartTodoTheme(textScale = settings?.textScale ?: 1.15f, accent = io.github.kiraherk.smarttodo.ui.theme.Accent.of(settings?.accent)) {
         val voiceVm: VoiceViewModel = viewModel { VoiceViewModel(c) }
         val voiceState by voiceVm.state.collectAsStateWithLifecycle()
         val nav = rememberNavController()

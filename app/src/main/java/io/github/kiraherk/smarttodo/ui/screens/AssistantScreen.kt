@@ -124,7 +124,13 @@ fun AssistantScreen() {
     DisposableEffect(Unit) { onDispose { vm.stopVoice() } }
 
     val rows = messages.size + (if (typing) 1 else 0)
-    LaunchedEffect(rows) { if (rows > 0) listState.animateScrollToItem(rows - 1) }
+    // Opening the chat lands on the newest message at once; only messages that arrive later glide in.
+    var landed by remember { mutableStateOf(false) }
+    LaunchedEffect(rows) {
+        if (rows == 0) return@LaunchedEffect
+        if (landed) listState.animateScrollToItem(rows - 1) else listState.scrollToItem(rows - 1)
+        landed = true
+    }
 
     fun send(text: String) {
         if (text.isBlank()) return

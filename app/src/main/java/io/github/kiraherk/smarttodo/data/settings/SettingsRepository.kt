@@ -49,6 +49,8 @@ data class AppSettings(
      */
     val listenMode: String = LISTEN_AUTO,
     val textScale: Float = 1.15f,
+    /** [io.github.kiraherk.smarttodo.ui.theme.Accent] name: the app colour. */
+    val accent: String = "GREEN",
     val backupTreeUri: String = "",
     val lastBackupAt: Long = 0,
     val lastNotifiedUpdate: String = "",
@@ -77,6 +79,7 @@ class SettingsRepository(private val context: Context) {
         val autoConfirm = booleanPreferencesKey("auto_confirm")
         val listenMode = stringPreferencesKey("listen_mode")
         val textScale = floatPreferencesKey("text_scale")
+        val accent = stringPreferencesKey("accent")
         val backupTreeUri = stringPreferencesKey("backup_tree_uri")
         val lastBackupAt = longPreferencesKey("last_backup_at")
         val lastNotifiedUpdate = stringPreferencesKey("last_notified_update")
@@ -104,6 +107,7 @@ class SettingsRepository(private val context: Context) {
             autoConfirm = p[Keys.autoConfirm] ?: d.autoConfirm,
             listenMode = p[Keys.listenMode] ?: d.listenMode,
             textScale = p[Keys.textScale] ?: d.textScale,
+            accent = p[Keys.accent] ?: d.accent,
             backupTreeUri = p[Keys.backupTreeUri] ?: d.backupTreeUri,
             lastBackupAt = p[Keys.lastBackupAt] ?: d.lastBackupAt,
             lastNotifiedUpdate = p[Keys.lastNotifiedUpdate] ?: d.lastNotifiedUpdate,
@@ -127,6 +131,7 @@ class SettingsRepository(private val context: Context) {
     suspend fun setAutoConfirm(v: Boolean) = put(Keys.autoConfirm, v)
     suspend fun setListenMode(v: String) = put(Keys.listenMode, v)
     suspend fun setTextScale(v: Float) = put(Keys.textScale, v)
+    suspend fun setAccent(v: String) = put(Keys.accent, v)
     suspend fun setBackupTreeUri(v: String) = put(Keys.backupTreeUri, v)
     suspend fun setLastBackupAt(v: Long) = put(Keys.lastBackupAt, v)
     suspend fun setLastNotifiedUpdate(v: String) = put(Keys.lastNotifiedUpdate, v)

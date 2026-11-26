@@ -2,7 +2,7 @@
 
 <!-- impeccable:product-schema 1 -->
 
-Smart To-Do (مهامي الذكية), by Hussein Al Herk. Facts come from the README, docs/USER_GUIDE_ar.md and the owner's messages; audience and page language were confirmed by the owner.
+Thakkirni (ذكّرني, "remind me"), formerly Smart To-Do, by Hussein Al Herk. Facts come from the README, docs/USER_GUIDE_ar.md and the owner's messages; audience and page language were confirmed by the owner.
 
 ## Platform
 
@@ -32,7 +32,7 @@ Voice first (big Talk button), confirmation card before saving (every detail edi
 
 ## Brand Commitments
 
-Name «مهامي الذكية» / Smart To-Do. Arabic right-to-left first in the app. Credit line: designed and developed by Hussein Al Herk, with links to GitHub (KIRAHERK), LinkedIn (husseinalherk) and the portfolio (kiraherk.github.io). Download page lives at kiraherk.github.io/Smart-To-Do, matching the author's Forge page (kiraherk.github.io/Forge), and opens in English with a full Arabic switch.
+Name «ذكّرني» / Thakkirni (chosen with impeccable from eight options; formerly Smart To-Do). Mark: a microphone with a gold thread tied round its stem (app/src/main/res/drawable/ic_launcher_foreground.xml, docs/icon.svg). Five app colours the user can pick: green (default), blue, purple, red, pink. Arabic right-to-left first in the app. Credit line: designed and developed by Hussein Al Herk, with links to GitHub (KIRAHERK), LinkedIn (husseinalherk) and the portfolio (kiraherk.github.io). Download page lives at kiraherk.github.io/Smart-To-Do, matching the author's Forge page (kiraherk.github.io/Forge), and opens in English with a full Arabic switch.
 
 ## Evidence on Hand
 

@@ -1,16 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Thakkirni (ذكّرني): a microphone with a gold thread tied round it, the old way to remember. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
     <group
-        android:scaleX="2.5"
-        android:scaleY="2.5"
-        android:translateX="24"
-        android:translateY="24">
+        android:pivotX="54"
+        android:pivotY="54.5"
+        android:scaleX="1.12"
+        android:scaleY="1.12">
         <path
-            android:fillColor="#FFFFFFFF"
-            android:pathData="M12,14c1.66,0 2.99,-1.34 2.99,-3L15,5c0,-1.66 -1.34,-3 -3,-3S9,3.34 9,5v6c0,1.66 1.34,3 3,3zM17.3,11c0,3 -2.54,5.1 -5.3,5.1S6.7,14 6.7,11L5,11c0,3.41 2.72,6.23 6,6.72L11,21h2v-3.28c3.28,-0.48 6,-3.3 6,-6.72h-1.7z" />
+            android:fillColor="#FFFBF9F5"
+            android:pathData="M44.5,35.5a9.5,9.5 0,0 1,19 0v14a9.5,9.5 0,0 1,-19 0z" />
+        <path
+            android:pathData="M37,50a17,17 0,0 0,34 0"
+            android:strokeColor="#FFFBF9F5"
+            android:strokeLineCap="round"
+            android:strokeWidth="4.6" />
+        <path
+            android:pathData="M54,67v13"
+            android:strokeColor="#FFFBF9F5"
+            android:strokeLineCap="round"
+            android:strokeWidth="4.6" />
+        <path
+            android:pathData="M54,74C47,67 39,70 42.5,75.5C45,79 50,77 54,74C58,77 63,79 65.5,75.5C69,70 61,67 54,74ZM54,74L49,83M54,74L59,83"
+            android:strokeColor="#FFE5C27A"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            android:strokeWidth="3" />
+        <path
+            android:fillColor="#FFE5C27A"
+            android:pathData="M51.4,74a2.6,2.6 0,1 0,5.2 0a2.6,2.6 0,1 0,-5.2 0z" />
     </group>
 </vector>

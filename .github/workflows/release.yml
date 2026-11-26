@@ -70,20 +70,20 @@ jobs:
           SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
         run: |
           ./gradlew testDebugUnitTest assembleRelease -PappVersionName=${{ steps.v.outputs.version }} --stacktrace
-          cp app/build/outputs/apk/release/app-release.apk "SmartToDo-${{ steps.v.outputs.tag }}.apk"
+          cp app/build/outputs/apk/release/app-release.apk "Thakkirni-${{ steps.v.outputs.tag }}.apk"
 
       - name: Check the APK is signed
         run: |
           APKSIGNER=$(find "$ANDROID_HOME/build-tools" -name apksigner | sort -V | tail -1)
-          "$APKSIGNER" verify --print-certs SmartToDo-*.apk | grep "SHA-256"
+          "$APKSIGNER" verify --print-certs Thakkirni-*.apk | grep "SHA-256"
 
       - name: Publish the release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "${{ steps.v.outputs.tag }}" SmartToDo-*.apk \
+          gh release create "${{ steps.v.outputs.tag }}" Thakkirni-*.apk \
             --target "$GITHUB_SHA" \
-            --title "Smart To-Do ${{ steps.v.outputs.tag }}" \
+            --title "Thakkirni ${{ steps.v.outputs.tag }}" \
             --generate-notes
 
       - name: Remove the key from the runner

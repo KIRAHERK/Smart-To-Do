@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">مهامي الذكية</string>
+    <string name="app_name">ذكّرني</string>
     <string name="talk">تكلّم</string>
     <string name="ask">اسأل</string>
     <string name="tell_me">أخبرني</string>
@@ -250,12 +250,11 @@
     <string name="dialect">لغة الكلام</string>
     <string name="read_aloud_setting">قراءة الردود بصوت عالٍ</string>
     <string name="auto_confirm">احفظ المهام الجديدة بدون سؤال</string>
-    <string name="test_voice">تجربة الصوت</string>
-    <string name="test_voice_hint">اضغط لسماع جملة</string>
     <string name="voice_choice">صوت القراءة</string>
     <string name="voice_phone">صوت الهاتف (يعمل بدون إنترنت)</string>
     <string name="voice_natural_hint">الأصوات الطبيعية تحتاج الإنترنت، وإذا لم تتوفر يقرأ صوت الهاتف بدلاً منها.</string>
-    <string name="voice_pick_hint">اضغط على أي صوت لتسمعه، ثم اضغط «حفظ» لاعتماده.</string>
+    <string name="voice_listen">استمع</string>
+    <string name="voice_pick_hint">اضغط على السمّاعة لتسمع الصوت. اختر صوتاً ثم اضغط «حفظ».</string>
     <string name="voice_section_natural">أصوات Google الطبيعية (تحتاج الإنترنت، وتتأخر بضع ثوانٍ)</string>
     <string name="voice_section_instant">أصوات فورية على الهاتف (بدون إنترنت، بلا انتظار)</string>
     <string name="voice_phone_n">صوت فوري %1$d</string>
@@ -305,10 +304,10 @@
     <string name="check_updates">البحث عن تحديث</string>
     <string name="current_version">الإصدار الحالي %1$s</string>
     <string name="section_about">حول التطبيق</string>
-    <string name="about_app_version">مهامي الذكية v%1$s</string>
+    <string name="about_app_version">ذكّرني v%1$s</string>
     <string name="about_made_by">تصميم وتطوير %1$s</string>
     <string name="share_app">شارك التطبيق</string>
-    <string name="share_app_text">مهامي الذكية: تطبيق مهام تكلّمه بالعربي. مجاني ومفتوح المصدر.\nللتحميل: %1$s</string>
+    <string name="share_app_text">«ذكّرني»: تطبيق مهام تكلّمه بالعربي. مجاني ومفتوح المصدر.\nللتحميل: %1$s</string>
     <string name="source_code">الكود المصدري</string>
     <string name="about_license">مفتوح المصدر برخصة Apache 2.0. حقوق النشر 2026 %1$s. الخط: IBM Plex Sans Arabic (رخصة SIL المفتوحة للخطوط).</string>
     <string name="guide_title">الدليل</string>
@@ -342,7 +341,7 @@
     <string name="guide_done_title">جاهز!</string>
     <string name="guide_done_1">ما تقوله بدون إنترنت يُضاف تلقائياً عند عودة الاتصال.</string>
     <string name="guide_done_2">أخطأ الهاتف في سماعك؟ اضغط على كلامك في بطاقة التأكيد لتصحيحه.</string>
-    <string name="guide_done_tip">مهامي الذكية من تصميم وتطوير %1$s.</string>
+    <string name="guide_done_tip">«ذكّرني» من تصميم وتطوير %1$s.</string>
     <string name="update_checking">جارٍ البحث…</string>
     <string name="update_up_to_date">لديك أحدث إصدار ✓</string>
     <string name="update_available_title">إصدار جديد %1$s</string>
@@ -351,14 +350,14 @@
     <string name="update_in_browser">تنزيل التحديث من المتصفح</string>
     <string name="update_downloading">جارٍ التنزيل… %1$d%%</string>
     <string name="update_installing">جارٍ التثبيت… وافق على الشاشة إن طُلب منك.</string>
-    <string name="update_needs_permission">اسمح لتطبيق «مهامي الذكية» بتثبيت التحديثات (مرة واحدة)، ثم اضغط «حدّث الآن».</string>
+    <string name="update_needs_permission">اسمح لتطبيق «ذكّرني» بتثبيت التحديثات (مرة واحدة)، ثم اضغط «حدّث الآن».</string>
     <string name="allow_install">سماح</string>
     <string name="update_failed">فشل التحديث.</string>
     <string name="update_confirm_title">أكمل التحديث</string>
     <string name="update_confirm_text">اضغط هنا، ثم اضغط «تثبيت».</string>
     <string name="update_stopped">توقف التحديث. افتح الإعدادات ← التحديثات واضغط «حدّث الآن» للمحاولة مرة أخرى.</string>
     <string name="update_no_space">لا توجد مساحة كافية في الهاتف. احذف بعض الملفات ثم حاول مرة أخرى.</string>
-    <string name="update_blocked">منع الهاتف التحديث. تأكد من السماح بالتثبيت من «مهامي الذكية» ثم حاول مرة أخرى.</string>
+    <string name="update_blocked">منع الهاتف التحديث. تأكد من السماح بالتثبيت من «ذكّرني» ثم حاول مرة أخرى.</string>
     <string name="update_try_again">حدث خطأ. افتح الإعدادات ← التحديثات واضغط «حدّث الآن» للمحاولة مرة أخرى.</string>
     <string name="update_check_failed">تعذّر البحث عن تحديث.</string>
     <string name="update_bad_signature">هذا الملف غير موقّع من التطبيق الرسمي، لذلك لم يُثبَّت.</string>
@@ -375,7 +374,7 @@
     <string name="setup_alarms">التذكير في الوقت المحدد</string>
     <string name="setup_alarms_hint">لكي ترنّ التذكيرات في وقتها تماماً</string>
     <string name="setup_battery">إبقاء التذكيرات تعمل</string>
-    <string name="setup_battery_hint">هاتف سامسونج يُنيم التطبيقات. اضغط سماح، واضبط أيضاً: الإعدادات ← التطبيقات ← مهامي الذكية ← البطارية ← غير مقيّد.</string>
+    <string name="setup_battery_hint">هاتف سامسونج يُنيم التطبيقات. اضغط سماح، واضبط أيضاً: الإعدادات ← التطبيقات ← ذكّرني ← البطارية ← غير مقيّد.</string>
     <string name="setup_speech">التعرّف على الصوت</string>
     <string name="setup_speech_hint">يستخدم تطبيق Google. أبقِه مثبتاً ومحدّثاً.</string>
     <string name="setup_voice">صوت القراءة</string>
@@ -449,4 +448,10 @@
         <item quantity="many">✓ تم %d</item>
         <item quantity="other">✓ تم %d</item>
     </plurals>
+    <string name="app_color">لون التطبيق</string>
+    <string name="color_green">أخضر</string>
+    <string name="color_blue">أزرق</string>
+    <string name="color_purple">بنفسجي</string>
+    <string name="color_red">أحمر</string>
+    <string name="color_pink">وردي</string>
 </resources>

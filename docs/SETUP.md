@@ -1,6 +1,6 @@
 # Setup guide
 
-Everything needed to get Smart To-Do onto his phone and keep it updated.
+Everything needed to get Thakkirni (ذكّرني) onto his phone and keep it updated.
 Steps 1–3 are done once by you (the maintainer); step 4 is on his phone.
 
 ## 1. Repository
@@ -46,13 +46,13 @@ Notes:
 ## 4. Install on his phone (Samsung Galaxy A9)
 
 1. On his phone, open `https://github.com/kiraherk/smart-to-do/releases/latest`.
-2. Tap `SmartToDo-vX.Y.Z.apk` to download, then open it.
+2. Tap `Thakkirni-vX.Y.Z.apk` to download, then open it.
 3. If Android asks, allow **Install unknown apps** for the browser, then **Install**.
-4. Open **مهامي الذكية**. The setup checklist appears:
+4. Open **ذكّرني**. The setup checklist appears:
    - **Microphone**: Allow.
    - **Notifications**: Allow (Android 13+ only).
    - **Keep reminders running**: Allow. On Samsung also open
-     *Settings → Apps → مهامي الذكية → Battery → Unrestricted*.
+     *Settings → Apps → ذكّرني → Battery → Unrestricted*.
      If Samsung shows "Sleeping apps", make sure the app is **not** in that list.
    - **Speech language**: choose his dialect (e.g. Arabic – Saudi Arabia, Egypt, Lebanon…).
    - **Reading voice**: if not green, tap Install and download the Arabic voice.

@@ -318,6 +318,21 @@ class ScreenshotTest {
         save("settings-about")
     }
 
+    /** The app colour picker, chosen colour Purple: the whole screen follows it. */
+    @Test
+    fun appColourPicker() {
+        compose.setContent {
+            SmartTodoTheme(1.15f, accent = io.github.kiraherk.smarttodo.ui.theme.Accent.PURPLE) {
+                CompositionLocalProvider(LocalVoice provides voice) {
+                    io.github.kiraherk.smarttodo.ui.screens.SettingsScreen(openUpdate = false, onUpdateOpened = {}, onOpenSetup = {})
+                }
+            }
+        }
+        compose.waitUntil(10_000) { compose.onAllNodesWithText("لون التطبيق").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithText("وردي").performScrollTo()
+        save("settings-colour")
+    }
+
     @Test
     fun answerOverlay() {
         compose.setContent {

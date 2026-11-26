@@ -57,10 +57,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.kiraherk.smarttodo.R
 import io.github.kiraherk.smarttodo.ui.screens.Routes
@@ -77,6 +76,9 @@ data class GuideStep(
     @StringRes val tip: Int,
     val since: String,
 )
+
+/** Test tag of the circle drawn around the tab being explained. */
+const val RING_TAG = "guide_ring"
 
 object Guide {
     /** The bottom tabs, in their order (the ring is drawn around the right one). */
@@ -118,7 +120,6 @@ fun GuideOverlay(steps: List<GuideStep>, whatsNew: Boolean, onGoTo: (String) -> 
     BackHandler { if (step > 0) step-- else onDone() }
 
     val navBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
-    val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     val pulse by rememberInfiniteTransition(label = "guide").animateFloat(
         1f, 1.18f, infiniteRepeatable(tween(900), RepeatMode.Reverse), label = "pulse",
     )
@@ -139,12 +140,13 @@ fun GuideOverlay(steps: List<GuideStep>, whatsNew: Boolean, onGoTo: (String) -> 
         if (tabIndex != null) {
             val slot = maxWidth / Guide.TABS.size
             val ring = 60.dp
-            // In Arabic the first tab is on the right.
-            val center = if (rtl) maxWidth - slot * tabIndex - slot / 2 else slot * tabIndex + slot / 2
+            // Measured from the start edge: offset() mirrors itself in Arabic, where the first tab is on the right.
+            val center = slot * tabIndex + slot / 2
             Box(
                 Modifier
                     .offset(x = center - ring / 2, y = maxHeight - navBottom - barHeight / 2 - ring / 2)
                     .size(ring)
+                    .testTag(RING_TAG)
                     .graphicsLayer { scaleX = pulse; scaleY = pulse; alpha = 1.6f - pulse }
                     .border(3.dp, accent, CircleShape),
             )
