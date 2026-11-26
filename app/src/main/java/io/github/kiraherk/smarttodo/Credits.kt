@@ -6,7 +6,7 @@ object Credits {
     const val GITHUB_USER = "KIRAHERK"
 
     /** The always-newest version, for sharing the app. */
-    const val DOWNLOAD_PAGE = "https://kiraherk.github.io/Thakkirni/"
+    const val DOWNLOAD_PAGE = "https://kiraherk.github.io/Zakkirni/"
 
     /** Label to URL. Links left blank are not shown. */
     val links: List<Pair<String, String>> = listOf(

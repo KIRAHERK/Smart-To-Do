@@ -31,7 +31,7 @@ android {
         targetSdk = 36
         versionCode = appVersionCode
         versionName = appVersionName
-        buildConfigField("String", "GITHUB_REPO", "\"KIRAHERK/Thakkirni\"")
+        buildConfigField("String", "GITHUB_REPO", "\"KIRAHERK/Zakkirni\"")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 

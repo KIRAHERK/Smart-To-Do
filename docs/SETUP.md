@@ -45,7 +45,7 @@ Notes:
 
 ## 4. Install on his phone (Samsung Galaxy A9)
 
-1. On his phone, open `https://github.com/KIRAHERK/Thakkirni/releases/latest`.
+1. On his phone, open `https://github.com/KIRAHERK/Zakkirni/releases/latest`.
 2. Tap `Zakkirni-vX.Y.Z.apk` to download, then open it.
 3. If Android asks, allow **Install unknown apps** for the browser, then **Install**.
 4. Open **ذكّرني**. The setup checklist appears:

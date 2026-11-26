@@ -8,8 +8,8 @@
 <meta name="theme-color" content="#0A4A3F">
 <meta property="og:title" content="Zakkirni · Talk to your to-do list, in Arabic">
 <meta property="og:description" content="Say what you must do, in any Arabic dialect. It writes it down, reminds you, asks how it went and keeps the whole record. Free for Android.">
-<meta property="og:image" content="https://kiraherk.github.io/Thakkirni/screenshots/share.png">
-<meta property="og:url" content="https://kiraherk.github.io/Thakkirni/">
+<meta property="og:image" content="https://kiraherk.github.io/Zakkirni/screenshots/share.png">
+<meta property="og:url" content="https://kiraherk.github.io/Zakkirni/">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="preload" href="fonts/plex-latin-700.woff2" as="font" type="font/woff2" crossorigin>
@@ -182,7 +182,7 @@
     <a href="#say" data-ar="ماذا تقول">What to say</a>
     <a href="#kept" data-ar="لا يضيع شيء">Nothing lost</a>
     <a href="#install" data-ar="التثبيت">Install</a>
-    <a href="https://github.com/KIRAHERK/Thakkirni">GitHub</a>
+    <a href="https://github.com/KIRAHERK/Zakkirni">GitHub</a>
     <button class="lang keep" type="button" id="lang" lang="ar">العربية</button>
   </nav>
 </header>
@@ -194,7 +194,7 @@
       <p data-ar="قل ما عليك فعله بلهجتك. التطبيق يكتبه، ويصنّفه، ويذكّرك في وقته، ويسألك كيف جرى، ويحفظ السجل كاملاً.">Say what you must do, in any dialect. It writes it down, files it, reminds you on time, asks how it went, and keeps the whole record.</p>
     </div>
     <div class="get">
-      <a class="btn" data-apk href="https://github.com/KIRAHERK/Thakkirni/releases/latest">
+      <a class="btn" data-apk href="https://github.com/KIRAHERK/Zakkirni/releases/latest">
         <span data-ar="تنزيل لأندرويد">Download for Android</span>
         <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M11 4h2v9.17l3.59-3.58L18 11l-6 6-6-6 1.41-1.41L11 13.17z"/><path fill="currentColor" d="M5 19h14v2H5z"/></svg>
       </a>
@@ -265,7 +265,7 @@
       <div>
         <h2 data-ar="التثبيت في دقيقة.">Install in a minute.</h2>
         <p class="lead" data-ar="مجاني ومفتوح المصدر. يُنزَّل من صفحة الإصدارات على GitHub، موقّعاً بالمفتاح نفسه في كل إصدار.">Free and open source. It comes from the project's GitHub Releases, signed with the same key every time.</p>
-        <a class="btn" data-apk href="https://github.com/KIRAHERK/Thakkirni/releases/latest">
+        <a class="btn" data-apk href="https://github.com/KIRAHERK/Zakkirni/releases/latest">
           <span data-ar="تنزيل لأندرويد">Download for Android</span>
           <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M11 4h2v9.17l3.59-3.58L18 11l-6 6-6-6 1.41-1.41L11 13.17z"/><path fill="currentColor" d="M5 19h14v2H5z"/></svg>
         </a>
@@ -294,7 +294,7 @@
       <a href="https://kiraherk.github.io" data-ar="أعمالي">Portfolio</a>
       <a href="https://www.linkedin.com/in/husseinalherk">LinkedIn</a>
       <a href="https://github.com/KIRAHERK">GitHub</a>
-      <a href="https://github.com/KIRAHERK/Thakkirni" data-ar="الكود المصدري">Source code</a>
+      <a href="https://github.com/KIRAHERK/Zakkirni" data-ar="الكود المصدري">Source code</a>
     </nav>
   </div>
 </footer>
@@ -320,7 +320,7 @@
   if (wanted === "ar") setLang("ar");
 
   // Point the buttons straight at the newest signed APK; the Releases page stays the fallback.
-  fetch("https://api.github.com/repos/KIRAHERK/Thakkirni/releases/latest")
+  fetch("https://api.github.com/repos/KIRAHERK/Zakkirni/releases/latest")
     .then(function (r) { return r.ok ? r.json() : null; })
     .then(function (rel) {
       if (!rel) return;
